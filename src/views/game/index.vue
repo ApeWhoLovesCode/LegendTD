@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { nextTick, onMounted, reactive } from 'vue';
+import { nextTick, onMounted, reactive, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 import ProgressBar from '@/components/progressBar.vue'
@@ -14,8 +14,9 @@ import towerData from '@/dataSource/towerData'
 import enemyData from '@/dataSource/enemyData'
 import _ from 'lodash'
 import floorTitleIcon from "@/assets/img/floor-tile.png"
+import { IndexType } from '@/type';
 
-const state = reactive({
+const state = reactive<IndexType>({
   title: '保卫大司马',
   // 当前选择的地图
   mapLevel: 0,
@@ -42,11 +43,14 @@ const state = reactive({
   // 判断是否是手机
   isMobile: false,
   // 用于切换关卡克隆出来的一份数据
-  newEnemySource: null,
-  newTowerList: null
+  newEnemySource: undefined,
+  newTowerList: undefined
 })
 const route = useRoute()
 const router = useRouter()
+const progressStep = computed<number>(() => {
+  return 95 / state.enemySource.length
+})
 
 /** 初始化加载图片等内容 */
 async function init() {
@@ -83,8 +87,8 @@ function switchMapLevel(index: number) {
 /** 等待所有的gif图生成静态图片 */
 async function allGifToStaticImg() {
   return Promise.all(state.enemySource.map(async (item, index) => {
-    state.enemySource[index].imgList = await gifToStaticImg(item)
-    state.progress += state.progressStep
+    state.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
+    state.progress += progressStep.value
     return 
   })).then(res => {
     

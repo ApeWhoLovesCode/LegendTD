@@ -1,11 +1,12 @@
 // import SuperGif from './libgif.js'
+import { ImgLoadType } from '@/type';
 import SuperGif from 'libgif'
 
 /** 加载图片 imgUrl: 图片数组, objKey: 在数组中的key值  */
-export function loadImage(imgUrl, objKey) {
-  return new Promise((resolve, reject) => {
+export function loadImage(imgUrl: any, objKey?: string) {
+  return new Promise<ImgLoadType>((resolve, reject) => {
     try {
-      const imgObj = {}; // 保存图片资源
+      const imgObj: {[key: string]: HTMLImageElement} = {}; // 保存图片资源
       let tempImg, imgLength = 0, loaded = 0;
       for (let key in imgUrl) {
         imgLength++; // 初始化要加载图片的总数
@@ -28,8 +29,8 @@ export function loadImage(imgUrl, objKey) {
 }
 
  /** 单张gif转静态图片 */
-export function gifToStaticImg(target) {
-  return new Promise((resolve, reject) => {
+export function gifToStaticImg(target: {type: string, imgSource: string}) {
+  return new Promise<HTMLImageElement[]>((resolve, reject) => {
     try {
       const {type, imgSource} = target
       if(type !== 'gif') {

@@ -12,4 +12,19 @@ export default [
   {name: '风车',     money: 500, saleMoney: 250, r: 180, damage: 2, targetNum: 1, rate: 1000, speed: 6, bSize: {w:50,h:50}, isThrough: true, audioKey: 'fengche', img: new URL("../assets/img/plant/fengche.png", import.meta.url).href, bulletImg: new URL("../assets/img/plant/bullet-fengche.png", import.meta.url).href},
   {name: 'PDD',      money: 600, saleMoney: 300, r: 230, damage: 4, targetNum: 20, rate: 3000, speed: 8, bSize: {w:20,h:20},   audioKey: 'pdd-heihei', img: new URL("../assets/img/plant/pdd.png", import.meta.url).href, bulletImg: new URL("../assets/img/plant/bullet1.png", import.meta.url).href},
   {name: '冰星',     money: 800, saleMoney: 400, r: 200, damage: 1, targetNum: 20, rate: 1200, speed: 8, slow: {num: 2, time: 5000}, bSize: {w:30,h:30},   audioKey: 'slow-star', img: new URL("../assets/img/plant/tower_slow.png", import.meta.url).href, bulletImg: new URL("../assets/img/plant/bullet_star.png", import.meta.url).href},
-]
+] as TowerType[]
+
+export type TowerType = {
+  name: string
+  money: number,
+  saleMoney: number,
+  r: number,
+  damage: number,
+  targetNum: number
+  rate: number
+  speed: number
+  bSize: {w:number,h:number}
+  audioKey: string
+  img: string
+  bulletImg: string
+}

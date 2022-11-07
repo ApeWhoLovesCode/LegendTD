@@ -37,7 +37,7 @@ export default [
 ]
 
 /** 初始格子的位置信息和总格子数量 */
-const mapGridInfoList = [
+const mapGridInfoList: MapGridInfo[] = [
   { x: 0, y: 250, x_y: 3, num: 72 },
   { x: 0, y: 50, x_y: 3, num: 83 },
   { x: 0, y: 50, x_y: 3, num: 96 },
@@ -46,6 +46,15 @@ const mapGridInfoList = [
 export {
   mapGridInfoList
 }
+
+/** 格子类型 */
+export type GridInfo = {
+  x: number
+  y: number
+  x_y: number
+}
+
+export type MapGridInfo = GridInfo & {num: number}
   
 /* 
 刚开始的时候，switch判断写法
