@@ -16,4 +16,4 @@ export default {
   'qizi-wujie': new URL("../assets/audio/qizi-wujie.mp3", import.meta.url).href,
   'pdd-heihei': new URL("../assets/audio/pdd-heihaha.wav", import.meta.url).href,
   'kunkun': new URL("../assets/audio/kunkun.mp3", import.meta.url).href,
-}
+} as {[key in string]: string}

@@ -5,18 +5,23 @@
  * 2.手机屏幕翻转兼容
  */
 import { nextTick, onMounted, onBeforeUnmount reactive, computed, watch } from 'vue';
+import _ from 'lodash'
+import {baseInfoState} from './tools/baseInfo'
+import {audioState} from './tools/audioState'
+import {baseDataState} from './tools/baseData'
+import {gameConfigState} from './tools/gameConfig'
+import {gameSkillState} from './tools/gameSkill'
+import {enemy, enemyState} from './tools/enemy'
+import {tower, towerState} from './tools/tower'
+
 import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
 import Skill from '@/components/skill.vue'
-import _ from 'lodash'
-import { GameBaseInfo, GameConfigType, GameBaseData, GameAudio, GameMasterSkill } from '@/type/game'
 
 import { limitRange, randomNum, createProbNum, waitTime } from '@/utils/tools'
 import keepInterval from '@/utils/keepInterval'
 
 import levelEnemyArr from '@/dataSource/levelEnemyArr'
-import audioData from '@/dataSource/audioData'
-import skillData from '@/dataSource/skillData'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
 
 const props = defineProps({
@@ -50,93 +55,10 @@ const props = defineProps({
   }
 })
 
-const baseInfo = reactive<GameBaseInfo>({
-  // 游戏结束
-  isGameOver: false,
-  // 设置游戏的暂停
-  isPause: true,
-  /** 是否播放背景音乐 */
-  isPlayBgAudio: false,
-  // 等级
-  level: 0,
-  // 生命值
-  hp: 10,
-  // 金钱
-  money: 600,
-})
-
-const g_config = reactive<GameConfigType>({
-  // 浏览器大小变化
-  resizeTimer: null,
-  // canvas 默认大小
-  defaultCanvas: {w: 1050, h: 600},
-  // canvas 对象
-  canvas: {},
-  // canvas 画布距离浏览器左边和顶部的距离
-  canvasInfo: {left: 0, top: 0},
-  // requestAnimationFrame api的保存对象
-  animationFrame: null,
-  // 得到 canvas 的 2d 上下文
-  ctx: {},
-  // 是否加载完成
-  loadingDone: false,
-  isGameBeginMask: true,
-})
-
-const baseData = reactive<GameBaseData>({
-  // 偏移量y 是用来计算敌人与地板底部的距离 (两个地板(50*2)-敌人(h(75)+y(10))) = 10
-  offset: {y: 10},
-  // 终点位置
-  terminal: null,
-  // 地板：大小 数量
-  floorTile: {size: 50, num: 83},
-  // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [[]] },
-})
-
-const audioState = reactive<GameAudio>({
-  // 所有音乐数据
-  audioList: audioData,
-  // 终点音乐
-  audioEnd: '',
-  // 当前技能音乐
-  audioSkill: '',
-})
-
-const g_skill = reactive<GameMasterSkill>({
-  // 生产的金钱
-  proMoney: {isShow: false, interval: 10000, money: 25},
-  // 增加的金钱
-  addMoney: {num: '', timer: null, time: 1000},
-  // 底部技能栏
-  skillList: JSON.parse(JSON.stringify(skillData)),
-})
-
-const state = reactive({
-  // 敌人生成间隔时间
-  intervalTime: 900,
-  // 当前等级需要的敌人索引
-  levelEnemy: [],
-  // 已上场的敌人数量
-  createdEnemyNum: 0,
-  // 场上的敌人数组  
-  enemy: [],
-  // 移动轨迹 [{x坐标, y坐标, x_y(方向): 1:左 2:下 3:右 4:上}]
-  movePath: [],
-  // 塔防
-  building: { left: 0, top: 0, isShow: false },
-  // 塔防攻击范围
-  buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerIndex: 0},
-  // 场上的防御塔数组 {x, y, shootFn(防抖的射击函数), targetIndexList(攻击的目标):[], bulletArr(子弹数组)[x,y(子弹当前位置),addX,addY(往目标方向增加的值),xy(当前距离),x_y(目标距离),e_i(目标索引)], ...this.towerList[i], onload-img, onload-bulletImg
-  tower: [],
-  mapGridInfoItem: null,
-})
-
 /** ---计算属性--- */
 /** 终点位置 */
 const terminalStyle = computed(() => {
-  const {x, y} = this.terminal
-  return {left: x + 'px', top: y + 'px'}
+  return {left: baseDataState.terminal?.x + 'px', top: baseDataState.terminal?.y + 'px'}
 })
 /** 塔防容器的样式 */
 const buildingStyle = computed(() => {
@@ -185,7 +107,7 @@ const allEnemyIn = computed(() => {
 })
 
 // 监听增加的钱
-watch(() => baseInfo.money, (newVal, oldVal) => {
+watch(() => baseInfoState.money, (newVal, oldVal) => {
   g_skill.addMoney.num = ''
   clearTimeout(g_skill.addMoney.timer)
   g_skill.addMoney.timer = null
@@ -198,14 +120,14 @@ watch(() => baseInfo.money, (newVal, oldVal) => {
   })
 })
 // 游戏结束判断
-watch(() => baseInfo.hp, (val) => {
-  baseInfo.isGameOver = true
-  baseInfo.isPause = true
+watch(() => baseInfoState.hp, (val) => {
+  baseInfoState.isGameOver = true
+  baseInfoState.isPause = true
   playAudio('ma-gameover', 'Skill')
   this.$refs.audioBgRef.pause()
 })
 
-watch(() => baseInfo.isPause, (val) => {
+watch(() => baseInfoState.isPause, (val) => {
   keepInterval.allPause(val)
   if(!val) {
     makeEnemy()
@@ -214,7 +136,7 @@ watch(() => baseInfo.isPause, (val) => {
   }
 })
 // 监听等级变化生成对应敌人
-watch(() => baseInfo.level, (val) => {
+watch(() => baseInfoState.level, (val) => {
   setTimeout(() => {
     state.createdEnemyNum = 0
     if(val < levelEnemyArr.length && !isInfinite) {
@@ -232,7 +154,7 @@ watch(() => baseInfo.level, (val) => {
       if((val / 10) % 1 === 0) {
         playAudio('ma-pvz', 'End')
       }
-      baseInfo.money += (baseInfo.level + 1) * g_skill.proMoney.money
+      baseInfoState.money += (baseInfoState.level + 1) * g_skill.proMoney.money
       makeEnemy()
       this.$refs.audioLevelRef.play()
     }
@@ -241,8 +163,8 @@ watch(() => baseInfo.level, (val) => {
 // 监听敌人的移动
 watch(() => enemy, (enemyList) => {
   // 敌人已经清空
-  if(!enemyList.length && allEnemyIn && baseInfo.hp) {
-    nextTick(() => { baseInfo.level++ })
+  if(!enemyList.length && allEnemyIn && baseInfoState.hp) {
+    nextTick(() => { baseInfoState.level++ })
   }
   const tower = state.tower
   for(let t_i in tower) {
@@ -273,9 +195,9 @@ async function init() {
   }
   this.canvas = this.$refs.canvasRef;
   this.ctx = this.canvas.getContext("2d");
-  this.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[this.mapLevel]))
+  baseInfoState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[this.mapLevel]))
   this.initMobileData()
-  this.floorTile.num = this.mapGridInfoItem.num
+  this.floorTile.num = baseInfoState.mapGridInfoItem.num
   this.initAllGrid()
   this.initMovePath()
   this.onKeyDown()
@@ -318,7 +240,7 @@ function buildTower(index) {
   // 处理多个相同塔防的id值
   const id = Date.now()
   const tower = {x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], ...this.towerList[index], img: this.towerOnloadImg[index], bulletImg: this.towerBulletOnloadImg[index]}
-  this.tower.push(tower)
+  tower.push(tower)
   // 用于标记是哪个塔防 10 + index
   this.gridInfo.arr[y / size][x / size] = 10 + index
   this.drawTower(tower)
@@ -327,12 +249,12 @@ function buildTower(index) {
 /** 售卖防御塔 */
 function saleTower(index) {
   const size = this.gridInfo.size
-  const {x, y, saleMoney, id} = this.tower[index]
+  const {x, y, saleMoney, id} = tower[index]
   this.ctx.clearRect(x, y, size, size);
   this.gridInfo.arr[y / size][x / size] = 0
   this.money += saleMoney
   this.removeAudio(id)
-  this.tower.splice(index, 1)
+  tower.splice(index, 1)
 }
 /** 点击背景 隐藏塔防 */
 function hiddenTowerOperation() {
@@ -342,22 +264,22 @@ function hiddenTowerOperation() {
 /** 处理塔防 */
 function handlerTower(x, y) {
   // 当前点击的是哪个塔防
-  const towerIndex = this.tower.findIndex(item => item.x === x && item.y === y)
-  const {x:left, y:top, r} = this.tower[towerIndex]
+  const towerIndex = tower.findIndex(item => item.x === x && item.y === y)
+  const {x:left, y:top, r} = tower[towerIndex]
   // 展示攻击范围
   this.buildingScope = {isShow: true, left, top, r, towerIndex}
 }
 /** 发射子弹  enemy:敌人索引数组，t_i:塔索引 */
 function shootBullet(eIdList, t_i) {
   // 添加攻击目标的索引
-  this.tower[t_i].targetIndexList = eIdList
+  tower[t_i].targetIndexList = eIdList
   for(const e_id of eIdList) {
-    const enemy = this.enemy.find(e => e.id === e_id)
+    const enemy = enemy.find(e => e.id === e_id)
     if(!enemy) break
     const {x, y, w, h} = enemy
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough } = this.tower[t_i]
+    const {x: t_x, y: t_y, speed, name, id, isThrough } = tower[t_i]
     const size_2 = this.gridInfo.size / 2
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
@@ -370,7 +292,7 @@ function shootBullet(eIdList, t_i) {
     if(isThrough) {
       bullet.attactIdSet = new Set()
     }
-    this.tower[t_i].bulletArr.push(bullet)
+    tower[t_i].bulletArr.push(bullet)
     if(name === 'PDD') {
       this.playDomAudio(id, 0.4)
     }
@@ -395,14 +317,14 @@ function startDraw() {
   this.drawFloorTile()
   this.drawTower()
   // 循环静态图片数组画敌人形成gif效果
-  for(let index = 0; index < this.enemy.length; index++) {
-    const item = this.enemy[index]
+  for(let index = 0; index < enemy.length; index++) {
+    const item = enemy[index]
     const res = this.moveEnemy(index)
     // 当敌人已经到达终点，后面就不执行了
     if(res) break
     this.drawEnemy(index)
-    if(item.imgIndex === item.imgList.length - 1) this.enemy[index].imgIndex = 0
-    else this.enemy[index].imgIndex++
+    if(item.imgIndex === item.imgList.length - 1) enemy[index].imgIndex = 0
+    else enemy[index].imgIndex++
   }
   this.drawAndMoveBullet()
 }
@@ -419,7 +341,7 @@ function drawTower(item) {
   if(item) {
     this.ctx.drawImage(item.img, item.x, item.y, size, size)
   } else {
-    for(const t of this.tower) {
+    for(const t of tower) {
       this.ctx.drawImage(t.img, t.x, t.y, size, size)
     }
   }
@@ -427,8 +349,8 @@ function drawTower(item) {
 /** 画并处理子弹 */
 function drawAndMoveBullet() {
   const e_idList = []
-  for(const t_i in this.tower) {
-    const t = this.tower[t_i]
+  for(const t_i in tower) {
+    const t = tower[t_i]
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
       const {w, h} = t.bSize
       // 当前塔防的当前子弹
@@ -463,7 +385,7 @@ function drawAndMoveBullet() {
           isDelete = true
         }
         // 敌人扣血
-        const enemy = this.enemy.find(e => e.id === e_id)
+        const enemy = enemy.find(e => e.id === e_id)
         if(enemy) {
           enemy.hp.cur -= t.damage
           if(enemy.hp.cur <= 0) {
@@ -499,28 +421,28 @@ function drawAndMoveBullet() {
 }
 /** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
 function slowEnemy(e_id, t_slow) {
-  const e_i = this.enemy.findIndex(e => e.id === e_id)
-  const { speed: e_speed, curSpeed } = this.enemy[e_i]
+  const e_i = enemy.findIndex(e => e.id === e_id)
+  const { speed: e_speed, curSpeed } = enemy[e_i]
   // 当前已经被眩晕了不能减速了
   if(curSpeed === 0) return
   // 新增或重置减速定时器
   keepInterval.set(`slow-${e_id}`, () => {
-    const newE_i = this.enemy.findIndex(e => e.id === e_id)
-    if(this.enemy[newE_i]) {
-      this.enemy[newE_i].curSpeed = e_speed
+    const newE_i = enemy.findIndex(e => e.id === e_id)
+    if(enemy[newE_i]) {
+      enemy[newE_i].curSpeed = e_speed
     }
     keepInterval.delete(`slow-${e_id}`)
   }, t_slow.time)
   // 减速敌人
   const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
   if(newSpeed < curSpeed) {
-    this.enemy[e_i].curSpeed = newSpeed
+    enemy[e_i].curSpeed = newSpeed
   }
 }
 /** 处理穿透性子弹攻击的下一个敌人 */
 function handleThroughBulletEid(bItem) {
   const {x, y, w, h, attactIdSet} = bItem
-  for(const eItem of this.enemy) {
+  for(const eItem of enemy) {
     if(!attactIdSet.has(eItem.id) && this.checkBulletInEnemy({x,y,w,h}, eItem.id)) {
       return eItem.id
     }
@@ -536,8 +458,8 @@ function checkThroughBullet(bItem) {
 }
 /** 画敌人 */
 function drawEnemy(index) {
-  if(!this.enemy[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = this.enemy[index]
+  if(!enemy[index]) return
+  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = enemy[index]
   // 翻转图片
   // ctx.translate(200, 0);
   // imgList[imgIndex].scale(-1, 1)
@@ -567,7 +489,7 @@ function drawEnemy(index) {
 }
 /** 敌人移动 */
 function moveEnemy(index) {
-  const { w, h, curSpeed, speed, curFloorI, id } = this.enemy[index]
+  const { w, h, curSpeed, speed, curFloorI, id } = enemy[index]
   // 敌人到达终点
   if(curFloorI === this.floorTile.num - 1) {
     this.removeEnemy([id])
@@ -582,15 +504,15 @@ function moveEnemy(index) {
   const _y = y - (size - (size * 2 - h - this.offset.y))
   const _x = x - (w - size)
   switch (x_y) {
-    case 1: this.enemy[index].x -= curSpeed; break;
-    case 2: this.enemy[index].y -= curSpeed; break;
-    case 3: this.enemy[index].x += curSpeed; break;
-    case 4: this.enemy[index].y += curSpeed; break;
+    case 1: enemy[index].x -= curSpeed; break;
+    case 2: enemy[index].y -= curSpeed; break;
+    case 3: enemy[index].x += curSpeed; break;
+    case 4: enemy[index].y += curSpeed; break;
   }
-  const { x: eX, y: eY } = this.enemy[index]
+  const { x: eX, y: eY } = enemy[index]
   // 敌人到达下一个格子
   if((eX >= _x &&  eX <= _x + speed) && (eY >= _y &&  eY <= _y + speed)) {
-    this.enemy[index].curFloorI++
+    enemy[index].curFloorI++
   }
 }
 /** 按间隔时间生成敌人 */
@@ -608,62 +530,62 @@ function makeEnemy() {
 }
 /** 生成敌人 */
 function setEnemy() {
-  const enemyItem = _.cloneDeep(this.enemySource[state.levelEnemy[this.createdEnemyNum]])
+  const enemyItem = _.cloneDeep(enemySource[state.levelEnemy[this.createdEnemyNum]])
   const size = this.gridInfo.size
   const {audioKey, name, h} = enemyItem
   // 设置敌人的初始位置
-  const {x, y} = this.mapGridInfoItem
+  const {x, y} = baseInfoState.mapGridInfoItem
   enemyItem.x = x
   enemyItem.y = y - (size - (size * 2 - h - this.offset.y))
   const id = Date.now()
   enemyItem.id = audioKey + id
-  this.enemy.push(enemyItem)
+  enemy.push(enemyItem)
   this.createdEnemyNum++
   this.handleEnemySkill(name, enemyItem.id)
   this.createAudio(audioKey, id)
 }
 /** 处理敌人技能 */
 function handleEnemySkill(enemyName, e_id) {
-  const e_i = this.enemy.findIndex(e => e.id === e_id)
-  if(!this.enemy[e_i].skill) return
+  const e_i = enemy.findIndex(e => e.id === e_id)
+  if(!enemy[e_i].skill) return
   // 有技能的敌人
-  const {time} = this.enemy[e_i].skill
+  const {time} = enemy[e_i].skill
   keepInterval.set(e_id, () => {
     this.setEnemySkill(enemyName, e_id)
   }, time)
 }
 /** 设置敌人技能 */
 function setEnemySkill(enemyName, e_id) {
-  const e_i = this.enemy.findIndex(e => e.id === e_id)
-  if(!this.enemy[e_i] || !this.enemy[e_i].skill) return
-  const {curFloorI: _curFloorI, id, hp} = this.enemy[e_i]
+  const e_i = enemy.findIndex(e => e.id === e_id)
+  if(!enemy[e_i] || !enemy[e_i].skill) return
+  const {curFloorI: _curFloorI, id, hp} = enemy[e_i]
   let volume = 1
   // 舞王僵尸技能
   if(enemyName === '舞王') {
     const total = this.floorTile.num - 1
     for(let i = 0; i < 4; i++) {
-      const newEnemy = _.cloneDeep(this.enemySource[12])
+      const newEnemy = _.cloneDeep(enemySource[12])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
         case 2: newEnemy.curFloorI = limitRange(_curFloorI + 1, 1, total); break;
         case 3: newEnemy.curFloorI = limitRange(_curFloorI + 2, 1, total); break;
       }
-      this.enemy.push(this.callEnemy(newEnemy, i))
+      enemy.push(this.callEnemy(newEnemy, i))
     }
   } else if(enemyName === '弗利萨') {
     const total = this.floorTile.num - 1
     for(let i = 0; i < 2; i++) {
-      const newEnemy = _.cloneDeep(this.enemySource[13])
+      const newEnemy = _.cloneDeep(enemySource[13])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
       }
-      this.enemy.push(this.callEnemy(newEnemy, i))
+      enemy.push(this.callEnemy(newEnemy, i))
     }
   } else if(enemyName === '坤坤') {
     const newHp = hp.cur + 200
-    this.enemy[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
+    enemy[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
     volume = 0.7
   }
   this.playDomAudio(id, volume)
@@ -683,7 +605,7 @@ function callEnemy(newEnemy, i) {
 function removeEnemy(e_idList) {
   if(!e_idList.length) return
   const eiList = Array.from(e_idList.reduce((pre, id) => {
-    const e_i = this.enemy.findIndex(e => e.id === id)
+    const e_i = enemy.findIndex(e => e.id === id)
     if(e_i !== -1) pre.add(e_i)
     return pre
   }, new Set([])))
@@ -691,15 +613,15 @@ function removeEnemy(e_idList) {
   // 这里会有执行时机的问题
   try {
     for(const e_i of eiList) {
-      if(!this.enemy[e_i]) return
-      const e_id = this.enemy[e_i].id
+      if(!enemy[e_i]) return
+      const e_id = enemy[e_i].id
       // 清除减速持续时间定时器
       keepInterval.delete(`slow-${e_id}`)
-      if(this.enemy[e_i].skill) {
+      if(enemy[e_i].skill) {
         keepInterval.delete(e_id)
       }
       // 清除穿透子弹攻击过的目标id
-      for(const t of this.tower) {
+      for(const t of tower) {
         if(t.isThrough) {
           for(const b of t.bulletArr) {
             b.attactIdSet.delete(e_id) 
@@ -707,7 +629,7 @@ function removeEnemy(e_idList) {
         }
       }
       this.removeAudio(e_id)
-      this.enemy.splice(e_i, 1)
+      enemy.splice(e_i, 1)
     }
   } catch (error) {
     console.log('error: ', error);
@@ -719,14 +641,14 @@ function handleSkill(index) {
   this.money -= money
   if(name !== '礼物') {
     const e_idList = []
-    for(const enemy of this.enemy) {
+    for(const enemy of enemy) {
       const e_id = enemy.id
       enemy.hp.cur -= damage
         if(enemy.hp.cur <= 0) {
         this.money += enemy.reward
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
-        for(const t of this.tower) {
+        for(const t of tower) {
           t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
         }
       }
@@ -770,7 +692,7 @@ function initAllGrid() {
 function initMovePath() {
   const size = this.gridInfo.size
   // 刚开始就右移了，所有该初始格不会算上去
-  const movePathItem = JSON.parse(JSON.stringify(this.mapGridInfoItem))
+  const movePathItem = JSON.parse(JSON.stringify(baseInfoState.mapGridInfoItem))
   delete movePathItem.num
   const movePath: GridInfo[]  = []
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
@@ -827,14 +749,14 @@ function enterAttackScopeList(enemyList, tower) {
  * 返回 x,y方向需要增加的值， xy: 塔和敌人的距离
  */
 function bulletEnemyDistance(e_id, t_i, b_i) {
-  const enemy = this.enemy.find(e => e.id === e_id)
+  const enemy = enemy.find(e => e.id === e_id)
   // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
-  if(!enemy || this.tower[t_i].isThrough) return
+  if(!enemy || tower[t_i].isThrough) return
   const size_2 = this.gridInfo.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
-  const { speed, bulletArr, x: tx, y: ty } = this.tower[t_i]
+  const { speed, bulletArr, x: tx, y: ty } = tower[t_i]
   // 两坐标间的差值
   const diff = {x: _x - bulletArr[b_i].x, y: _y - bulletArr[b_i].y}
   // 子弹和敌人的距离
@@ -845,7 +767,7 @@ function bulletEnemyDistance(e_id, t_i, b_i) {
 }
 /** 判断敌人中心是否在子弹中 即击中敌人 */
 function checkBulletInEnemy({x, y, w, h}, e_id) {
-  const enemy = this.enemy.find(e => e.id === e_id)
+  const enemy = enemy.find(e => e.id === e_id)
   if(!enemy) return
   const {x:ex, y:ey, w:ew, h:eh} = enemy
   // 绘画子弹时的偏移
@@ -935,9 +857,9 @@ function initMobileData() {
   this.offset.y *= p
   this.defaultCanvas.w *= p
   this.defaultCanvas.h *= p
-  this.mapGridInfoItem.x *= p
-  this.mapGridInfoItem.y *= p
-  this.enemySource.forEach(item => {
+  baseInfoState.mapGridInfoItem.x *= p
+  baseInfoState.mapGridInfoItem.y *= p
+  enemySource.forEach(item => {
     item.w = handleDecimals(item.w)
     item.h = handleDecimals(item.w)
     item.curSpeed = handleDecimals(item.curSpeed)
