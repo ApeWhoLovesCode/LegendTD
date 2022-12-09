@@ -2,6 +2,7 @@
 import { ImgLoadType } from '@/type';
 import SuperGif from 'libgif'
 
+// CanvasImageSource
 /** 加载图片 imgUrl: 图片数组, objKey: 在数组中的key值  */
 export function loadImage(imgUrl: any, objKey?: string) {
   return new Promise<ImgLoadType>((resolve, reject) => {

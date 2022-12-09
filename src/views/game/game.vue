@@ -4,15 +4,17 @@
  * 1.敌人图片翻转
  * 2.手机屏幕翻转兼容
  */
-import { nextTick, onMounted, onBeforeUnmount reactive, computed, watch } from 'vue';
+import { nextTick, onMounted, onBeforeUnmount, computed, watch, ref } from 'vue';
 import _ from 'lodash'
+import { ElMessage } from 'element-plus'
 import {baseInfoState} from './tools/baseInfo'
 import {audioState} from './tools/audioState'
 import {baseDataState} from './tools/baseData'
 import {gameConfigState} from './tools/gameConfig'
 import {gameSkillState} from './tools/gameSkill'
-import {enemy, enemyState} from './tools/enemy'
-import {tower, towerState} from './tools/tower'
+import {enemyList, enemyState} from './tools/enemy'
+import {towerList, towerState} from './tools/tower'
+import {audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj} from './tools/domRef'
 
 import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
@@ -23,37 +25,26 @@ import keepInterval from '@/utils/keepInterval'
 
 import levelEnemyArr from '@/dataSource/levelEnemyArr'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
+import { BulletType, EnemyStateType, TowerStateType } from '@/type/game';
+import { TowerSlowType, TowerType } from '@/dataSource/towerData';
+import { EnemyType } from '@/dataSource/enemyData';
+import { ImgLoadType } from '@/type';
 
-const props = defineProps({
-  mapLevel: {
-    type: Number,
-    default: 0
-  },
-  enemySource: {
-    type: Array,
-    default: () => []
-  },
-  towerList: {
-    type: Array,
-    default: () => []
-  },
-  imgOnloadObj: {
-    type: Object,
-    default: () => {}
-  },
-  towerOnloadImg: {
-    type: Object,
-    default: () => {}
-  },
-  towerBulletOnloadImg: {
-    type: Object,
-    default: () => {}
-  },
-  isMobile: {
-    type: Boolean,
-    default: false
-  }
-})
+import { BuildingImg, HorseImg, SunImg } from './tools/imgSource'
+
+type GameProps = {
+  mapLevel: number
+  enemySource: EnemyType[]
+  towerSource: TowerType[]
+  imgOnloadObj: ImgLoadType
+  towerOnloadImg: ImgLoadType
+  towerBulletOnloadImg: ImgLoadType
+  isMobile: boolean
+}
+
+const props = defineProps<GameProps>()
+
+const canvasRef = ref<HTMLCanvasElement>()
 
 /** ---计算属性--- */
 /** 终点位置 */
@@ -62,14 +53,14 @@ const terminalStyle = computed(() => {
 })
 /** 塔防容器的样式 */
 const buildingStyle = computed(() => {
-  const {left, top} = this.building
-  const size = this.gridInfo.size
+  const {left, top} = towerState.building
+  const size = baseDataState.gridInfo.size
   return {left: left + size + 'px', top: top + size + 'px'}
 })
 /** 塔防容器的类目 */
 const buildingClass = computed(() => {
-  const {left, top} = this.building
-  const {x_num, y_num, size} = this.gridInfo
+  const {left, top} = towerState.building
+  const {x_num, y_num, size} = baseDataState.gridInfo
   const _x_num = Math.round(left / size), _y_num = Math.round(top / size)
   let className = ''
   if(_y_num >= y_num - 3) {
@@ -86,37 +77,37 @@ const buildingClass = computed(() => {
 })
 /** 攻击范围的样式 */
 const buildingScopeStyle = computed(() => {
-  const padding = this.gridInfo.size
-  const size = this.gridInfo.size / 2
-  const {left, top, r} = this.buildingScope
+  const padding = baseDataState.gridInfo.size
+  const size = baseDataState.gridInfo.size / 2
+  const {left, top, r} = towerState.buildingScope
   return {left: left + padding + size + 'px', top: top + padding + size + 'px', width: r * 2 + 'px', height: r * 2 + 'px'}
 })
 /** 售卖防御塔按钮的样式 */
 const saleTowerStyle = computed(() => {
-  const {y_num, size} = this.gridInfo
-  const _y_num = Math.round(this.buildingScope.top / size)
+  const {y_num, size} = baseDataState.gridInfo
+  const _y_num = Math.round(towerState.buildingScope.top / size)
   return _y_num >= y_num / 2 ? { top: 0 } : { bottom: 0 }
 })
 /** 是否是无限火力模式 */
 const isInfinite = computed(() => {
-  return this.mapLevel === mapData.length - 1
+  return props.mapLevel === mapData.length - 1
 })
 /** 当前关卡全部敌人已经上场 */
 const allEnemyIn = computed(() => {
-  return this.createdEnemyNum === state.levelEnemy.length
+  return enemyState.createdEnemyNum === enemyState.levelEnemy.length
 })
 
 // 监听增加的钱
 watch(() => baseInfoState.money, (newVal, oldVal) => {
-  g_skill.addMoney.num = ''
-  clearTimeout(g_skill.addMoney.timer)
-  g_skill.addMoney.timer = null
+  gameSkillState.addMoney.num = ''
+  clearTimeout(gameSkillState.addMoney.timer as NodeJS.Timer)
+  gameSkillState.addMoney.timer = null
   nextTick(() => {
     const val = newVal - oldVal
-    g_skill.addMoney.num = (val >= 0 ? '+' : '') + val
-    g_skill.addMoney.timer = setTimeout(() => {
-      g_skill.addMoney.num = ''
-    }, g_skill.addMoney.time);
+    gameSkillState.addMoney.num = (val >= 0 ? '+' : '') + val
+    gameSkillState.addMoney.timer = setTimeout(() => {
+      gameSkillState.addMoney.num = ''
+    }, gameSkillState.addMoney.time);
   })
 })
 // 游戏结束判断
@@ -124,7 +115,7 @@ watch(() => baseInfoState.hp, (val) => {
   baseInfoState.isGameOver = true
   baseInfoState.isPause = true
   playAudio('ma-gameover', 'Skill')
-  this.$refs.audioBgRef.pause()
+  audioBgRef.value?.pause()
 })
 
 watch(() => baseInfoState.isPause, (val) => {
@@ -138,226 +129,225 @@ watch(() => baseInfoState.isPause, (val) => {
 // 监听等级变化生成对应敌人
 watch(() => baseInfoState.level, (val) => {
   setTimeout(() => {
-    state.createdEnemyNum = 0
+    enemyState.createdEnemyNum = 0
     if(val < levelEnemyArr.length && !isInfinite) {
-      state.levelEnemy = levelEnemyArr[val]
+      enemyState.levelEnemy = levelEnemyArr[val]
     } else {
       const list = [0]
       const isUpdate = (val / 2) > levelEnemyArr.length ? true : false
-      const enemyNum = isInfinite ? parseInt((val + 1) * 5) : parseInt(val * 1.3)
+      const enemyNum = isInfinite ? ~~((val + 1) * 5) : ~~(val * 1.3)
       for(let i = 0; i < enemyNum; i++) {
         list.push(createProbNum(isUpdate))
       }
-      state.levelEnemy = list
+      enemyState.levelEnemy = list
     }
     if(val) {
       if((val / 10) % 1 === 0) {
         playAudio('ma-pvz', 'End')
       }
-      baseInfoState.money += (baseInfoState.level + 1) * g_skill.proMoney.money
+      baseInfoState.money += (baseInfoState.level + 1) * gameSkillState.proMoney.money
       makeEnemy()
-      this.$refs.audioLevelRef.play()
+      audioLevelRef.value?.play()
     }
   }, val ? 500 : 0);
-}, immediate: true)
+}, {immediate: true})
 // 监听敌人的移动
-watch(() => enemy, (enemyList) => {
+watch(() => enemyList, (enemyList) => {
   // 敌人已经清空
   if(!enemyList.length && allEnemyIn && baseInfoState.hp) {
     nextTick(() => { baseInfoState.level++ })
   }
-  const tower = state.tower
-  for(let t_i in tower) {
-    const eIdList = enterAttackScopeList(enemyList, tower[t_i])
+  for(let t_i in towerList) {
+    const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
     // 进入攻击范围，开始射击 
     if(eIdList.length) {
-      tower[t_i].shootFun(eIdList.slice(0, tower[t_i].targetNum), t_i)
+      towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
     }
   }
 }, { deep: true }) // 这里deep可能会无效
 
 onMounted(() => {
-  init();
-  getCanvasMargin()
+  setTimeout(() => {
+    init();
+    getCanvasMargin()
+  }, 10);
   // 监听浏览器窗口大小变化
-  window.addEventListener("resize", this.getCanvasMargin);
+  window.addEventListener("resize", getCanvasMargin);
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', this.getCanvasMargin)
-  cancelAnimationFrame(this.animationFrame)
+  window.removeEventListener('resize', getCanvasMargin)
+  cancelAnimationFrame(gameConfigState.animationFrame)
   keepInterval.clear()
 })
 
 async function init() {
   if(isInfinite) {
-    this.money = 999999
+    baseInfoState.money = 999999
   }
-  this.canvas = this.$refs.canvasRef;
-  this.ctx = this.canvas.getContext("2d");
-  baseInfoState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[this.mapLevel]))
-  this.initMobileData()
-  this.floorTile.num = baseInfoState.mapGridInfoItem.num
-  this.initAllGrid()
-  this.initMovePath()
-  this.onKeyDown()
+  gameConfigState.ctx = (canvasRef.value!.getContext("2d") as CanvasRenderingContext2D);
+  baseInfoState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[props.mapLevel]))
+  initMobileData()
+  baseDataState.floorTile.num = baseInfoState.mapGridInfoItem.num
+  initAllGrid()
+  initMovePath()
+  onKeyDown()
   await waitTime(800)
-  this.loadingDone = true
-  this.startAnimation()
+  gameConfigState.loadingDone = true
+  startAnimation()
 }
 /** 点击获取鼠标位置 操作塔防 */
-function getMouse(e) {
+function getMouse(e: MouseEvent) {
   e.stopPropagation()
-  const size = this.gridInfo.size
-  const _x = e.x - this.canvasInfo.left, _y = e.y - this.canvasInfo.top
+  const size = baseDataState.gridInfo.size
+  const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
   // 当前点击的格子的索引值
   const col = Math.floor(_y / size), row = Math.floor(_x / size)
-  const gridVal = this.gridInfo.arr[col][row]
+  const gridVal = baseDataState.gridInfo.arr[col][row]
   const left = row * size, top = col * size
   // 已经有地板或者有建筑了
   if(gridVal >= 10) {
-    this.handlerTower(left, top)
+    handlerTower(left, top)
   }
   if(gridVal) {
     return
   }
-  this.building.isShow = true
-  this.building.left = left
-  this.building.top = top
+  towerState.building.isShow = true
+  towerState.building.left = left
+  towerState.building.top = top
 }
 /** 点击建造塔防 */
-function buildTower(index) {
-  const { rate, money, audioKey } = this.towerList[index]
-  if(this.money < money) return
-  this.money -= money
-  const {left: x, top: y} = this.building
-  const size = this.gridInfo.size
+function buildTower(index: number) {
+  const { rate, money, audioKey } = props.towerSource[index]
+  if(baseInfoState.money < money) return
+  baseInfoState.money -= money
+  const {left: x, top: y} = towerState.building
+  const size = baseDataState.gridInfo.size
   // 将该塔防数据放入场上塔防数组中
   // 射击的防抖函数
   const shootFun = _.throttle((eIdList, t_i) => {
-    this.shootBullet(eIdList, t_i)
+    shootBullet(eIdList, t_i)
   }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
   const id = Date.now()
-  const tower = {x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], ...this.towerList[index], img: this.towerOnloadImg[index], bulletImg: this.towerBulletOnloadImg[index]}
-  tower.push(tower)
+  const tower: TowerStateType = {x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], ...props.towerSource[index], onloadImg: props.towerOnloadImg[index], onloadbulletImg: props.towerBulletOnloadImg[index]}
+  towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
-  this.gridInfo.arr[y / size][x / size] = 10 + index
-  this.drawTower(tower)
-  this.createAudio(audioKey, id)
+  baseDataState.gridInfo.arr[y / size][x / size] = 10 + index
+  drawTower(tower)
+  createAudio(audioKey, String(id))
 }
 /** 售卖防御塔 */
-function saleTower(index) {
-  const size = this.gridInfo.size
-  const {x, y, saleMoney, id} = tower[index]
-  this.ctx.clearRect(x, y, size, size);
-  this.gridInfo.arr[y / size][x / size] = 0
-  this.money += saleMoney
-  this.removeAudio(id)
-  tower.splice(index, 1)
+function saleTower(index: number) {
+  const size = baseDataState.gridInfo.size
+  const {x, y, saleMoney, id} = towerList[index]
+  gameConfigState.ctx.clearRect(x, y, size, size);
+  baseDataState.gridInfo.arr[y / size][x / size] = 0
+  baseInfoState.money += saleMoney
+  removeAudio(id)
+  towerList.splice(index, 1)
 }
 /** 点击背景 隐藏塔防 */
 function hiddenTowerOperation() {
-  if(this.building.isShow) this.building.isShow = false
-  if(this.buildingScope.isShow) this.buildingScope.isShow = false
+  if(towerState.building.isShow) towerState.building.isShow = false
+  if(towerState.buildingScope.isShow) towerState.buildingScope.isShow = false
 }
 /** 处理塔防 */
-function handlerTower(x, y) {
+function handlerTower(x: number, y: number) {
   // 当前点击的是哪个塔防
-  const towerIndex = tower.findIndex(item => item.x === x && item.y === y)
-  const {x:left, y:top, r} = tower[towerIndex]
+  const towerIndex = towerList.findIndex(item => item.x === x && item.y === y)
+  const {x:left, y:top, r} = towerList[towerIndex]
   // 展示攻击范围
-  this.buildingScope = {isShow: true, left, top, r, towerIndex}
+  towerState.buildingScope = {isShow: true, left, top, r, towerIndex}
 }
 /** 发射子弹  enemy:敌人索引数组，t_i:塔索引 */
-function shootBullet(eIdList, t_i) {
+function shootBullet(eIdList: string[], t_i: number) {
   // 添加攻击目标的索引
-  tower[t_i].targetIndexList = eIdList
+  towerList[t_i].targetIndexList = eIdList
   for(const e_id of eIdList) {
-    const enemy = enemy.find(e => e.id === e_id)
+    const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
     const {x, y, w, h} = enemy
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough } = tower[t_i]
-    const size_2 = this.gridInfo.size / 2
+    const {x: t_x, y: t_y, speed, name, id, isThrough } = towerList[t_i]
+    const size_2 = baseDataState.gridInfo.size / 2
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
     // 两坐标间的差值
     const diff = {x: _x - begin.x, y: _y - begin.y}
     // 子弹和敌人的距离
-    const distance = this.powAndSqrt(diff.x, diff.y)
+    const distance = powAndSqrt(diff.x, diff.y)
     const addX = speed * diff.x / distance, addY = speed * diff.y / distance
-    const bullet = {x: begin.x, y: begin.y, addX, addY, xy: 0, x_y: distance, e_id}
+    const bullet: BulletType = {x: begin.x, y: begin.y, addX, addY, xy: 0, x_y: distance, e_id}
     if(isThrough) {
       bullet.attactIdSet = new Set()
     }
-    tower[t_i].bulletArr.push(bullet)
+    towerList[t_i].bulletArr.push(bullet)
     if(name === 'PDD') {
-      this.playDomAudio(id, 0.4)
+      playDomAudio(id, 0.4)
     }
   }
 }
 /** 开启动画绘画 */
 function startAnimation() {
-  const that = this;
   (function go() {
-    that.startDraw();
-    if (!that.isPause) {
+    startDraw();
+    if (!baseInfoState.isPause) {
       // 时间间隔为 1000/60 每秒 60 帧
-      that.animationFrame = requestAnimationFrame(go);
+      gameConfigState.animationFrame = requestAnimationFrame(go);
     } else {
-      cancelAnimationFrame(that.animationFrame)
+      cancelAnimationFrame(gameConfigState.animationFrame)
     }
   })();
 }
 /** 开始绘画 */
 function startDraw() {
-  this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  this.drawFloorTile()
-  this.drawTower()
+  gameConfigState.ctx.clearRect(0, 0, canvasRef.value!.width, canvasRef.value!.height);
+  drawFloorTile()
+  drawTower()
   // 循环静态图片数组画敌人形成gif效果
-  for(let index = 0; index < enemy.length; index++) {
-    const item = enemy[index]
-    const res = this.moveEnemy(index)
+  for(let index = 0; index < enemyList.length; index++) {
+    const item = enemyList[index]
+    const res = moveEnemy(index)
     // 当敌人已经到达终点，后面就不执行了
     if(res) break
-    this.drawEnemy(index)
-    if(item.imgIndex === item.imgList.length - 1) enemy[index].imgIndex = 0
-    else enemy[index].imgIndex++
+    drawEnemy(index)
+    if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
+    else enemyList[index].imgIndex++
   }
-  this.drawAndMoveBullet()
+  drawAndMoveBullet()
 }
 /** 画地板 */
 function drawFloorTile() {
-  const size = this.gridInfo.size
-  for(let f of this.movePath) {
-    this.ctx.drawImage(this.imgOnloadObj.floorTile, f.x, f.y, size, size)
+  const size = baseDataState.gridInfo.size
+  for(let f of enemyState.movePath) {
+    gameConfigState.ctx.drawImage(props.imgOnloadObj.floorTile, f.x, f.y, size, size)
   }
 }
 /** 画塔防 */
-function drawTower(item) {
-  const size = this.gridInfo.size
+function drawTower(item?: TowerStateType) {
+  const size = baseDataState.gridInfo.size
   if(item) {
-    this.ctx.drawImage(item.img, item.x, item.y, size, size)
+    gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
   } else {
-    for(const t of tower) {
-      this.ctx.drawImage(t.img, t.x, t.y, size, size)
+    for(const t of towerList) {
+      gameConfigState.ctx.drawImage(t.onloadImg, t.x, t.y, size, size)
     }
   }
 }
 /** 画并处理子弹 */
 function drawAndMoveBullet() {
   const e_idList = []
-  for(const t_i in tower) {
-    const t = tower[t_i]
+  for(const t_i in towerList) {
+    const t = towerList[t_i]
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
       const {w, h} = t.bSize
       // 当前塔防的当前子弹
       const bItem = t.bulletArr[b_i]
-      const {x, y, addX, addY, e_id, attactIdSet} = bItem
+      let {x, y, addX, addY, e_id, attactIdSet} = bItem
       // 重新计算子弹离敌人的距离
-      const b_e_distance = this.bulletEnemyDistance(e_id, t_i, b_i)
+      const b_e_distance = bulletEnemyDistance(e_id, +t_i, b_i)
       if(b_e_distance) {
         const {addX: _addX, addY: _addY, xy} = b_e_distance
         addX = _addX, addY = _addY
@@ -370,35 +360,35 @@ function drawAndMoveBullet() {
       bItem.xy += t.speed
       // 穿透性塔防
       if(t.isThrough) {
-        const newEid = this.handleThroughBulletEid({x, y, w, h, attactIdSet})
+        const newEid = handleThroughBulletEid({x, y, w, h, attactIdSet})
         if(newEid) bItem.e_id = newEid
       }
-      let isAttact = t.isThrough && attactIdSet.has(e_id)
+      let isAttact = t.isThrough && attactIdSet?.has(e_id)
       let isDelete = false
       // 子弹击中敌人
-      if(this.checkBulletInEnemy({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
+      if(checkBulletInEnemy({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
         // 穿透性子弹击中敌人
-        if(t.isThrough) bItem.attactIdSet.add(e_id)
+        if(t.isThrough) bItem.attactIdSet?.add(e_id)
         // 清除子弹
         if(!t.isThrough) {
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
         // 敌人扣血
-        const enemy = enemy.find(e => e.id === e_id)
+        const enemy = enemyList.find(e => e.id === e_id)
         if(enemy) {
           enemy.hp.cur -= t.damage
           if(enemy.hp.cur <= 0) {
-            this.money += enemy.reward
+            baseInfoState.money += enemy.reward
             e_idList.push(e_id)
             t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
             if(t.name === '茄子') {
-              this.playDomAudio(t.id)
+              playDomAudio(t.id)
             }
           } else {
             // 判断减速
             if(t.slow) {
-              this.slowEnemy(e_id, t.slow)
+              slowEnemy(e_id, t.slow)
             }
           }
         }
@@ -406,299 +396,299 @@ function drawAndMoveBullet() {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
           t.bulletArr.splice(b_i, 1)
         }
-        this.ctx.drawImage(t.bulletImg, x - w / 2, y - h / 2, w, h)
+        gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
       }
       // 清除穿透性子弹
-      if(t.isThrough && this.checkThroughBullet({x,y,w,h})) {
+      if(t.isThrough && checkThroughBullet({x,y,w,h})) {
         t.bulletArr.splice(b_i, 1)
       }
     }
   }
   // 消灭敌人
   if(e_idList.length) {
-    this.removeEnemy(e_idList)
+    removeEnemy(e_idList)
   }
 }
 /** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
-function slowEnemy(e_id, t_slow) {
-  const e_i = enemy.findIndex(e => e.id === e_id)
-  const { speed: e_speed, curSpeed } = enemy[e_i]
+function slowEnemy(e_id: string, t_slow: TowerSlowType) {
+  const e_i = enemyList.findIndex(e => e.id === e_id)
+  const { speed: e_speed, curSpeed } = enemyList[e_i]
   // 当前已经被眩晕了不能减速了
   if(curSpeed === 0) return
   // 新增或重置减速定时器
   keepInterval.set(`slow-${e_id}`, () => {
-    const newE_i = enemy.findIndex(e => e.id === e_id)
-    if(enemy[newE_i]) {
-      enemy[newE_i].curSpeed = e_speed
+    const newE_i = enemyList.findIndex(e => e.id === e_id)
+    if(enemyList[newE_i]) {
+      enemyList[newE_i].curSpeed = e_speed
     }
     keepInterval.delete(`slow-${e_id}`)
   }, t_slow.time)
   // 减速敌人
   const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
   if(newSpeed < curSpeed) {
-    enemy[e_i].curSpeed = newSpeed
+    enemyList[e_i].curSpeed = newSpeed
   }
 }
 /** 处理穿透性子弹攻击的下一个敌人 */
-function handleThroughBulletEid(bItem) {
+function handleThroughBulletEid(bItem: any) {
   const {x, y, w, h, attactIdSet} = bItem
-  for(const eItem of enemy) {
-    if(!attactIdSet.has(eItem.id) && this.checkBulletInEnemy({x,y,w,h}, eItem.id)) {
+  for(const eItem of enemyList) {
+    if(!attactIdSet.has(eItem.id) && checkBulletInEnemy({x,y,w,h}, eItem.id)) {
       return eItem.id
     }
   }
   return false
 }
 /** 判断穿透性子弹是否越界了 */
-function checkThroughBullet(bItem) {
+function checkThroughBullet(bItem: any) {
   let {x, y, w, h} = bItem
-  const {w: canvasW, h: canvasH} = this.defaultCanvas
+  const {w: canvasW, h: canvasH} = gameConfigState.defaultCanvas
   x = x - w / 2, y = y - h / 2
   return x + w < 0 || y + h < 0 || x > canvasW || y > canvasH
 }
 /** 画敌人 */
-function drawEnemy(index) {
-  if(!enemy[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = enemy[index]
+function drawEnemy(index: number) {
+  if(!enemyList[index]) return
+  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = enemyList[index]
   // 翻转图片
   // ctx.translate(200, 0);
   // imgList[imgIndex].scale(-1, 1)
-  this.ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  gameConfigState.ctx.drawImage(imgList[imgIndex], x, y, w, h) 
   // 绘画减速效果
   if(curSpeed !== speed) {
-    this.ctx.beginPath();
-    this.ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
-    this.ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
-    this.ctx.fill()
-    this.ctx.strokeStyle = '#022ef1'
-    this.ctx.stroke()
+    gameConfigState.ctx.beginPath();
+    gameConfigState.ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
+    gameConfigState.ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
+    gameConfigState.ctx.fill()
+    gameConfigState.ctx.strokeStyle = '#022ef1'
+    gameConfigState.ctx.stroke()
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
   const w_2 = w - hp.size
-  this.ctx.fillStyle = '#0066a1'
-  this.ctx.fillRect(x, y - hp.size, w_2, hp.size)
-  this.ctx.fillStyle = '#49ca00'
-  this.ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
+  gameConfigState.ctx.fillStyle = '#0066a1'
+  gameConfigState.ctx.fillRect(x, y - hp.size, w_2, hp.size)
+  gameConfigState.ctx.fillStyle = '#49ca00'
+  gameConfigState.ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
   // 画边框
-  this.ctx.beginPath();
-  this.ctx.lineWidth = 1;
-  this.ctx.strokeStyle = "#cff1d3"; //边框颜色
-  this.ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
-  this.ctx.stroke();
+  gameConfigState.ctx.beginPath();
+  gameConfigState.ctx.lineWidth = 1;
+  gameConfigState.ctx.strokeStyle = "#cff1d3"; //边框颜色
+  gameConfigState.ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
+  gameConfigState.ctx.stroke();
 }
 /** 敌人移动 */
-function moveEnemy(index) {
-  const { w, h, curSpeed, speed, curFloorI, id } = enemy[index]
+function moveEnemy(index: number) {
+  const { w, h, curSpeed, speed, curFloorI, id } = enemyList[index]
   // 敌人到达终点
-  if(curFloorI === this.floorTile.num - 1) {
-    this.removeEnemy([id])
-    this.hp -= 1
-    this.playAudio('ma-nansou', 'End')
+  if(curFloorI === baseDataState.floorTile.num - 1) {
+    removeEnemy([id])
+    baseInfoState.hp -= 1
+    playAudio('ma-nansou', 'End')
     return true
   }
-  const size = this.gridInfo.size
+  const size = baseDataState.gridInfo.size
   // 将格子坐标同步到敌人的坐标
-  const { x, y, x_y } = this.movePath[curFloorI]
+  const { x, y, x_y } = enemyState.movePath[curFloorI]
   // 敌人需要站在地板中间区域
-  const _y = y - (size - (size * 2 - h - this.offset.y))
+  const _y = y - (size - (size * 2 - h - baseDataState.offset.y))
   const _x = x - (w - size)
   switch (x_y) {
-    case 1: enemy[index].x -= curSpeed; break;
-    case 2: enemy[index].y -= curSpeed; break;
-    case 3: enemy[index].x += curSpeed; break;
-    case 4: enemy[index].y += curSpeed; break;
+    case 1: enemyList[index].x -= curSpeed; break;
+    case 2: enemyList[index].y -= curSpeed; break;
+    case 3: enemyList[index].x += curSpeed; break;
+    case 4: enemyList[index].y += curSpeed; break;
   }
-  const { x: eX, y: eY } = enemy[index]
+  const { x: eX, y: eY } = enemyList[index]
   // 敌人到达下一个格子
   if((eX >= _x &&  eX <= _x + speed) && (eY >= _y &&  eY <= _y + speed)) {
-    enemy[index].curFloorI++
+    enemyList[index].curFloorI++
   }
 }
 /** 按间隔时间生成敌人 */
 function makeEnemy() {
   // 当前关卡敌人已经全部上场
-  if(this.allEnemyIn) return
+  if(allEnemyIn) return
   // 暂停回来，间隔时间修改
   keepInterval.set('makeEnemy', () => {
-    if(this.allEnemyIn) {
+    if(allEnemyIn) {
       keepInterval.delete('makeEnemy')
     } else {
-      this.setEnemy()
+      setEnemy()
     }
-  }, this.intervalTime)
+  }, baseInfoState.intervalTime)
 }
 /** 生成敌人 */
 function setEnemy() {
-  const enemyItem = _.cloneDeep(enemySource[state.levelEnemy[this.createdEnemyNum]])
-  const size = this.gridInfo.size
-  const {audioKey, name, h} = enemyItem
+  const enemyItemSource = _.cloneDeep(props.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
+  const size = baseDataState.gridInfo.size
+  const {audioKey, name, h} = enemyItemSource
   // 设置敌人的初始位置
+  const id = Date.now()
+  const enemyItem: EnemyStateType = {id: audioKey + id, ...enemyItemSource}
   const {x, y} = baseInfoState.mapGridInfoItem
   enemyItem.x = x
-  enemyItem.y = y - (size - (size * 2 - h - this.offset.y))
-  const id = Date.now()
-  enemyItem.id = audioKey + id
-  enemy.push(enemyItem)
-  this.createdEnemyNum++
-  this.handleEnemySkill(name, enemyItem.id)
-  this.createAudio(audioKey, id)
+  enemyItem.y = y - (size - (size * 2 - h - baseDataState.offset.y))
+  enemyList.push(enemyItem)
+  enemyState.createdEnemyNum++
+  handleEnemySkill(name, enemyItem.id)
+  createAudio(audioKey, String(id))
 }
 /** 处理敌人技能 */
-function handleEnemySkill(enemyName, e_id) {
-  const e_i = enemy.findIndex(e => e.id === e_id)
-  if(!enemy[e_i].skill) return
+function handleEnemySkill(enemyName: string, e_id: string) {
+  const e_i = enemyList.findIndex(e => e.id === e_id)
+  if(!enemyList[e_i].skill) return
   // 有技能的敌人
-  const {time} = enemy[e_i].skill
+  const {time} = enemyList[e_i].skill!
   keepInterval.set(e_id, () => {
-    this.setEnemySkill(enemyName, e_id)
+    setEnemySkill(enemyName, e_id)
   }, time)
 }
 /** 设置敌人技能 */
-function setEnemySkill(enemyName, e_id) {
-  const e_i = enemy.findIndex(e => e.id === e_id)
-  if(!enemy[e_i] || !enemy[e_i].skill) return
-  const {curFloorI: _curFloorI, id, hp} = enemy[e_i]
+function setEnemySkill(enemyName: string, e_id: string) {
+  const e_i = enemyList.findIndex(e => e.id === e_id)
+  if(!enemyList[e_i] || !enemyList[e_i].skill) return
+  const {curFloorI: _curFloorI, id, hp} = enemyList[e_i]
   let volume = 1
   // 舞王僵尸技能
   if(enemyName === '舞王') {
-    const total = this.floorTile.num - 1
+    const total = baseDataState.floorTile.num - 1
     for(let i = 0; i < 4; i++) {
-      const newEnemy = _.cloneDeep(enemySource[12])
+      const newEnemy = _.cloneDeep(props.enemySource[12])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
         case 2: newEnemy.curFloorI = limitRange(_curFloorI + 1, 1, total); break;
         case 3: newEnemy.curFloorI = limitRange(_curFloorI + 2, 1, total); break;
       }
-      enemy.push(this.callEnemy(newEnemy, i))
+      enemyList.push(callEnemy(newEnemy, i))
     }
   } else if(enemyName === '弗利萨') {
-    const total = this.floorTile.num - 1
+    const total = baseDataState.floorTile.num - 1
     for(let i = 0; i < 2; i++) {
-      const newEnemy = _.cloneDeep(enemySource[13])
+      const newEnemy = _.cloneDeep(props.enemySource[13])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
       }
-      enemy.push(this.callEnemy(newEnemy, i))
+      enemyList.push(callEnemy(newEnemy, i))
     }
   } else if(enemyName === '坤坤') {
     const newHp = hp.cur + 200
-    enemy[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
+    enemyList[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
     volume = 0.7
   }
-  this.playDomAudio(id, volume)
+  playDomAudio(id, volume)
 }
 /** 召唤敌人的处理 */
-function callEnemy(newEnemy, i) {
-  const size = this.gridInfo.size
+function callEnemy(newEnemy: EnemyType, i: number) {
+  const size = baseDataState.gridInfo.size
   const { curFloorI, w, h, audioKey } = newEnemy
-  const { x, y } = this.movePath[curFloorI - 1]
+  const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = Date.now() + i
-  newEnemy.id = audioKey + id
-  newEnemy.x = x - (w - size)
-  newEnemy.y = y - (size - (size * 2 - h - this.offset.y))
-  return newEnemy
+  const _newEnemy: EnemyStateType = {id: audioKey + id, ...newEnemy}
+  _newEnemy.x = x - (w - size)
+  _newEnemy.y = y - (size - (size * 2 - h - baseDataState.offset.y))
+  return _newEnemy
 }
 /** 消灭敌人 */
-function removeEnemy(e_idList) {
+function removeEnemy(e_idList: string[]) {
   if(!e_idList.length) return
   const eiList = Array.from(e_idList.reduce((pre, id) => {
-    const e_i = enemy.findIndex(e => e.id === id)
+    const e_i = enemyList.findIndex(e => e.id === id)
     if(e_i !== -1) pre.add(e_i)
     return pre
-  }, new Set([])))
+  }, new Set() as Set<number>))
   eiList.sort((a, b) => b - a)
   // 这里会有执行时机的问题
   try {
     for(const e_i of eiList) {
-      if(!enemy[e_i]) return
-      const e_id = enemy[e_i].id
+      if(!enemyList[e_i]) return
+      const e_id = enemyList[e_i].id
       // 清除减速持续时间定时器
       keepInterval.delete(`slow-${e_id}`)
-      if(enemy[e_i].skill) {
+      if(enemyList[e_i].skill) {
         keepInterval.delete(e_id)
       }
       // 清除穿透子弹攻击过的目标id
-      for(const t of tower) {
+      for(const t of towerList) {
         if(t.isThrough) {
           for(const b of t.bulletArr) {
-            b.attactIdSet.delete(e_id) 
+            b.attactIdSet?.delete(e_id) 
           }
         }
       }
-      this.removeAudio(e_id)
-      enemy.splice(e_i, 1)
+      removeAudio(e_id)
+      enemyList.splice(e_i, 1)
     }
   } catch (error) {
     console.log('error: ', error);
   }
 }
 /** 发动技能 */
-function handleSkill(index) {
-  const { name, money, damage, audioKey, showTime, cd } = this.skillList[index]
-  this.money -= money
+function handleSkill(index: number) {
+  const { name, money, damage, audioKey, showTime, cd } = gameSkillState.skillList[index]
+  baseInfoState.money -= money
   if(name !== '礼物') {
     const e_idList = []
-    for(const enemy of enemy) {
+    for(const enemy of enemyList) {
       const e_id = enemy.id
       enemy.hp.cur -= damage
         if(enemy.hp.cur <= 0) {
-        this.money += enemy.reward
+        baseInfoState.money += enemy.reward
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
-        for(const t of tower) {
+        for(const t of towerList) {
           t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
         }
       }
       if(name === "肉弹冲击") {
-        this.slowEnemy(e_id, {num: 0, time: 6000})
+        slowEnemy(e_id, {num: 0, time: 6000})
       }
     }
-    this.removeEnemy(e_idList)
+    removeEnemy(e_idList)
   } else {
-    this.money += randomNum(1, 100)
+    baseInfoState.money += randomNum(1, 100)
   }
-  this.playAudio(audioKey, 'Skill')
+  playAudio(audioKey, 'Skill')
   // 显示技能效果
-  this.skillList[index].isShow = true
+  gameSkillState.skillList[index].isShow = true
   setTimeout(() => {
-    this.skillList[index].isShow = false
+    gameSkillState.skillList[index].isShow = false
   }, showTime);
   // 技能进入cd
-  this.skillList[index].curTime = cd 
+  gameSkillState.skillList[index].curTime = cd 
   const skillId = `skill-${name}`
   keepInterval.set(skillId, () => {
-    this.skillList[index].curTime -= 1000
-    if(this.skillList[index].curTime <= 0) {
+    gameSkillState.skillList[index].curTime -= 1000
+    if(gameSkillState.skillList[index].curTime <= 0) {
       keepInterval.delete(skillId)
     }
   })
 }
 /** 初始化所有格子 */
 function initAllGrid() {
-  const { x_num, y_num } = this.gridInfo
-  const arr = []
+  const { x_num, y_num } = baseDataState.gridInfo
+  const arr: number[][] = []
   for(let i = 0; i < x_num; i++) {
     arr.push([])
     for(let j = 0; j < y_num; j++) {
       arr[i][j] = 0
     }
   }
-  this.gridInfo.arr = arr
+  baseDataState.gridInfo.arr = arr
 }
 /** 初始化行动轨迹 */
 function initMovePath() {
-  const size = this.gridInfo.size
+  const size = baseDataState.gridInfo.size
   // 刚开始就右移了，所有该初始格不会算上去
   const movePathItem = JSON.parse(JSON.stringify(baseInfoState.mapGridInfoItem))
   delete movePathItem.num
   const movePath: GridInfo[]  = []
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
-  for(let i = 0; i < this.floorTile.num; i++) {
-    const newXY = mapData[this.mapLevel][i]
+  for(let i = 0; i < baseDataState.floorTile.num; i++) {
+    const newXY = mapData[props.mapLevel][i]
     if(newXY) {
       x_y = newXY
     }
@@ -706,41 +696,41 @@ function initMovePath() {
     else movePathItem.y += x_y === 4 ? size : -size
     movePathItem.x_y = x_y
     movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-    this.gridInfo.arr[movePathItem.y / size][movePathItem.x / size] = 1
+    baseDataState.gridInfo.arr[movePathItem.y / size][movePathItem.x / size] = 1
   }
-  this.terminal = movePath[movePath.length - 1]
-  this.movePath = movePath
+  baseDataState.terminal = movePath[movePath.length - 1]
+  enemyState.movePath = movePath
 }
 /** 开启创建金钱定时器 */
 function startMoneyTimer() {
   keepInterval.set('startMoneyTimer', () => {
-    this.proMoney.isShow = true
-    this.playAudio('ma-qifei', 'End')
+    gameSkillState.proMoney.isShow = true
+    playAudio('ma-qifei', 'End')
     keepInterval.delete('startMoneyTimer')
-  }, this.proMoney.interval)
+  }, gameSkillState.proMoney.interval)
 }
 /** 点击了生产出来的金钱 */
 function proMoneyClick() {
-  this.proMoney.isShow = false
-  this.money += this.proMoney.money
-  this.startMoneyTimer()
+  gameSkillState.proMoney.isShow = false
+  baseInfoState.money += gameSkillState.proMoney.money
+  startMoneyTimer()
 }
 /** 获取canvas与浏览器 左边 / 顶部 的距离 */
 function getCanvasMargin() {
-  clearTimeout(this.resizeTimer)
-  this.resizeTimer = setTimeout(() => {
-    this.canvasInfo.left = this.$refs.canvasRef.getBoundingClientRect().left;
-    this.canvasInfo.top = this.$refs.canvasRef.getBoundingClientRect().top;
+  clearTimeout(gameConfigState.resizeTimer as NodeJS.Timer)
+  gameConfigState.resizeTimer = setTimeout(() => {
+    gameConfigState.canvasInfo.left = canvasRef.value?.getBoundingClientRect().left ?? 0;
+    gameConfigState.canvasInfo.top = canvasRef.value?.getBoundingClientRect().top ?? 0;
   }, 50);
 }
 /** 返回进入攻击范围的值的数组 */
-function enterAttackScopeList(enemyList, tower) {
-  const list = enemyList.reduce((pre, enemy) => {
-    if(this.checkValInCircle(enemy, tower)) {
+function enterAttackScopeList(eList: EnemyStateType[], tower: TowerStateType) {
+  const list = eList.reduce((pre, enemy) => {
+    if(checkValInCircle(enemy, tower)) {
       pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
     }
     return pre
-  }, [])
+  }, [] as {curFloorI: number, id: string}[])
   list.sort((a, b) => b.curFloorI - a.curFloorI)
   return list.map(item => item.id)
 }
@@ -748,26 +738,26 @@ function enterAttackScopeList(enemyList, tower) {
  * 计算子弹和敌人的距离
  * 返回 x,y方向需要增加的值， xy: 塔和敌人的距离
  */
-function bulletEnemyDistance(e_id, t_i, b_i) {
-  const enemy = enemy.find(e => e.id === e_id)
+function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
+  const enemy = enemyList.find(e => e.id === e_id)
   // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
-  if(!enemy || tower[t_i].isThrough) return
-  const size_2 = this.gridInfo.size / 2
+  if(!enemy || towerList[t_i].isThrough) return
+  const size_2 = baseDataState.gridInfo.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
-  const { speed, bulletArr, x: tx, y: ty } = tower[t_i]
+  const { speed, bulletArr, x: tx, y: ty } = towerList[t_i]
   // 两坐标间的差值
   const diff = {x: _x - bulletArr[b_i].x, y: _y - bulletArr[b_i].y}
   // 子弹和敌人的距离
-  const distance = this.powAndSqrt(diff.x, diff.y)
+  const distance = powAndSqrt(diff.x, diff.y)
   return {
-    addX: speed * diff.x / distance, addY: speed * diff.y / distance, xy: this.powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
+    addX: speed * diff.x / distance, addY: speed * diff.y / distance, xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
   }
 }
 /** 判断敌人中心是否在子弹中 即击中敌人 */
-function checkBulletInEnemy({x, y, w, h}, e_id) {
-  const enemy = enemy.find(e => e.id === e_id)
+function checkBulletInEnemy({x, y, w, h}: any, e_id: string) {
+  const enemy = enemyList.find(e => e.id === e_id)
   if(!enemy) return
   const {x:ex, y:ey, w:ew, h:eh} = enemy
   // 绘画子弹时的偏移
@@ -775,40 +765,40 @@ function checkBulletInEnemy({x, y, w, h}, e_id) {
   // 敌人中心
   const _ex = ex + ew / 2, _ey = ey + eh / 2
   return _ex > x && _ey > y && (_ex < x + w) && (_ey < y + h)
-},   
+}   
 /** 判断值是否在圆内 */
-function checkValInCircle(enemy, tower) {
+function checkValInCircle(enemy: EnemyStateType, tower: TowerStateType) {
   const {x, y, w, h} = enemy
   const angleList = [
-    this.calculateDistance(tower, x, y),
-    this.calculateDistance(tower, x + w, y),
-    this.calculateDistance(tower, x + w, y + h),
-    this.calculateDistance(tower, x , y + h),
+    calculateDistance(tower, x, y),
+    calculateDistance(tower, x + w, y),
+    calculateDistance(tower, x + w, y + h),
+    calculateDistance(tower, x , y + h),
   ]
   return angleList.some(item => item <= tower.r)
 }
 /** 计算点到圆心的距离之间的距离 */
-function calculateDistance(tower, x, y) {
+function calculateDistance(tower: TowerStateType, x: number, y: number) {
   const {x: _x, y: _y} = tower
-  const size_2 = this.gridInfo.size / 2
-  return this.powAndSqrt(_x + size_2 - x, _y + size_2 - y)
+  const size_2 = baseDataState.gridInfo.size / 2
+  return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
 }
 /** 两值平方相加并开方 求斜边 */
-function powAndSqrt(val1, val2) {
+function powAndSqrt(val1: number, val2: number) {
   return Math.sqrt(Math.pow(val1, 2) + Math.pow(val2, 2))
 }
 /** 生成音频播放器 */
-function createAudio(audioKey, id) {
-  if(!this.audioList[audioKey]) return
+function createAudio(audioKey: string, id: string) {
+  if(!audioState.audioList[audioKey]) return
   // var audio = new Audio()
   const audioWrap = document.querySelector('#audio-wrap')
   const audio = document.createElement('audio') //生成一个audio元素 
-  audio.src = this.audioList[audioKey]  //音乐的路径
+  audio.src = audioState.audioList[audioKey]  //音乐的路径
   audio.id = audioKey + id
-  audioWrap.appendChild(audio)  //把它添加到页面中
+  audioWrap?.appendChild(audio)  //把它添加到页面中
 }
 /** 清除音频播放器 */
-function removeAudio(id) {
+function removeAudio(id: string) {
   // 删除该 video dom 节点
   const videoDom = document.querySelector(`#${id}`)
   if(videoDom) {
@@ -817,56 +807,56 @@ function removeAudio(id) {
 }
 /** 播放背景音乐 */
 function playBgAudio() {
-  this.isPlayBgAudio = !this.isPlayBgAudio
-  if(this.isPlayBgAudio) {
-    this.$refs.audioBgRef.volume = 0.65
-    this.$refs.audioBgRef.play()
+  baseInfoState.isPlayBgAudio = !baseInfoState.isPlayBgAudio
+  if(baseInfoState.isPlayBgAudio) {
+    audioBgRef.value!.volume = 0.65
+    audioBgRef.value?.play()
   }
-  else this.$refs.audioBgRef.pause()
+  else audioBgRef.value?.pause()
 }
-/** 播放音乐 */
-function playAudio(audioKey, key) {
-  const audio_key = `audio${key}`
-  if(this[audio_key] === undefined) return
-  if(this[audio_key] !== audioKey) {
-    this[audio_key] = audioKey
+/** 播放技能音乐和结束音乐 */
+function playAudio(audioKey: string, key: 'End' | 'Skill') {
+  const audio_key: 'audioEnd' | 'audioSkill' = `audio${key}`
+  if(audioState[audio_key] === undefined) return
+  if(audioState[audio_key] !== audioKey) {
+    audioState[audio_key] = audioKey
   }
   nextTick(()=>{
     // 调节音量
-    this.$refs[`${audio_key}Ref`].volume = 0.9
-    this.$refs[`${audio_key}Ref`].play()
+    audioRefObj[audio_key + 'Ref'].value!.volume = 0.9
+    audioRefObj[audio_key + 'Ref'].value!.play()
   })
 }
 /** 播放创建出来的dom(防御塔和僵尸)的音乐 */
-function playDomAudio(id, volume) {
+function playDomAudio(id: string, volume?: number) {
   const audioWrap = document.querySelector('#audio-wrap')
-  const audioDom = audioWrap.querySelector(`#${id}`)
+  const audioDom = (audioWrap?.querySelector(`#${id}`) as HTMLAudioElement)
   if(!audioDom) return
-  audioDom.play()
+  audioDom!.play()
   audioDom.volume = volume || 1
 }
 /** 移动端按比例缩放数据 */
 function initMobileData() {
-  if(!this.isMobile) return
-  console.log('this.isMobile: ', this.isMobile);
+  if(!props.isMobile) return
+  console.log('props.isMobile: ', props.isMobile);
   const p = 0.4
-  function handleDecimals(val) {
+  function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
   }
-  this.gridInfo.size *= p
-  this.offset.y *= p
-  this.defaultCanvas.w *= p
-  this.defaultCanvas.h *= p
+  baseDataState.gridInfo.size *= p
+  baseDataState.offset.y *= p
+  gameConfigState.defaultCanvas.w *= p
+  gameConfigState.defaultCanvas.h *= p
   baseInfoState.mapGridInfoItem.x *= p
   baseInfoState.mapGridInfoItem.y *= p
-  enemySource.forEach(item => {
+  props.enemySource.forEach(item => {
     item.w = handleDecimals(item.w)
     item.h = handleDecimals(item.w)
     item.curSpeed = handleDecimals(item.curSpeed)
     item.speed = handleDecimals(item.speed)
     item.hp.size = handleDecimals(item.hp.size)
   })
-  this.towerList.forEach(item => {
+  props.towerSource.forEach(item => {
     item.r = handleDecimals(item.r)
     item.speed = handleDecimals(item.speed)
     item.bSize.w = handleDecimals(item.bSize.w)
@@ -876,10 +866,10 @@ function initMobileData() {
 /** 监听用户的键盘事件 */
 function onKeyDown() {
   document.onkeydown = (e) => {
-    if(this.isGameBeginMask) return
+    if(gameConfigState.isGameBeginMask) return
     switch (e.code) {
       case "Space":{
-        this.gamePause()
+        gamePause()
         break;
       } 
     }
@@ -887,16 +877,16 @@ function onKeyDown() {
 }
 /** 开始游戏 */
 function beginGame() {
-  this.$refs.audioLevelRef.play()
-  this.playBgAudio()
-  this.isGameBeginMask = false
-  this.isPause = false
-  this.$message({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
+  audioLevelRef.value?.play()
+  playBgAudio()
+  gameConfigState.isGameBeginMask = false
+  baseInfoState.isPause = false
+  ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
 }
 /** 游戏暂停 */
 function gamePause() {
-  if(!this.isGameOver) {
-    this.isPause = !this.isPause;
+  if(!baseInfoState.isGameOver) {
+    baseInfoState.isPause = !baseInfoState.isPause;
   }
 }
 
@@ -905,33 +895,33 @@ function gamePause() {
 <template>
   <div id="protect-horse">
     <div id="audio-wrap">
-      <audio ref="audioBgRef" :src="audioList['pvz-morning']" loop></audio>
-      <audio ref="audioLevelRef" :src="audioList['pvz-comein']"></audio>
-      <audio ref="audioSkillRef" :src="audioList[audioSkill]"></audio>
-      <audio ref="audioEndRef" :src="audioList[audioEnd]"></audio>
+      <audio ref="audioBgRef" :src="audioState.audioList['pvz-morning']" loop></audio>
+      <audio ref="audioLevelRef" :src="audioState.audioList['pvz-comein']"></audio>
+      <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
+      <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
     <div class="game-wrap">
       <div class="canvas-wrap" @click="hiddenTowerOperation">
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
-          :money="money"
-          :addMoney="addMoney"
-          :level="level"
-          :isPause="isPause"
-          :isPlayBgAudio="isPlayBgAudio"
+          :money="baseInfoState.money"
+          :addMoney="gameSkillState.addMoney"
+          :level="baseInfoState.level"
+          :isPause="baseInfoState.isPause"
+          :isPlayBgAudio="baseInfoState.isPlayBgAudio"
           @gamePause="gamePause"
           @playBgAudio="playBgAudio"
         />
         <!-- 游戏区域 -->
-        <canvas ref="canvasRef" id="mycanvas" :width="defaultCanvas.w" :height="defaultCanvas.h" @click="getMouse($event)"></canvas>
+        <canvas ref="canvasRef" id="mycanvas" :width="gameConfigState.defaultCanvas.w" :height="gameConfigState.defaultCanvas.h" @click="getMouse($event)"></canvas>
         <!-- 塔防的容器 -->
-        <div v-show="building.isShow" class="building-wrap" :style="buildingStyle">
-          <img src="./assets/img/add.png" alt="" class="add-icon">
+        <div v-show="towerState.building.isShow" class="building-wrap" :style="buildingStyle">
+          <img :src="BuildingImg" alt="" class="add-icon">
           <div class="tower-wrap" :class="buildingClass">
             <div 
               class="tower" 
-              :class="{'tower-no-money': money < item.money}" 
-              v-for="(item, index) in towerList" 
+              :class="{'tower-no-money': baseInfoState.money < item.money}" 
+              v-for="(item, index) in towerSource" 
               :key="index"
               @click="buildTower(index)"
             >
@@ -941,35 +931,35 @@ function gamePause() {
           </div>
         </div>
         <!-- 塔防的攻击范围 -->
-        <div v-show="buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
-          <span class="sale-wrap" @click="saleTower(buildingScope.towerIndex)" :style="saleTowerStyle">
+        <div v-show="towerState.buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
+          <span class="sale-wrap" @click="saleTower(towerState.buildingScope.towerIndex)" :style="saleTowerStyle">
             <span class="iconfont icon-ashbin"></span>
-            <span class="sale-num">{{tower[buildingScope.towerIndex] && tower[buildingScope.towerIndex].saleMoney}}</span>
+            <span class="sale-num">{{towerList[towerState.buildingScope.towerIndex] && towerList[towerState.buildingScope.towerIndex].saleMoney}}</span>
           </span>
         </div>
         <!-- 游戏底部技能区 -->
-        <Skill :skillList="skillList" :money="money" :isPause="isPause" @handleSkill="handleSkill" />
+        <Skill :skillList="gameSkillState.skillList" :money="baseInfoState.money" :isPause="baseInfoState.isPause" @handleSkill="handleSkill" />
         <!-- 终点 -->
-        <div v-if="terminal" class="terminal" :style="terminalStyle">
-          <div class="hp">{{hp}}</div>
-          <img class="terminal-icon" src="./assets/img/horse1.png" alt="">
-          <img v-show="proMoney.isShow" class="money-icon" src="./assets/img/Sun.gif" alt="" @click="proMoneyClick">
+        <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
+          <div class="hp">{{baseInfoState.hp}}</div>
+          <img class="terminal-icon" :src="HorseImg" alt="">
+          <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="SunImg" alt="" @click="proMoneyClick">
         </div>
         <!-- 游戏开始遮罩层 -->
-        <div v-if="isGameBeginMask" class="game-begin mask">
+        <div v-if="gameConfigState.isGameBeginMask" class="game-begin mask">
           <div class="info">
-            <Loading v-if="!loadingDone" />
+            <Loading v-if="!gameConfigState.loadingDone" />
             <div v-else class="begin-wrap">
               <span class="icon-wrap" @click="beginGame">
-                <span class="iconfont" :class="isPause ? 'icon-kaishi1' : 'icon-24gf-pause2'"></span>
+                <span class="iconfont" :class="baseInfoState.isPause ? 'icon-kaishi1' : 'icon-24gf-pause2'"></span>
               </span>
               <span class="begin-text">开始游戏</span>
             </div>
           </div>
         </div>
         <!-- 游戏结束遮罩层 -->
-        <div v-if="isGameOver" class="gameover-wrap mask">
-          <div class="info">你为了保卫大司马抵御了{{level}}波僵尸</div>
+        <div v-if="baseInfoState.isGameOver" class="gameover-wrap mask">
+          <div class="info">你为了保卫大司马抵御了{{baseInfoState.level}}波僵尸</div>
         </div>
       </div>
     </div>

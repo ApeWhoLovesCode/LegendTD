@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 
 import ProgressBar from '@/components/progressBar.vue'
 import LevelSelect from '@/components/levelSelect.vue'
-import ProtectTheHorse from './protectTheHorse.vue'
+import ProtectTheHorse from './game.vue'
 
 import { setTheme } from '@/assets/theme/theme'
 import { loadImage, gifToStaticImg } from '@/utils/handleImg'
@@ -32,19 +32,19 @@ const state = reactive<IndexType>({
   },
   // 敌人资源
   enemySource: enemyData,
-  // 塔防数据 
-  towerList: towerData,
+  // 塔防资源 
+  towerSource: towerData,
   // 加载完成的静态图片
-  imgOnloadObj: null,
+  imgOnloadObj: {},
   // 塔防加载完成图片
-  towerOnloadImg: null,
+  towerOnloadImg: {},
   // 塔防子弹加载完成图片
-  towerBulletOnloadImg: null,
+  towerBulletOnloadImg: {},
   // 判断是否是手机
   isMobile: false,
   // 用于切换关卡克隆出来的一份数据
-  newEnemySource: undefined,
-  newTowerList: undefined
+  newEnemySource: [],
+  newTowerList: []
 })
 const route = useRoute()
 const router = useRouter()
@@ -57,8 +57,8 @@ async function init() {
   // 加载图片
   await allGifToStaticImg()
   state.imgOnloadObj = await loadImage(state.imgObj);
-  state.towerOnloadImg = await loadImage(state.towerList, 'img');
-  state.towerBulletOnloadImg = await loadImage(state.towerList, 'bulletImg');
+  state.towerOnloadImg = await loadImage(state.towerSource, 'img');
+  state.towerBulletOnloadImg = await loadImage(state.towerSource, 'bulletImg');
   state.progress = 100
   handleData()
   setTimeout(() => {
@@ -69,10 +69,10 @@ async function init() {
 function handleData() {
   if(state.isMobile) {
     state.newEnemySource = _.cloneDeep(state.enemySource)
-    state.newTowerList = _.cloneDeep(state.towerList)
+    state.newTowerList = _.cloneDeep(state.towerSource)
   } else {
     state.newEnemySource = state.enemySource
-    state.newTowerList = state.towerList
+    state.newTowerList = state.towerSource
   }
 }
 /** 切换地图 */
@@ -116,7 +116,7 @@ onMounted(() => {
       :isMobile="state.isMobile"
       :mapLevel="state.mapLevel" 
       :enemySource="state.newEnemySource"
-      :towerList="state.newTowerList"
+      :towerSource="state.newTowerList"
       :imgOnloadObj="state.imgOnloadObj"
       :towerOnloadImg="state.towerOnloadImg"
       :towerBulletOnloadImg="state.towerBulletOnloadImg"

@@ -27,4 +27,13 @@ export type TowerType = {
   audioKey: string
   img: string
   bulletImg: string
+  /** 减速 */
+  slow?: TowerSlowType
+}
+
+export type TowerSlowType = {
+  /** 减少速度 */
+  num: number
+  /** 减速持续时间 */
+  time: number
 }

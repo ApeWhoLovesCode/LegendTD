@@ -34,7 +34,7 @@ export default [
   //   : 3, : 3, : 3, : 3, : 3, : 3,
   //   : 4, : 4, : 4, : 4, : 4, : 4,
   // }
-]
+] as {[key in number]: DirectionType}[]
 
 /** 初始格子的位置信息和总格子数量 */
 const mapGridInfoList: MapGridInfo[] = [
@@ -51,10 +51,13 @@ export {
 export type GridInfo = {
   x: number
   y: number
-  x_y: number
+  x_y: DirectionType
 }
 
 export type MapGridInfo = GridInfo & {num: number}
+
+/** 方向 1:左 2:下 3:右 4:上 */
+export type DirectionType = 1 | 2| 3 | 4
   
 /* 
 刚开始的时候，switch判断写法

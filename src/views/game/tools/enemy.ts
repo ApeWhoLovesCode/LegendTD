@@ -1,8 +1,7 @@
-import { EnemyType } from "@/dataSource/enemyData"
-import { EnemyState } from "@/type/game"
+import { EnemyState, EnemyStateType } from "@/type/game"
 import { reactive } from "vue"
 
-const enemy = reactive<EnemyType[]>([])
+const enemyList = reactive<EnemyStateType[]>([])
 const enemyState = reactive<EnemyState>({
   levelEnemy: [],
   createdEnemyNum: 0,
@@ -11,6 +10,6 @@ const enemyState = reactive<EnemyState>({
 })
 
 export {
-  enemy,
+  enemyList,
   enemyState
 }

@@ -13,7 +13,7 @@ const gameConfigState = reactive<GameConfigType>({
   // requestAnimationFrame api的保存对象
   animationFrame: null,
   // 得到 canvas 的 2d 上下文
-  ctx: {},
+  ctx: null,
   // 是否加载完成
   loadingDone: false,
   isGameBeginMask: true,

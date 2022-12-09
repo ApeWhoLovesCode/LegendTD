@@ -19,18 +19,18 @@ export type IndexType = {
   // 敌人资源
   enemySource: EnemyType[],
   // 塔防数据 
-  towerList: TowerType[],
+  towerSource: TowerType[],
   // 加载完成的静态图片
-  imgOnloadObj: ImgLoadType | null,
+  imgOnloadObj: ImgLoadType,
   // 塔防加载完成图片
-  towerOnloadImg: ImgLoadType | null,
+  towerOnloadImg: ImgLoadType,
   // 塔防子弹加载完成图片
-  towerBulletOnloadImg: ImgLoadType | null,
+  towerBulletOnloadImg: ImgLoadType,
   // 判断是否是手机
   isMobile: boolean,
   // 用于切换关卡克隆出来的一份数据
-  newEnemySource?: EnemyType[],
-  newTowerList?: TowerType[]
+  newEnemySource: EnemyType[],
+  newTowerList: TowerType[]
 }
 
 /** 图片加载完成的类型 */

@@ -1,15 +1,15 @@
 /** 用于限制 num 最大和最小不能超过边界值 */
-export function limitRange(num, min, max) {
+export function limitRange(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
 }
 
 /** 生成范围内的随机数 */
-export function randomNum(min, max) {
+export function randomNum(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
 /** 根据概率生成敌人索引 */
-export function createProbNum(isUpdate) {
+export function createProbNum(isUpdate: boolean) {
   // 各个僵尸出现的概率，加起来 100
   const probList = [
     0, 1, 2, 2, 3, 4, 2,
@@ -38,10 +38,11 @@ export function createProbNum(isUpdate) {
       return +index
     }
   }
+  return 0
 }
 
 /** 等待多久 */
-export function waitTime(time) {
+export function waitTime(time: number = 1000): Promise<void> {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve()
