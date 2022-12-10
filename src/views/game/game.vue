@@ -4,7 +4,7 @@
  * 1.敌人图片翻转
  * 2.手机屏幕翻转兼容
  */
-import { nextTick, onMounted, onBeforeUnmount, computed, watch, ref } from 'vue';
+import { nextTick, onMounted, onBeforeUnmount, computed, watch, ref, Ref } from 'vue';
 import _ from 'lodash'
 import { ElMessage } from 'element-plus'
 import {baseInfoState} from './tools/baseInfo'
@@ -14,7 +14,7 @@ import {gameConfigState} from './tools/gameConfig'
 import {gameSkillState} from './tools/gameSkill'
 import {enemyList, enemyState} from './tools/enemy'
 import {towerList, towerState} from './tools/tower'
-import {audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj} from './tools/domRef'
+// import {audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj} from './tools/domRef'
 
 import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
@@ -45,6 +45,20 @@ type GameProps = {
 const props = defineProps<GameProps>()
 
 const canvasRef = ref<HTMLCanvasElement>()
+/** 背景音乐 */
+const audioBgRef = ref<HTMLAudioElement>()
+/** 等级音乐 */
+const audioLevelRef = ref<HTMLAudioElement>()
+/** 技能音乐 */
+const audioSkillRef = ref<HTMLAudioElement>()
+/** 游戏结束音乐 */
+const audioEndRef = ref<HTMLAudioElement>()
+const audioRefObj: {[key in string]: Ref<HTMLAudioElement | undefined>} = {
+  audioBgRef,
+  audioLevelRef,
+  audioSkillRef,
+  audioEndRef
+}
 
 /** ---计算属性--- */
 /** 终点位置 */
@@ -130,12 +144,12 @@ watch(() => baseInfoState.isPause, (val) => {
 watch(() => baseInfoState.level, (val) => {
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
-    if(val < levelEnemyArr.length && !isInfinite) {
+    if(val < levelEnemyArr.length && !isInfinite.value) {
       enemyState.levelEnemy = levelEnemyArr[val]
     } else {
       const list = [0]
       const isUpdate = (val / 2) > levelEnemyArr.length ? true : false
-      const enemyNum = isInfinite ? ~~((val + 1) * 5) : ~~(val * 1.3)
+      const enemyNum = isInfinite.value ? ~~((val + 1) * 5) : ~~(val * 1.3)
       for(let i = 0; i < enemyNum; i++) {
         list.push(createProbNum(isUpdate))
       }
@@ -154,7 +168,7 @@ watch(() => baseInfoState.level, (val) => {
 // 监听敌人的移动
 watch(() => enemyList, (enemyList) => {
   // 敌人已经清空
-  if(!enemyList.length && allEnemyIn && baseInfoState.hp) {
+  if(!enemyList.length && allEnemyIn.value && baseInfoState.hp) {
     nextTick(() => { baseInfoState.level++ })
   }
   for(let t_i in towerList) {
@@ -182,7 +196,7 @@ onBeforeUnmount(() => {
 })
 
 async function init() {
-  if(isInfinite) {
+  if(isInfinite.value) {
     baseInfoState.money = 999999
   }
   gameConfigState.ctx = (canvasRef.value!.getContext("2d") as CanvasRenderingContext2D);
@@ -508,10 +522,10 @@ function moveEnemy(index: number) {
 /** 按间隔时间生成敌人 */
 function makeEnemy() {
   // 当前关卡敌人已经全部上场
-  if(allEnemyIn) return
+  if(allEnemyIn.value) return
   // 暂停回来，间隔时间修改
   keepInterval.set('makeEnemy', () => {
-    if(allEnemyIn) {
+    if(allEnemyIn.value) {
       keepInterval.delete('makeEnemy')
     } else {
       setEnemy()

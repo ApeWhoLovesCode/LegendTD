@@ -88,6 +88,7 @@ function switchMapLevel(index: number) {
 async function allGifToStaticImg() {
   return Promise.all(state.enemySource.map(async (item, index) => {
     state.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
+    console.log('state.enemySource[index].imgList: ', state.enemySource[index].imgList);
     state.progress += progressStep.value
     return 
   })).then(res => {
