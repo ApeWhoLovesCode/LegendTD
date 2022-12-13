@@ -7,30 +7,38 @@
 import { nextTick, onMounted, onBeforeUnmount, computed, watch, ref, Ref } from 'vue';
 import _ from 'lodash'
 import { ElMessage } from 'element-plus'
-import {baseInfoState} from './tools/baseInfo'
-import {audioState, createAudio, playAudio, playDomAudio, removeAudio} from './tools/audioState'
-import {baseDataState} from './tools/baseData'
-import {gameConfigState} from './tools/gameConfig'
-import {gameSkillState} from './tools/gameSkill'
-import {drawEnemy, enemyList, enemyState, removeEnemy, setEnemy, slowEnemy} from './tools/enemy'
-import {towerList, towerState} from './tools/tower'
+
+import {audioState, playAudio} from './tools/audioState';
+import {
+  baseDataState, drawFloorTile, enterAttackScopeList, initAllGrid, initMobileData
+} from './tools/baseData';
+import {
+  baseInfoState, initMovePath, onKeyDown, gamePause
+} from './tools/baseInfo';
+import {
+  drawEnemy, enemyList, enemyState, moveEnemy, setEnemy
+} from './tools/enemy';
+import { gameConfigState } from './tools/gameConfig';
+import { gameSkillState, handleSkill } from './tools/gameSkill';
+import { BuildingImg, HorseImg, SunImg } from './tools/imgSource';
+import {
+  drawAndMoveBullet, hiddenTowerOperation, getMouse, buildTower, saleTower, drawTower, towerList, towerState
+} from './tools/tower';
 // import {audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj} from './tools/domRef'
 
 import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
 import Skill from '@/components/skill.vue'
 
-import { randomNum, createProbNum, waitTime } from '@/utils/tools'
+import { createProbNum, waitTime } from '@/utils/tools'
 import keepInterval from '@/utils/keepInterval'
 
 import levelEnemyArr from '@/dataSource/levelEnemyArr'
-import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
-import { BulletType, EnemyStateType, TowerStateType } from '@/type/game';
+import mapData, { mapGridInfoList } from '@/dataSource/mapData'
 import { TowerType } from '@/dataSource/towerData';
 import { EnemyType } from '@/dataSource/enemyData';
 import { ImgLoadType } from '@/type';
 
-import { BuildingImg, HorseImg, SunImg } from './tools/imgSource'
 
 type GameProps = {
   mapLevel: number
@@ -210,99 +218,7 @@ async function init() {
   gameConfigState.loadingDone = true
   startAnimation()
 }
-/** 点击获取鼠标位置 操作塔防 */
-function getMouse(e: MouseEvent) {
-  e.stopPropagation()
-  const size = baseDataState.gridInfo.size
-  const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
-  // 当前点击的格子的索引值
-  const col = Math.floor(_y / size), row = Math.floor(_x / size)
-  const gridVal = baseDataState.gridInfo.arr[col][row]
-  const left = row * size, top = col * size
-  // 已经有地板或者有建筑了
-  if(gridVal >= 10) {
-    handlerTower(left, top)
-  }
-  if(gridVal) {
-    return
-  }
-  towerState.building.isShow = true
-  towerState.building.left = left
-  towerState.building.top = top
-}
-/** 点击建造塔防 */
-function buildTower(index: number) {
-  const { rate, money, audioKey } = props.towerSource[index]
-  if(baseInfoState.money < money) return
-  baseInfoState.money -= money
-  const {left: x, top: y} = towerState.building
-  const size = baseDataState.gridInfo.size
-  // 将该塔防数据放入场上塔防数组中
-  // 射击的防抖函数
-  const shootFun = _.throttle((eIdList, t_i) => {
-    shootBullet(eIdList, t_i)
-  }, rate, { leading: true, trailing: false })
-  // 处理多个相同塔防的id值
-  const id = Date.now()
-  const tower: TowerStateType = {x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], ...props.towerSource[index], onloadImg: props.towerOnloadImg[index], onloadbulletImg: props.towerBulletOnloadImg[index]}
-  towerList.push(tower)
-  // 用于标记是哪个塔防 10 + index
-  baseDataState.gridInfo.arr[y / size][x / size] = 10 + index
-  drawTower(tower)
-  createAudio(audioKey, String(id))
-}
-/** 售卖防御塔 */
-function saleTower(index: number) {
-  const size = baseDataState.gridInfo.size
-  const {x, y, saleMoney, id} = towerList[index]
-  gameConfigState.ctx.clearRect(x, y, size, size);
-  baseDataState.gridInfo.arr[y / size][x / size] = 0
-  baseInfoState.money += saleMoney
-  removeAudio(id)
-  towerList.splice(index, 1)
-}
-/** 点击背景 隐藏塔防 */
-function hiddenTowerOperation() {
-  if(towerState.building.isShow) towerState.building.isShow = false
-  if(towerState.buildingScope.isShow) towerState.buildingScope.isShow = false
-}
-/** 处理塔防 */
-function handlerTower(x: number, y: number) {
-  // 当前点击的是哪个塔防
-  const towerIndex = towerList.findIndex(item => item.x === x && item.y === y)
-  const {x:left, y:top, r} = towerList[towerIndex]
-  // 展示攻击范围
-  towerState.buildingScope = {isShow: true, left, top, r, towerIndex}
-}
-/** 发射子弹  enemy:敌人索引数组，t_i:塔索引 */
-function shootBullet(eIdList: string[], t_i: number) {
-  // 添加攻击目标的索引
-  towerList[t_i].targetIndexList = eIdList
-  for(const e_id of eIdList) {
-    const enemy = enemyList.find(e => e.id === e_id)
-    if(!enemy) break
-    const {x, y, w, h} = enemy
-    // 敌人中心坐标
-    const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough } = towerList[t_i]
-    const size_2 = baseDataState.gridInfo.size / 2
-    // 子弹初始坐标
-    const begin = {x: t_x + size_2, y: t_y + size_2}
-    // 两坐标间的差值
-    const diff = {x: _x - begin.x, y: _y - begin.y}
-    // 子弹和敌人的距离
-    const distance = powAndSqrt(diff.x, diff.y)
-    const addX = speed * diff.x / distance, addY = speed * diff.y / distance
-    const bullet: BulletType = {x: begin.x, y: begin.y, addX, addY, xy: 0, x_y: distance, e_id}
-    if(isThrough) {
-      bullet.attactIdSet = new Set()
-    }
-    towerList[t_i].bulletArr.push(bullet)
-    if(name === 'PDD') {
-      playDomAudio(id, 0.4)
-    }
-  }
-}
+
 /** 开启动画绘画 */
 function startAnimation() {
   (function go() {
@@ -332,143 +248,7 @@ function startDraw() {
   }
   drawAndMoveBullet()
 }
-/** 画地板 */
-function drawFloorTile() {
-  const size = baseDataState.gridInfo.size
-  for(let f of enemyState.movePath) {
-    gameConfigState.ctx.drawImage(props.imgOnloadObj.floorTile, f.x, f.y, size, size)
-  }
-}
-/** 画塔防 */
-function drawTower(item?: TowerStateType) {
-  const size = baseDataState.gridInfo.size
-  if(item) {
-    gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
-  } else {
-    for(const t of towerList) {
-      gameConfigState.ctx.drawImage(t.onloadImg, t.x, t.y, size, size)
-    }
-  }
-}
-/** 画并处理子弹 */
-function drawAndMoveBullet() {
-  const e_idList = []
-  for(const t_i in towerList) {
-    const t = towerList[t_i]
-    for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
-      const {w, h} = t.bSize
-      // 当前塔防的当前子弹
-      const bItem = t.bulletArr[b_i]
-      let {x, y, addX, addY, e_id, attactIdSet} = bItem
-      // 重新计算子弹离敌人的距离
-      const b_e_distance = bulletEnemyDistance(e_id, +t_i, b_i)
-      if(b_e_distance) {
-        const {addX: _addX, addY: _addY, xy} = b_e_distance
-        addX = _addX, addY = _addY
-        bItem.addX = _addX
-        bItem.addY = _addY
-        bItem.x_y = xy
-      }
-      bItem.x += addX
-      bItem.y += addY
-      bItem.xy += t.speed
-      // 穿透性塔防
-      if(t.isThrough) {
-        const newEid = handleThroughBulletEid({x, y, w, h, attactIdSet})
-        if(newEid) bItem.e_id = newEid
-      }
-      let isAttact = t.isThrough && attactIdSet?.has(e_id)
-      let isDelete = false
-      // 子弹击中敌人
-      if(checkBulletInEnemy({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
-        // 穿透性子弹击中敌人
-        if(t.isThrough) bItem.attactIdSet?.add(e_id)
-        // 清除子弹
-        if(!t.isThrough) {
-          t.bulletArr.splice(b_i, 1)
-          isDelete = true
-        }
-        // 敌人扣血
-        const enemy = enemyList.find(e => e.id === e_id)
-        if(enemy) {
-          enemy.hp.cur -= t.damage
-          if(enemy.hp.cur <= 0) {
-            baseInfoState.money += enemy.reward
-            e_idList.push(e_id)
-            t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
-            if(t.name === '茄子') {
-              playDomAudio(t.id)
-            }
-          } else {
-            // 判断减速
-            if(t.slow) {
-              slowEnemy(e_id, t.slow)
-            }
-          }
-        }
-      } else {
-        if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
-          t.bulletArr.splice(b_i, 1)
-        }
-        gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
-      }
-      // 清除穿透性子弹
-      if(t.isThrough && checkThroughBullet({x,y,w,h})) {
-        t.bulletArr.splice(b_i, 1)
-      }
-    }
-  }
-  // 消灭敌人
-  if(e_idList.length) {
-    removeEnemy(e_idList)
-  }
-}
-/** 处理穿透性子弹攻击的下一个敌人 */
-function handleThroughBulletEid(bItem: any) {
-  const {x, y, w, h, attactIdSet} = bItem
-  for(const eItem of enemyList) {
-    if(!attactIdSet.has(eItem.id) && checkBulletInEnemy({x,y,w,h}, eItem.id)) {
-      return eItem.id
-    }
-  }
-  return false
-}
-/** 判断穿透性子弹是否越界了 */
-function checkThroughBullet(bItem: any) {
-  let {x, y, w, h} = bItem
-  const {w: canvasW, h: canvasH} = gameConfigState.defaultCanvas
-  x = x - w / 2, y = y - h / 2
-  return x + w < 0 || y + h < 0 || x > canvasW || y > canvasH
-}
 
-/** 敌人移动 */
-function moveEnemy(index: number) {
-  const { w, h, curSpeed, speed, curFloorI, id } = enemyList[index]
-  // 敌人到达终点
-  if(curFloorI === baseDataState.floorTile.num - 1) {
-    removeEnemy([id])
-    baseInfoState.hp -= 1
-    playAudio('ma-nansou', 'End')
-    return true
-  }
-  const size = baseDataState.gridInfo.size
-  // 将格子坐标同步到敌人的坐标
-  const { x, y, x_y } = enemyState.movePath[curFloorI]
-  // 敌人需要站在地板中间区域
-  const _y = y - (size - (size * 2 - h - baseDataState.offset.y))
-  const _x = x - (w - size)
-  switch (x_y) {
-    case 1: enemyList[index].x -= curSpeed; break;
-    case 2: enemyList[index].y -= curSpeed; break;
-    case 3: enemyList[index].x += curSpeed; break;
-    case 4: enemyList[index].y += curSpeed; break;
-  }
-  const { x: eX, y: eY } = enemyList[index]
-  // 敌人到达下一个格子
-  if((eX >= _x &&  eX <= _x + speed) && (eY >= _y &&  eY <= _y + speed)) {
-    enemyList[index].curFloorI++
-  }
-}
 /** 按间隔时间生成敌人 */
 function makeEnemy() {
   // 当前关卡敌人已经全部上场
@@ -483,43 +263,6 @@ function makeEnemy() {
   }, baseInfoState.intervalTime)
 }
 
-
-
-/** 初始化所有格子 */
-function initAllGrid() {
-  const { x_num, y_num } = baseDataState.gridInfo
-  const arr: number[][] = []
-  for(let i = 0; i < x_num; i++) {
-    arr.push([])
-    for(let j = 0; j < y_num; j++) {
-      arr[i][j] = 0
-    }
-  }
-  baseDataState.gridInfo.arr = arr
-}
-/** 初始化行动轨迹 */
-function initMovePath() {
-  const size = baseDataState.gridInfo.size
-  // 刚开始就右移了，所有该初始格不会算上去
-  const movePathItem = JSON.parse(JSON.stringify(baseInfoState.mapGridInfoItem))
-  delete movePathItem.num
-  const movePath: GridInfo[]  = []
-  // 控制x y轴的方向 1:左 2:下 3:右 4:上
-  let x_y = movePathItem.x_y
-  for(let i = 0; i < baseDataState.floorTile.num; i++) {
-    const newXY = mapData[props.mapLevel][i]
-    if(newXY) {
-      x_y = newXY
-    }
-    if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
-    else movePathItem.y += x_y === 4 ? size : -size
-    movePathItem.x_y = x_y
-    movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-    baseDataState.gridInfo.arr[movePathItem.y / size][movePathItem.x / size] = 1
-  }
-  baseDataState.terminal = movePath[movePath.length - 1]
-  enemyState.movePath = movePath
-}
 /** 开启创建金钱定时器 */
 function startMoneyTimer() {
   keepInterval.set('startMoneyTimer', () => {
@@ -542,70 +285,7 @@ function getCanvasMargin() {
     gameConfigState.canvasInfo.top = canvasRef.value?.getBoundingClientRect().top ?? 0;
   }, 50);
 }
-/** 返回进入攻击范围的值的数组 */
-function enterAttackScopeList(eList: EnemyStateType[], tower: TowerStateType) {
-  const list = eList.reduce((pre, enemy) => {
-    if(checkValInCircle(enemy, tower)) {
-      pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
-    }
-    return pre
-  }, [] as {curFloorI: number, id: string}[])
-  list.sort((a, b) => b.curFloorI - a.curFloorI)
-  return list.map(item => item.id)
-}
-/** 
- * 计算子弹和敌人的距离
- * 返回 x,y方向需要增加的值， xy: 塔和敌人的距离
- */
-function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
-  const enemy = enemyList.find(e => e.id === e_id)
-  // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
-  if(!enemy || towerList[t_i].isThrough) return
-  const size_2 = baseDataState.gridInfo.size / 2
-  const {x, y, w, h} = enemy
-  // 敌人中心坐标
-  const _x = x + w / 2, _y = y + h / 2
-  const { speed, bulletArr, x: tx, y: ty } = towerList[t_i]
-  // 两坐标间的差值
-  const diff = {x: _x - bulletArr[b_i].x, y: _y - bulletArr[b_i].y}
-  // 子弹和敌人的距离
-  const distance = powAndSqrt(diff.x, diff.y)
-  return {
-    addX: speed * diff.x / distance, addY: speed * diff.y / distance, xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
-  }
-}
-/** 判断敌人中心是否在子弹中 即击中敌人 */
-function checkBulletInEnemy({x, y, w, h}: any, e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
-  if(!enemy) return
-  const {x:ex, y:ey, w:ew, h:eh} = enemy
-  // 绘画子弹时的偏移
-  x -= w / 2, y -= h / 2
-  // 敌人中心
-  const _ex = ex + ew / 2, _ey = ey + eh / 2
-  return _ex > x && _ey > y && (_ex < x + w) && (_ey < y + h)
-}   
-/** 判断值是否在圆内 */
-function checkValInCircle(enemy: EnemyStateType, tower: TowerStateType) {
-  const {x, y, w, h} = enemy
-  const angleList = [
-    calculateDistance(tower, x, y),
-    calculateDistance(tower, x + w, y),
-    calculateDistance(tower, x + w, y + h),
-    calculateDistance(tower, x , y + h),
-  ]
-  return angleList.some(item => item <= tower.r)
-}
-/** 计算点到圆心的距离之间的距离 */
-function calculateDistance(tower: TowerStateType, x: number, y: number) {
-  const {x: _x, y: _y} = tower
-  const size_2 = baseDataState.gridInfo.size / 2
-  return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
-}
-/** 两值平方相加并开方 求斜边 */
-function powAndSqrt(val1: number, val2: number) {
-  return Math.sqrt(Math.pow(val1, 2) + Math.pow(val2, 2))
-}
+
 /** 播放背景音乐 */
 function playBgAudio() {
   baseInfoState.isPlayBgAudio = !baseInfoState.isPlayBgAudio
@@ -616,46 +296,6 @@ function playBgAudio() {
   else audioBgRef.value?.pause()
 }
 
-/** 移动端按比例缩放数据 */
-function initMobileData() {
-  if(!props.isMobile) return
-  console.log('props.isMobile: ', props.isMobile);
-  const p = 0.4
-  function handleDecimals(val: number) {
-    return val * (p * 1000) / 1000
-  }
-  baseDataState.gridInfo.size *= p
-  baseDataState.offset.y *= p
-  gameConfigState.defaultCanvas.w *= p
-  gameConfigState.defaultCanvas.h *= p
-  baseInfoState.mapGridInfoItem.x *= p
-  baseInfoState.mapGridInfoItem.y *= p
-  props.enemySource.forEach(item => {
-    item.w = handleDecimals(item.w)
-    item.h = handleDecimals(item.w)
-    item.curSpeed = handleDecimals(item.curSpeed)
-    item.speed = handleDecimals(item.speed)
-    item.hp.size = handleDecimals(item.hp.size)
-  })
-  props.towerSource.forEach(item => {
-    item.r = handleDecimals(item.r)
-    item.speed = handleDecimals(item.speed)
-    item.bSize.w = handleDecimals(item.bSize.w)
-    item.bSize.h = handleDecimals(item.bSize.h)
-  })
-}
-/** 监听用户的键盘事件 */
-function onKeyDown() {
-  document.onkeydown = (e) => {
-    if(gameConfigState.isGameBeginMask) return
-    switch (e.code) {
-      case "Space":{
-        gamePause()
-        break;
-      } 
-    }
-  };
-}
 /** 开始游戏 */
 function beginGame() {
   audioLevelRef.value?.play()
@@ -663,12 +303,6 @@ function beginGame() {
   gameConfigState.isGameBeginMask = false
   baseInfoState.isPause = false
   ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
-}
-/** 游戏暂停 */
-function gamePause() {
-  if(!baseInfoState.isGameOver) {
-    baseInfoState.isPause = !baseInfoState.isPause;
-  }
 }
 
 </script>

@@ -1,6 +1,6 @@
 import audioData from "@/dataSource/audioData"
 import { GameAudio } from "@/type/game"
-import { reactive } from "vue"
+import { reactive, nextTick } from "vue"
 
 const audioState = reactive<GameAudio>({
   // 所有音乐数据
@@ -46,11 +46,11 @@ function playAudio(audioKey: string, key: 'End' | 'Skill') {
   if(audioState[audio_key] !== audioKey) {
     audioState[audio_key] = audioKey
   }
-  // vue.nextTick(()=>{
-  //   // 调节音量
-  //   audioRefObj[audio_key + 'Ref'].value!.volume = 0.9
-  //   audioRefObj[audio_key + 'Ref'].value!.play()
-  // })
+  nextTick(()=>{
+    // 调节音量
+    // audioRefObj[audio_key + 'Ref'].value!.volume = 0.9
+    // audioRefObj[audio_key + 'Ref'].value!.play()
+  })
 }
 
 export {

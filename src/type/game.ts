@@ -147,3 +147,11 @@ export type GameProps = {
   towerBulletOnloadImg: ImgLoadType
   isMobile: boolean
 }
+
+/** 目标的信息类型 宽高xy */
+export type TargetInfo = {
+  w: number
+  h: number
+  x: number
+  y: number
+}

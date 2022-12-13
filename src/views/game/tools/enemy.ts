@@ -5,7 +5,7 @@ import keepInterval from "@/utils/keepInterval"
 import { limitRange } from "@/utils/tools"
 import _ from "lodash"
 import { reactive } from "vue"
-import { createAudio, playDomAudio, removeAudio } from "./audioState"
+import { createAudio, playAudio, playDomAudio, removeAudio } from "./audioState"
 import { baseDataState } from "./baseData"
 import { baseInfoState } from "./baseInfo"
 import { gameConfigState } from "./gameConfig"
@@ -87,6 +87,35 @@ function setEnemy() {
   enemyState.createdEnemyNum++
   handleEnemySkill(name, enemyItem.id)
   createAudio(audioKey, String(id))
+}
+
+/** 敌人移动 */
+function moveEnemy(index: number) {
+  const { w, h, curSpeed, speed, curFloorI, id } = enemyList[index]
+  // 敌人到达终点
+  if(curFloorI === baseDataState.floorTile.num - 1) {
+    removeEnemy([id])
+    baseInfoState.hp -= 1
+    playAudio('ma-nansou', 'End')
+    return true
+  }
+  const size = baseDataState.gridInfo.size
+  // 将格子坐标同步到敌人的坐标
+  const { x, y, x_y } = enemyState.movePath[curFloorI]
+  // 敌人需要站在地板中间区域
+  const _y = y - (size - (size * 2 - h - baseDataState.offset.y))
+  const _x = x - (w - size)
+  switch (x_y) {
+    case 1: enemyList[index].x -= curSpeed; break;
+    case 2: enemyList[index].y -= curSpeed; break;
+    case 3: enemyList[index].x += curSpeed; break;
+    case 4: enemyList[index].y += curSpeed; break;
+  }
+  const { x: eX, y: eY } = enemyList[index]
+  // 敌人到达下一个格子
+  if((eX >= _x &&  eX <= _x + speed) && (eY >= _y &&  eY <= _y + speed)) {
+    enemyList[index].curFloorI++
+  }
 }
 
 /** 处理敌人技能 */
@@ -188,7 +217,8 @@ export {
   enemyList,
   enemyState,
   drawEnemy,
-  slowEnemy,
   setEnemy,
+  moveEnemy,
   removeEnemy,
+  slowEnemy,
 }
