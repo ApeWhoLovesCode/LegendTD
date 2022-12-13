@@ -3,10 +3,9 @@
  * 可以暂停与继续
  */
 class KeepInterval {
-  // private timerMap: Map<string, TimerMap> = new Map()
-  timerMap = new Map()
+  private timerMap: Map<string, TimerMap> = new Map()
   /** 私有的静态的实例对象 */
-  static _instance
+  static _instance: any
   /** 公有的、静态的、访问该实例对象的方法 */
   static get instance(){
     if(!this._instance){
@@ -15,8 +14,8 @@ class KeepInterval {
     return this._instance
   }
   /** 设置/开启计时器 */
-  set(key, fn, intervalTime = 1000) {
-    if(!this.timerMap.has(key)) {
+  set(key: string, fn?: () => void, intervalTime = 1000) {
+    if(!this.timerMap.has(key) && fn) {
       this.timerMap.set(key, {
         timeout: null,
         interval: null,
@@ -28,7 +27,7 @@ class KeepInterval {
       })
     }
     // console.log(`---${key}---`);
-    const timeItem = this.timerMap.get(key)
+    const timeItem = this.timerMap.get(key)!
     this.stopTime(key)
     timeItem.remainTime -= timeItem.end - timeItem.cur
     timeItem.cur = Date.now()
@@ -43,7 +42,7 @@ class KeepInterval {
     }, timeItem.remainTime)
   }
   /** 关闭计时器 */
-  pause(key) {
+  pause(key: string) {
     const timeItem = this.timerMap.get(key)
     if(timeItem) {
       timeItem.end = Date.now()
@@ -58,7 +57,7 @@ class KeepInterval {
     )
   }
   /** 删除其中一个 */
-  delete(key) {
+  delete(key: string) {
     this.stopTime(key)
     if(this.timerMap.has(key)) {
       this.timerMap.delete(key)
@@ -74,7 +73,7 @@ class KeepInterval {
     }
   }
   /** 停止定时器 */
-  stopTime(key) {
+  stopTime(key: string) {
     const timeItem = this.timerMap.get(key)
     if(timeItem) {
       if(timeItem.timeout) {
@@ -91,8 +90,7 @@ class KeepInterval {
 
 export default KeepInterval.instance
 
-/* 
-interface TimerMap {
+export type TimerMap = {
   // 第一层的setTimeout
   timeout: NodeJS.Timeout | null
   // 第二层的setInterval
@@ -108,4 +106,3 @@ interface TimerMap {
   // 用于setTimeout的剩余时间间隔
   remainTime: number
 }
-*/
