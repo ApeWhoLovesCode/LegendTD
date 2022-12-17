@@ -1,4 +1,5 @@
 import mapData, { GridInfo } from "@/dataSource/mapData";
+import { useSourceStore } from "@/stores/source";
 import { GameBaseInfo } from "@/type/game"
 import { reactive } from "vue"
 import { baseDataState } from "./baseData";
@@ -23,6 +24,7 @@ const baseInfoState = reactive<GameBaseInfo>({
   // 当前关卡地图信息
   mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
 })
+const source = useSourceStore()
 
 /** 初始化行动轨迹 */
 function initMovePath() {
@@ -34,7 +36,7 @@ function initMovePath() {
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
   for(let i = 0; i < baseDataState.floorTile.num; i++) {
-    const newXY = mapData[props.mapLevel][i]
+    const newXY = mapData[source.mapLevel][i]
     if(newXY) {
       x_y = newXY
     }

@@ -38,6 +38,7 @@ import mapData, { mapGridInfoList } from '@/dataSource/mapData'
 import { TowerType } from '@/dataSource/towerData';
 import { EnemyType } from '@/dataSource/enemyData';
 import { ImgLoadType } from '@/type';
+import { useSourceStore } from '@/stores/source';
 
 
 type GameProps = {
@@ -50,7 +51,8 @@ type GameProps = {
   isMobile: boolean
 }
 
-const props = defineProps<GameProps>()
+// const props = defineProps<GameProps>()
+const source = useSourceStore()
 
 const canvasRef = ref<HTMLCanvasElement>()
 /** 背景音乐 */
@@ -112,7 +114,7 @@ const saleTowerStyle = computed(() => {
 })
 /** 是否是无限火力模式 */
 const isInfinite = computed(() => {
-  return props.mapLevel === mapData.length - 1
+  return source.mapLevel === mapData.length - 1
 })
 /** 当前关卡全部敌人已经上场 */
 const allEnemyIn = computed(() => {
@@ -208,7 +210,7 @@ async function init() {
     baseInfoState.money = 999999
   }
   gameConfigState.ctx = (canvasRef.value!.getContext("2d") as CanvasRenderingContext2D);
-  baseInfoState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[props.mapLevel]))
+  baseInfoState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
   initMobileData()
   baseDataState.floorTile.num = baseInfoState.mapGridInfoItem.num
   initAllGrid()
@@ -336,7 +338,7 @@ function beginGame() {
             <div 
               class="tower" 
               :class="{'tower-no-money': baseInfoState.money < item.money}" 
-              v-for="(item, index) in towerSource" 
+              v-for="(item, index) in source.towerSource" 
               :key="index"
               @click="buildTower(index)"
             >

@@ -1,5 +1,6 @@
 import { EnemyType } from "@/dataSource/enemyData"
 import { TowerSlowType } from "@/dataSource/towerData"
+import { useSourceStore } from "@/stores/source"
 import { EnemyState, EnemyStateType } from "@/type/game"
 import keepInterval from "@/utils/keepInterval"
 import { limitRange } from "@/utils/tools"
@@ -18,6 +19,7 @@ const enemyState = reactive<EnemyState>({
   // 敌人的移动轨迹 x坐标, y坐标, x_y(方向): 1:左 2:下 3:右 4:上
   movePath: [],
 })
+const source = useSourceStore()
 
 /** 画敌人 */
 function drawEnemy(index: number) {
@@ -74,12 +76,12 @@ function slowEnemy(e_id: string, t_slow: TowerSlowType) {
 
 /** 生成敌人 */
 function setEnemy() {
-  const enemyItemSource = _.cloneDeep(props.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
+  const enemyItemSource = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
   const size = baseDataState.gridInfo.size
   const {audioKey, name, h} = enemyItemSource
   // 设置敌人的初始位置
   const id = Date.now()
-  const enemyItem: EnemyStateType = {id: audioKey + id, ...enemyItemSource}
+  const enemyItem: EnemyStateType = {...enemyItemSource, id: audioKey + id}
   const {x, y} = baseInfoState.mapGridInfoItem
   enemyItem.x = x
   enemyItem.y = y - (size - (size * 2 - h - baseDataState.offset.y))
@@ -139,7 +141,7 @@ function setEnemySkill(enemyName: string, e_id: string) {
   if(enemyName === '舞王') {
     const total = baseDataState.floorTile.num - 1
     for(let i = 0; i < 4; i++) {
-      const newEnemy = _.cloneDeep(props.enemySource[12])
+      const newEnemy = _.cloneDeep(source.enemySource[12])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
@@ -151,7 +153,7 @@ function setEnemySkill(enemyName: string, e_id: string) {
   } else if(enemyName === '弗利萨') {
     const total = baseDataState.floorTile.num - 1
     for(let i = 0; i < 2; i++) {
-      const newEnemy = _.cloneDeep(props.enemySource[13])
+      const newEnemy = _.cloneDeep(source.enemySource[13])
       switch (i) {
         case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;

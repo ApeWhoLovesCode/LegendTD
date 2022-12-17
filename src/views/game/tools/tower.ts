@@ -1,4 +1,6 @@
+import { useSourceStore } from "@/stores/source";
 import { BulletType, TargetInfo, TowerState, TowerStateType } from "@/type/game";
+import _ from "lodash";
 import { reactive } from "vue";
 import { createAudio, playDomAudio, removeAudio } from "./audioState";
 import { baseDataState, powAndSqrt } from "./baseData";
@@ -11,6 +13,7 @@ const towerState = reactive<TowerState>({
   building: { left: 0, top: 0, isShow: false },
   buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerIndex: 0}
 })
+const source = useSourceStore()
 
 /** 点击获取鼠标位置 操作塔防 */
 function getMouse(e: MouseEvent) {
@@ -34,7 +37,7 @@ function getMouse(e: MouseEvent) {
 }
 /** 点击建造塔防 */
 function buildTower(index: number) {
-  const { rate, money, audioKey } = props.towerSource[index]
+  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = source.towerSource[index]
   if(baseInfoState.money < money) return
   baseInfoState.money -= money
   const {left: x, top: y} = towerState.building
@@ -46,7 +49,7 @@ function buildTower(index: number) {
   }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
   const id = Date.now()
-  const tower: TowerStateType = {x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], ...props.towerSource[index], onloadImg: props.towerOnloadImg[index], onloadbulletImg: props.towerBulletOnloadImg[index]}
+  const tower: TowerStateType = {...ret, x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg}
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[y / size][x / size] = 10 + index

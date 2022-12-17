@@ -1,3 +1,4 @@
+import { useSourceStore } from "@/stores/source";
 import { EnemyStateType, GameBaseData, TowerStateType } from "@/type/game";
 import { reactive } from "vue";
 import { baseInfoState } from "./baseInfo";
@@ -14,11 +15,12 @@ const baseDataState = reactive<GameBaseData>({
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
   gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] },
 })
+const source = useSourceStore()
 
 /** 移动端按比例缩放数据 */
 function initMobileData() {
-  if(!props.isMobile) return
-  console.log('props.isMobile: ', props.isMobile);
+  if(!source.isMobile) return
+  console.log('props.isMobile: ', source.isMobile);
   const p = 0.4
   function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
@@ -29,14 +31,14 @@ function initMobileData() {
   gameConfigState.defaultCanvas.h *= p
   baseInfoState.mapGridInfoItem.x *= p
   baseInfoState.mapGridInfoItem.y *= p
-  props.enemySource.forEach(item => {
+  source.enemySource.forEach(item => {
     item.w = handleDecimals(item.w)
     item.h = handleDecimals(item.w)
     item.curSpeed = handleDecimals(item.curSpeed)
     item.speed = handleDecimals(item.speed)
     item.hp.size = handleDecimals(item.hp.size)
   })
-  props.towerSource.forEach(item => {
+  source.towerSource.forEach(item => {
     item.r = handleDecimals(item.r)
     item.speed = handleDecimals(item.speed)
     item.bSize.w = handleDecimals(item.bSize.w)
@@ -61,7 +63,7 @@ function initAllGrid() {
 function drawFloorTile() {
   const size = baseDataState.gridInfo.size
   for(let f of enemyState.movePath) {
-    gameConfigState.ctx.drawImage(props.imgOnloadObj.floorTile, f.x, f.y, size, size)
+    gameConfigState.ctx.drawImage(source.imgOnloadObj.floor!, f.x, f.y, size, size)
   }
 }
 

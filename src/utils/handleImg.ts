@@ -1,27 +1,16 @@
 // import SuperGif from './libgif.js'
-import { ImgLoadType } from '@/type';
 import SuperGif from 'libgif'
 
 // CanvasImageSource
-/** 加载图片 imgUrl: 图片数组, objKey: 在数组中的key值  */
-export function loadImage(imgUrl: any, objKey?: string) {
-  return new Promise<ImgLoadType>((resolve, reject) => {
+/** 加载图片 imgUrl: 图片地址,   */
+export function loadImage(imgUrl: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
     try {
-      const imgObj: {[key: string]: HTMLImageElement} = {}; // 保存图片资源
-      let tempImg, imgLength = 0, loaded = 0;
-      for (let key in imgUrl) {
-        imgLength++; // 初始化要加载图片的总数
-        tempImg = new Image();
-        tempImg.src = !objKey ? imgUrl[key] : imgUrl[key][objKey];
-        imgObj[key] = tempImg;
-        tempImg.onload = function () {
-          loaded++; // 统计已经加载完毕的图像
-          // 所有的图片都加载完毕
-          if (loaded >= imgLength) {
-            resolve(imgObj)
-          }
-        };
-      }
+      const tempImg = new Image();
+      tempImg.src = imgUrl;
+      tempImg.onload = function () {
+        resolve(tempImg)
+      };
     } catch (error) {
       console.log('error: ', error);
       reject(error)

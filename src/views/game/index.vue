@@ -13,8 +13,10 @@ import { isMobile } from '@/utils/tools'
 import towerData from '@/dataSource/towerData'
 import enemyData from '@/dataSource/enemyData'
 import _ from 'lodash'
-import floorTitleIcon from "@/assets/img/floor-tile.png"
+
 import { IndexType } from '@/type';
+import { useSourceStore } from '@/stores/source';
+import floorData from '@/dataSource/floorData';
 
 const state = reactive<IndexType>({
   title: '保卫大司马',
@@ -25,15 +27,6 @@ const state = reactive<IndexType>({
   isProgressBar: true,
   // 控制游戏区域的显示与隐藏
   isProtectTheHorse: false,
-  // 静态图片资源(地板，阻挡物等)
-  imgObj: {
-    // floorTile: import("@/assets/img/floor-tile.png")
-    floorTile: floorTitleIcon
-  },
-  // 敌人资源
-  enemySource: enemyData,
-  // 塔防资源 
-  towerSource: towerData,
   // 加载完成的静态图片
   imgOnloadObj: {},
   // 塔防加载完成图片
@@ -46,54 +39,63 @@ const state = reactive<IndexType>({
   newEnemySource: [],
   newTowerList: []
 })
+const sourceS = useSourceStore()
 const route = useRoute()
 const router = useRouter()
 const progressStep = computed<number>(() => {
-  return 95 / state.enemySource.length
+  return 95 / sourceS.enemySource.length
 })
 
 /** 初始化加载图片等内容 */
 async function init() {
   // 加载图片
-  await allGifToStaticImg()
-  state.imgOnloadObj = await loadImage(state.imgObj);
-  state.towerOnloadImg = await loadImage(state.towerSource, 'img');
-  state.towerBulletOnloadImg = await loadImage(state.towerSource, 'bulletImg');
+  await handleEnemyImg()
+  sourceS.imgOnloadObj.floor = await loadImage(floorData[0]);
+  await handleTowerImg()
   state.progress = 100
-  handleData()
+  // handleData()
   setTimeout(() => {
     state.isProgressBar = false
     state.isProtectTheHorse = true
   }, 200);
 }
-function handleData() {
-  if(state.isMobile) {
-    state.newEnemySource = _.cloneDeep(state.enemySource)
-    state.newTowerList = _.cloneDeep(state.towerSource)
-  } else {
-    state.newEnemySource = state.enemySource
-    state.newTowerList = state.towerSource
-  }
-}
+// function handleData() {
+//   if(state.isMobile) {
+//     state.newEnemySource = _.cloneDeep(enemyData)
+//     state.newTowerList = _.cloneDeep(towerData)
+//   } else {
+//     state.newEnemySource = enemyData
+//     state.newTowerList = towerData
+//   }
+// }
 /** 切换地图 */
 function switchMapLevel(index: number) {
   if(state.mapLevel === index) return
   state.mapLevel = index
   router.push(`/protectTheHorse/${index}`)
   state.isProtectTheHorse = false
-  handleData()
+  // handleData()
   nextTick(() => {state.isProtectTheHorse = true})
 }
-/** 等待所有的gif图生成静态图片 */
-async function allGifToStaticImg() {
-  return Promise.all(state.enemySource.map(async (item, index) => {
-    state.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
-    console.log('state.enemySource[index].imgList: ', state.enemySource[index].imgList);
+/** 等待所有的敌人的gif图生成静态图片 */
+async function handleEnemyImg() {
+  sourceS.enemySource = _.cloneDeep(enemyData)
+  return Promise.all(enemyData.map(async (item, index) => {
+    sourceS.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
     state.progress += progressStep.value
     return 
   })).then(res => {
     
   })
+}
+/** 处理塔防的图片 */
+async function handleTowerImg() {
+  sourceS.towerSource = _.cloneDeep(towerData)
+  return Promise.all(towerData.map(async (t, index) => {
+    sourceS.towerSource[index].onloadImg = await loadImage(t.img)
+    sourceS.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
+    return
+  })).then(() => {})
 }
 
 onMounted(() => {
@@ -108,19 +110,22 @@ onMounted(() => {
 
 </script>
 
+<!-- 
+:isMobile="state.isMobile"
+:mapLevel="state.mapLevel" 
+:enemySource="state.newEnemySource"
+:towerSource="state.newTowerList"
+:imgOnloadObj="state.imgOnloadObj"
+:towerOnloadImg="state.towerOnloadImg"
+:towerBulletOnloadImg="state.towerBulletOnloadImg"
+-->
+
 <template>
   <div id='protect-horse-index'>
     <div class="back" @click="$router.push('/')">回到首页</div>
     <div class="title">{{state.title}}</div>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
-      :isMobile="state.isMobile"
-      :mapLevel="state.mapLevel" 
-      :enemySource="state.newEnemySource"
-      :towerSource="state.newTowerList"
-      :imgOnloadObj="state.imgOnloadObj"
-      :towerOnloadImg="state.towerOnloadImg"
-      :towerBulletOnloadImg="state.towerBulletOnloadImg"
     />
     <LevelSelect :mapLevel="state.mapLevel" @switchMapLevel="switchMapLevel" />
     <ProgressBar v-if="state.isProgressBar" :progress="state.progress" />
