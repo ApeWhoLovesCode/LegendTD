@@ -6,7 +6,7 @@ import { baseDataState } from "./baseData";
 import { enemyState } from "./enemy";
 import { gameConfigState } from "./gameConfig";
 
-const baseInfoState = reactive<GameBaseInfo>({
+const _baseInfoStateFn = (): GameBaseInfo => ({
   // 游戏结束
   isGameOver: false,
   // 设置游戏的暂停
@@ -24,6 +24,8 @@ const baseInfoState = reactive<GameBaseInfo>({
   // 当前关卡地图信息
   mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
 })
+
+const baseInfoState = reactive<GameBaseInfo>(_baseInfoStateFn())
 const source = useSourceStore()
 
 /** 初始化行动轨迹 */
@@ -73,6 +75,7 @@ function gamePause() {
 
 export {
   baseInfoState,
+  _baseInfoStateFn,
   onKeyDown,
   gamePause,
   initMovePath,

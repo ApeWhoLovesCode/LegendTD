@@ -5,13 +5,15 @@ const routes = [
     path: '/',
     name: 'index',
     component: () => import('../views/index.vue') 
-    // children: []
   },
   {
     path: '/game',
+    redirect: '/game/1'
+  },
+  {
+    path: '/game/:id',
     name: 'game',
     component: () => import('../views/game/index.vue') 
-    // children: []
   }
 ]
 

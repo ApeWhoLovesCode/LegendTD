@@ -5,7 +5,7 @@ import { baseInfoState } from "./baseInfo";
 import { enemyState } from "./enemy";
 import { gameConfigState } from "./gameConfig";
 
-const baseDataState = reactive<GameBaseData>({
+const _baseDataStateFn = () => ({
   // 偏移量y 是用来计算敌人与地板底部的距离 (两个地板(50*2)-敌人(h(75)+y(10))) = 10
   offset: {y: 10},
   // 终点位置
@@ -15,6 +15,8 @@ const baseDataState = reactive<GameBaseData>({
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
   gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] },
 })
+
+const baseDataState = reactive<GameBaseData>(_baseDataStateFn())
 const source = useSourceStore()
 
 /** 移动端按比例缩放数据 */
@@ -104,6 +106,7 @@ function powAndSqrt(val1: number, val2: number) {
 
 export {
   baseDataState,
+  _baseDataStateFn,
   initMobileData,
   initAllGrid,
   drawFloorTile,

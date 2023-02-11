@@ -13,7 +13,7 @@ import {
   baseDataState, drawFloorTile, enterAttackScopeList, initAllGrid, initMobileData
 } from './tools/baseData';
 import {
-  baseInfoState, initMovePath, onKeyDown, gamePause
+  baseInfoState, initMovePath, onKeyDown, gamePause, _baseInfoStateFn
 } from './tools/baseInfo';
 import {
   drawEnemy, enemyList, enemyState, moveEnemy, setEnemy
@@ -39,6 +39,7 @@ import { TowerType } from '@/dataSource/towerData';
 import { EnemyType } from '@/dataSource/enemyData';
 import { ImgLoadType } from '@/type';
 import { useSourceStore } from '@/stores/source';
+import { fa } from 'element-plus/es/locale';
 
 
 type GameProps = {
@@ -141,7 +142,7 @@ watch(() => baseInfoState.hp, (val) => {
   playAudio('ma-gameover', 'Skill')
   audioBgRef.value?.pause()
 })
-
+// 监听暂停
 watch(() => baseInfoState.isPause, (val) => {
   keepInterval.allPause(val)
   if(!val) {
@@ -206,6 +207,7 @@ onBeforeUnmount(() => {
 })
 
 async function init() {
+  initState()
   if(isInfinite.value) {
     baseInfoState.money = 999999
   }
@@ -216,9 +218,18 @@ async function init() {
   initAllGrid()
   initMovePath()
   onKeyDown()
+  source.isGameInit = true
   await waitTime(800)
   gameConfigState.loadingDone = true
   startAnimation()
+}
+
+function initState() {
+  if(source.isGameInit) {
+    Object.assign(baseInfoState, _baseInfoStateFn());
+    enemyList.length = 0
+    towerList.length = 0
+  }
 }
 
 /** 开启动画绘画 */

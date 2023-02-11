@@ -17,11 +17,10 @@ import _ from 'lodash'
 import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
 import floorData from '@/dataSource/floorData';
+import { EnemyStateType, TowerStateType } from '@/type/game';
 
 const state = reactive<IndexType>({
   title: '保卫大司马',
-  // 当前选择的地图
-  mapLevel: 0,
   // 当前加载进度
   progress: 0,
   isProgressBar: true,
@@ -57,7 +56,7 @@ async function init() {
   setTimeout(() => {
     state.isProgressBar = false
     state.isProtectTheHorse = true
-  }, 200);
+  }, 100);
 }
 // function handleData() {
 //   if(state.isMobile) {
@@ -70,16 +69,16 @@ async function init() {
 // }
 /** 切换地图 */
 function switchMapLevel(index: number) {
-  if(state.mapLevel === index) return
-  state.mapLevel = index
-  router.push(`/protectTheHorse/${index}`)
+  if(sourceS.mapLevel === index) return
+  sourceS.mapLevel = index
+  router.push(`/game/${index + 1}`)
   state.isProtectTheHorse = false
   // handleData()
   nextTick(() => {state.isProtectTheHorse = true})
 }
 /** 等待所有的敌人的gif图生成静态图片 */
 async function handleEnemyImg() {
-  sourceS.enemySource = _.cloneDeep(enemyData)
+  sourceS.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
   return Promise.all(enemyData.map(async (item, index) => {
     sourceS.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
     state.progress += progressStep.value
@@ -90,7 +89,7 @@ async function handleEnemyImg() {
 }
 /** 处理塔防的图片 */
 async function handleTowerImg() {
-  sourceS.towerSource = _.cloneDeep(towerData)
+  sourceS.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
   return Promise.all(towerData.map(async (t, index) => {
     sourceS.towerSource[index].onloadImg = await loadImage(t.img)
     sourceS.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
@@ -99,7 +98,7 @@ async function handleTowerImg() {
 }
 
 onMounted(() => {
-  state.mapLevel = +(route?.query?.id ?? '')
+  sourceS.mapLevel = +(route.params.id ?? 1) - 1
   if(isMobile()) {
     console.log('--is mobile--');
     setTheme('phone')
@@ -127,7 +126,7 @@ onMounted(() => {
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
     />
-    <LevelSelect :mapLevel="state.mapLevel" @switchMapLevel="switchMapLevel" />
+    <LevelSelect :mapLevel="sourceS.mapLevel" @switchMapLevel="switchMapLevel" />
     <ProgressBar v-if="state.isProgressBar" :progress="state.progress" />
   </div>
 </template>

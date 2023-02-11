@@ -4,8 +4,6 @@ import { TowerType } from "@/dataSource/towerData"
 /** 首页的数据类型 */
 export type IndexType = {
   title: string,
-  /** 当前选择的地图 */
-  mapLevel: number,
   /** 当前加载进度 */
   progress: number,
   /** 加载进度条的显示与隐藏 */
