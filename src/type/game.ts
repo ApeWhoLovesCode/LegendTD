@@ -6,26 +6,6 @@ import { SkillType } from "@/dataSource/skillData"
 import { TowerType } from "@/dataSource/towerData"
 import { ImgLoadType } from "."
 
-/** 游戏基础信息 */
-export type GameBaseInfo = {
-  /** 游戏结束 */
-  isGameOver: boolean
-  /** 设置游戏的暂停 */
-  isPause: boolean
-  /** 是否播放背景音乐 */
-  isPlayBgAudio: boolean,
-  /** 当前等级 */
-  level: number
-  /** 生命值 */
-  hp: number
-  /** 金钱 */
-  money: number
-  /** 敌人生成间隔时间 */
-  intervalTime: number
-  /** 当前关卡地图信息 */
-  mapGridInfoItem: MapGridInfo
-}
-
 /** 游戏配置信息 */
 export type GameConfigType = {
   /** 浏览器大小变化 */
@@ -56,6 +36,22 @@ export type GameBaseData = {
   floorTile: {size: number, num: number},
   /** 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]] */
   gridInfo: { x_num: number, y_num: number, size: number, arr: number[][] },
+  /** 游戏结束 */
+  isGameOver: boolean
+  /** 设置游戏的暂停 */
+  isPause: boolean
+  /** 是否播放背景音乐 */
+  isPlayBgAudio: boolean,
+  /** 当前等级 */
+  level: number
+  /** 生命值 */
+  hp: number
+  /** 金钱 */
+  money: number
+  /** 敌人生成间隔时间 */
+  intervalTime: number
+  /** 当前关卡地图信息 */
+  mapGridInfoItem: MapGridInfo
 }
 
 /** 敌人的类型 */
