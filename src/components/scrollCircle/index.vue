@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { getLineAngle } from '@/utils/handleCircle';
 import { randomStr } from '@/utils/random';
-import { onMounted, provide, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue';
 import { provideKey, classPrefix } from './provide';
 import { CircleInfoType, CircleTouchType, ScrollCircleProvide } from './type';
 
@@ -38,6 +38,7 @@ const props = withDefaults(defineProps<ScrollCircleProps>(), {
 const provideState = reactive<ScrollCircleProvide>({
   circleR: 0,
   cardDeg: 0,
+  isVertical: false
 })
 provide(provideKey, provideState)
 const idRef = ref(randomStr(classPrefix))
@@ -64,6 +65,23 @@ onMounted(() => {
   setTimeout(() => {
     init()
   }, 10);
+  window.addEventListener('resize', init)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', init)
+})
+
+const circleStyle = computed(() => {
+  let x = '-100%', y = '0'
+  if(provideState.isVertical) {
+    x = '-50%';
+    y = '-50%';
+  }
+  return {
+    width: `${info.circleR * 2}px`,
+    height: `${info.circleR * 2}px`,
+    transform: `translate(calc(${x} + ${systemInfo.screenWidth / 2}px), ${y}) rotate(${rotateDeg.value}deg)`
+  }
 })
 
 watch(() => props.list, () => {
@@ -85,11 +103,12 @@ const init = () => {
   rotateDeg.value = cardDeg.value * props.initCartNum
   provideState.circleR = info.circleR
   provideState.cardDeg = cardDeg.value
+  provideState.isVertical = systemInfo.screenHeight > systemInfo.screenWidth
 }
 
 const onTouchStart = (e: MouseEvent) => {
   touchInfo.isTouch = true
-  touchInfo.startY = e.clientY
+  touchInfo.startY = provideState.isVertical ? e.clientY : -e.clientX
   touchInfo.startDeg = rotateDeg.value
   touchInfo.time = Date.now()
 }
@@ -97,14 +116,14 @@ const onTouchMove = (e: MouseEvent) => {
   if(!touchInfo.isTouch) {
     return
   }
-  const y = e.clientY - touchInfo.startY
+  const y = (provideState.isVertical ? e.clientY : -e.clientX) - touchInfo.startY
   const deg = Math.round(touchInfo.startDeg - info.scrollViewDeg * (y / info.circleWrapHeight))
   rotateDeg.value = deg
 }
 const onTouchEnd = (e: MouseEvent) => {
   const {startY, startDeg, time } = touchInfo
   // 移动的距离
-  const _y = e.clientY - startY
+  const _y = (provideState.isVertical ? e.clientY : -e.clientX) - startY
   // 触摸的时间
   const _time = Date.now() - time
   let deg = rotateDeg.value
@@ -137,12 +156,13 @@ const onTouchEnd = (e: MouseEvent) => {
       @mousemove="onTouchMove"
       @mouseup="onTouchEnd"
       @mouseleave="onTouchEnd"
-      :style="{
+      :style="circleStyle"
+    >
+    <!-- {
         width: `${info.circleR * 2}px`,
         height: `${info.circleR * 2}px`,
         transform: `translate(calc(-50% + ${systemInfo.screenWidth / 2}px), -50%) rotate(${rotateDeg}deg)`
-      }"
-    >
+      } -->
       <slot></slot>
     </div>
   </div>

@@ -8,7 +8,7 @@ const state = reactive<{list: any[]}>({
 })
 
 onMounted(() => {
-  state.list = new Array(23).fill('Tops').map((a,i) => (
+  state.list = new Array(24).fill('Tops').map((a,i) => (
     {_id: 'id' + i, title: a + i}
   ))
 })
@@ -44,7 +44,6 @@ onMounted(() => {
     width: 135px;
     height: 174px;
     border: 3px solid #000;
-    background: skyblue;
     border-radius: 12px;
   }
 }

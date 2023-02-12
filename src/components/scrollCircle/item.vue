@@ -12,9 +12,10 @@ const props = defineProps<ScrollRotateItemProps>()
 const provideState = inject<ScrollCircleProvide>(provideKey)
 
 const cardStyle = computed(() => {
-  const deg = 90 + (provideState?.cardDeg ?? 1) * props.index
-  const top = (provideState?.circleR ?? 1) * (1 - Math.cos(deg * Math.PI / 180))
-  const left = (provideState?.circleR ?? 1) * (1 - Math.sin(deg * Math.PI / 180))
+  const {cardDeg = 1, circleR = 1, isVertical} = provideState as ScrollCircleProvide 
+  const deg = (isVertical ? 90 : 0) + cardDeg * props.index
+  const top = circleR * (1 - Math.cos(deg * Math.PI / 180))
+  const left = circleR * (1 - Math.sin(deg * Math.PI / 180))
   const rotate = 90 - deg
   return {top: `${top}px`, left: `${left}px`, transform: `translate(-50%, -50%) rotate(${rotate}deg)`}
 })
