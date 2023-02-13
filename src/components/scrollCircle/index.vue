@@ -5,11 +5,6 @@ import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } f
 import { provideKey, classPrefix } from './provide';
 import { CircleInfoType, CircleTouchType, ScrollCircleProvide } from './type';
 
-const systemInfo = {
-  screenWidth: window.innerWidth,
-  screenHeight: window.innerHeight
-}
-
 type ScrollCircleProps = {
   /** 传入卡片的数组 */
   list?: any[];
@@ -61,16 +56,6 @@ const cardDeg = ref<number>(0);
 /** 旋转的度数 */
 const rotateDeg = ref<number>(0);
 
-onMounted(() => {
-  setTimeout(() => {
-    init()
-  }, 10);
-  window.addEventListener('resize', init)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', init)
-})
-
 const circleStyle = computed(() => {
   let x = '-100%', y = '0'
   if(provideState.isVertical) {
@@ -80,30 +65,46 @@ const circleStyle = computed(() => {
   return {
     width: `${info.circleR * 2}px`,
     height: `${info.circleR * 2}px`,
-    transform: `translate(calc(${x} + ${systemInfo.screenWidth / 2}px), ${y}) rotate(${rotateDeg.value}deg)`
+    transform: `translate(calc(${x} + ${window.innerWidth / 2}px), ${y}) rotate(${rotateDeg.value}deg)`
   }
 })
 
 watch(() => props.list, () => {
-  init()
+  init(true)
 })
 
-const init = () => {
+onMounted(() => {
+  setTimeout(() => {
+    init(true)
+  }, 10);
+  window.addEventListener('resize', resizeFn)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resizeFn)
+})
+
+const resizeFn = () => {
+  init()
+}
+
+const init = (isInit = false) => {
   const cWrapH = document.querySelector(`.${classPrefix}-wrap`)?.clientHeight ?? 0
   info.circleWrapHeight = cWrapH
   const cInfo = document.querySelector(`.${classPrefix}-cardWrap`)
   info.cardH = cInfo?.clientHeight ?? 0
   const cW = cInfo?.clientWidth ?? 0
-  info.circleR = Math.round(systemInfo.screenHeight)
+  info.circleR = Math.round(provideState.isVertical ? window.innerHeight : window.innerWidth)
   // 卡片间的角度
   cardDeg.value = 2 * 180 * Math.atan(((info.cardH ?? 0) / 2) / (info.circleR - cW / 2)) / Math.PI + props.cardAddDeg
   // 屏幕高度对应的圆的角度
   info.scrollViewDeg = getLineAngle(info.circleWrapHeight, info.circleR)
   console.log(`可滚动区域高度: ${info.circleWrapHeight};\n卡片高度: ${info.cardH};\n圆的半径: ${info.circleR};\n卡片间的角度: ${cardDeg.value}度;\n可滚动区域占的度数: ${info.scrollViewDeg}度;`);
-  rotateDeg.value = cardDeg.value * props.initCartNum
   provideState.circleR = info.circleR
   provideState.cardDeg = cardDeg.value
-  provideState.isVertical = systemInfo.screenHeight > systemInfo.screenWidth
+  provideState.isVertical = window.innerHeight > window.innerWidth
+  if(isInit) {
+    rotateDeg.value = cardDeg.value * props.initCartNum
+  }
 }
 
 const onTouchStart = (e: MouseEvent) => {
@@ -158,11 +159,6 @@ const onTouchEnd = (e: MouseEvent) => {
       @mouseleave="onTouchEnd"
       :style="circleStyle"
     >
-    <!-- {
-        width: `${info.circleR * 2}px`,
-        height: `${info.circleR * 2}px`,
-        transform: `translate(calc(-50% + ${systemInfo.screenWidth / 2}px), -50%) rotate(${rotateDeg}deg)`
-      } -->
       <slot></slot>
     </div>
   </div>

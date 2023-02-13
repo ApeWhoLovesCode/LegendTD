@@ -23,11 +23,11 @@ import Skill from '@/components/skill.vue'
 import { createProbNum, limitRange, randomNum, waitTime } from '@/utils/tools'
 import keepInterval from '@/utils/keepInterval'
 
-import levelEnemyArr from '@/dataSource/levelEnemyArr'
+import levelData from '@/dataSource/levelData'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
 import { useSourceStore } from '@/stores/source';
 import { EnemyType } from '@/dataSource/enemyData';
-import { EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
+import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
 
 // 全局资源
@@ -126,11 +126,23 @@ watch(() => baseDataState.isPause, (val) => {
 watch(() => baseDataState.level, (val) => {
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
-    if(val < levelEnemyArr.length && !isInfinite.value) {
-      enemyState.levelEnemy = levelEnemyArr[val]
+    // 处理地图关卡中的敌人数据
+    let enemyDataArr: Array<number[]> | undefined
+    for(let i = 0; i < source.mapLevel; i++) { 
+      if(levelData[source.mapLevel]?.enemyArr) {
+        enemyDataArr = levelData[source.mapLevel].enemyArr
+        break
+      }
+    }
+    if(!enemyDataArr) {
+      enemyDataArr = levelData[0].enemyArr
+    }
+    // 获取地图关卡中的敌人数据
+    if(val < enemyDataArr.length && !isInfinite.value) {
+      enemyState.levelEnemy = enemyDataArr[val]
     } else {
       const list = [0]
-      const isUpdate = (val / 2) > levelEnemyArr.length ? true : false
+      const isUpdate = (val / 2) > enemyDataArr.length ? true : false
       const enemyNum = isInfinite.value ? ~~((val + 1) * 5) : ~~(val * 1.3)
       for(let i = 0; i < enemyNum; i++) {
         list.push(createProbNum(isUpdate))
