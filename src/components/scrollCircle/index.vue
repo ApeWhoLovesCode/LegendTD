@@ -131,9 +131,9 @@ const init = (isInit = false) => {
   console.log(`可滚动区域高度: ${info.circleWrapHeight};\n卡片高度: ${info.cardH};\n圆的半径: ${info.circleR};\n卡片间的角度: ${cardDeg.value}度;\n可滚动区域占的度数: ${info.scrollViewDeg}度;`);
   provideState.circleR = info.circleR
   provideState.cardDeg = cardDeg.value
+  props.onPageChange?.({...pageState})
   if(isInit) {
     rotateDeg.value = cardDeg.value * props.initCartNum
-    props.onPageChange?.({...pageState})
   }
 }
 
@@ -154,7 +154,6 @@ const onTouchMove = (event: MouseEvent | TouchEvent) => {
   rotateDeg.value = deg
 }
 const onTouchEnd = (event: MouseEvent | TouchEvent) => {
-  console.log('onTouchEnd: ');
   const e = changeEvent(event)
   if (!isMobile()) {
     document.removeEventListener('mousemove', onTouchMove, true);
