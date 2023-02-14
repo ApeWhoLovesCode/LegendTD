@@ -80,8 +80,8 @@ export default {
   }
 }
 </script>
-<style lang='scss' scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 .com-progress-bar {
   position: fixed;
   left: 0;

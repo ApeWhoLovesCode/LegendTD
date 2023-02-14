@@ -38,22 +38,22 @@ export default {
   }
 }
 </script>
-<style lang='scss' scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 .com-level-select {
   position: fixed;
-  left: calc($size * -1);
+  left: calc(@size * -1);
   top: 50%;
   background: rgba(109, 218, 245, 0.8);
-  padding: calc($size * 0.3);
+  padding: calc(@size * 0.3);
   border-radius: 0 8px 8px 0;
   transform: translate(0, -50%);
   transition: 0.2s transform;
   &:hover {
-    transform: translate($size, -50%);
+    transform: translate(@size, -50%);
   }
   .map-title {
-    font-size: calc($size * 0.4);
+    font-size: calc(@size * 0.4);
     font-weight: bold;
     color: #fff;
     text-align: center;
@@ -63,12 +63,12 @@ export default {
     color: #fff;
     font-size: 18px;
     cursor: pointer;
-    width: $size;
-    height: $size;
+    width: @size;
+    height: @size;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: calc($size * 0.2);
+    border-radius: calc(@size * 0.2);
     margin-bottom: 12px;
     &:hover {
       background: rgba(109, 218, 245, 0.7);

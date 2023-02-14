@@ -50,8 +50,8 @@ export default {
   }
 }
 </script>
-<style lang='scss' scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 .com-skill {
   .skill-wrap {
     position: absolute;
@@ -60,7 +60,7 @@ export default {
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    height: calc($size - 2px);
+    height: calc(@size - 2px);
     background: #d2f5fa;
     box-shadow: 3px -2px 14px 2px #0e80c7;
     border-top-left-radius: 8px;
@@ -68,22 +68,22 @@ export default {
     padding: 0 20px;
     user-select: none;
     .skill-item {
-      $smallSize: calc($size * 0.8);
-      $fontSize: calc($size * 0.64);
+      @smallSize: calc(@size * 0.8);
+      @fontSize: calc(@size * 0.64);
       position: relative;
       margin-right: 15px;
       border-radius: 8px;
       display: inline-block;
-      width: $smallSize;
-      height: $smallSize;
+      width: @smallSize;
+      height: @smallSize;
       text-align: center;
-      line-height: $smallSize;
+      line-height: @smallSize;
       cursor: pointer;
       &:hover {
         background: rgba(216, 216, 216, 0.4);
       }
       .skill {
-        font-size: $fontSize;
+        font-size: @fontSize;
         color: #5bb3e5;
         &:hover {
           color: #157ab5;
@@ -95,7 +95,7 @@ export default {
         top: 0;
         bottom: 0;
         right: 0;
-        font-size: $fontSize;
+        font-size: @fontSize;
         color: rgba(85, 174, 247, 0.5);
         background: rgba(216, 216, 216, 0.3);
         border-radius: 50%;
@@ -106,17 +106,17 @@ export default {
       }
     }
   }
-  $boomSize: calc($size * 80);
+  @boomSize: calc(@size * 80);
   .skill-boom {
     position: absolute;
     top: 50%;
     left: 50%;
     z-index: 1;
     transform: translate(-50%, -50%);
-    width: calc($size * 8);
-    height: calc($size * 8);
+    width: calc(@size * 8);
+    height: calc(@size * 8);
     background: url(../assets/img/boom.png) no-repeat;
-    background-size: $boomSize 100%;
+    background-size: @boomSize 100%;
     background-position: 0 0;
     animation: skill-boom 1.5s steps(10) forwards;
   }
@@ -125,10 +125,10 @@ export default {
       background-position: 0 0;
     }
     90% {
-      background-position: calc($boomSize * -1) 0;
+      background-position: calc(@boomSize * -1) 0;
     }
     100% {
-      background-position: calc($boomSize * -1) 0;
+      background-position: calc(@boomSize * -1) 0;
       display: none;
     }
   }
@@ -137,7 +137,7 @@ export default {
     top: 50%;
     z-index: 1;
     transform: translate(-50%, -50%);
-    width: calc($size * 10);
+    width: calc(@size * 10);
     animation: skill-rush 2s linear forwards;
   }
   @keyframes skill-rush {

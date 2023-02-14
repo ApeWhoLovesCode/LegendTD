@@ -131,7 +131,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style lang='scss'>
+<style lang='less'>
 #protect-horse-index {
   position: relative;
   box-sizing: border-box;

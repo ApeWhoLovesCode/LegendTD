@@ -28,7 +28,7 @@ const cardStyle = computed(() => {
   </div>
 </template>
 
-<style lang='scss' scoped>
+<style lang='less' scoped>
 .protect-scroll-circle-cardWrap {
   position: absolute;
   transform-origin: center center;

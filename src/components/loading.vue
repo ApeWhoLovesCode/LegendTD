@@ -13,8 +13,8 @@ export default {
   name: '',
 }
 </script>
-<style lang='scss' scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 // 加载中
 .loading-wrap {
   display: flex;

@@ -4,18 +4,26 @@ import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import levelData from '@/dataSource/levelData';
 
-/** 一大关的关卡数量（一圈的数量） */
-const HIGHER_LEVEL_NUM = 16
-// 第几大关
-const circleIndex = ref(0)
-
-const state = reactive<{list: any[]}>({
-  list: []
+const state = reactive({
+  // 总的数据列表
+  list: [] as any[],
+  // 遍历的数据列表
+  items: [] as any[],
+  pageNum: 1,
+  pageSize: 20
 })
 
 const init = () => {
-  const preIndex = circleIndex.value * HIGHER_LEVEL_NUM
-  state.list = levelData.slice(preIndex, preIndex + HIGHER_LEVEL_NUM)
+  const preIndex = (state.pageNum - 1) * state.pageSize
+  state.items = levelData.slice(preIndex, preIndex + state.pageSize)
+  state.list = levelData
+}
+
+const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) => {
+  const preIndex = (pageNum - 1) * pageSize
+  state.items = levelData.slice(preIndex, preIndex + pageSize)
+  state.pageNum = pageNum
+  state.pageSize = pageSize
 }
 
 onMounted(() => {
@@ -26,21 +34,25 @@ onMounted(() => {
 
 <template>
   <div class='page-index'>
-    <ScrollCircle :list="state.list" :height="`calc(100vh)`">
+    <ScrollCircle 
+      :list="state.list" 
+      :height="`calc(100vh)`"
+      :on-page-change="onPageChange"
+    >
       <ScrollCircleItem 
-        v-for="(item, i) in state.list" 
-        :key="item._id" 
+        v-for="(item, i) in state.items" 
+        :key="i" 
         :index="i"
       >
         <div class="card">
-          <div class="cardTitle">{{ i }}</div>
+          <div class="cardTitle">页码：{{ state.pageNum }}-{{ i }}</div>
         </div>
       </ScrollCircleItem>
     </ScrollCircle>
   </div>
 </template>
 
-<style lang='scss' scoped>
+<style lang='less' scoped>
 .page-index {
   position: relative;
   width: 100vw;

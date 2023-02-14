@@ -895,8 +895,8 @@ function onKeyDown() {
   </div>
 </template>
 
-<style lang="scss" scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 #protect-horse {
   .game-wrap {
     position: relative;
@@ -909,7 +909,7 @@ function onKeyDown() {
     border-radius: 8px;
     .canvas-wrap {
       position: relative;
-      padding: $size;
+      padding: @size;
       background-image: radial-gradient(circle 500px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
       border-radius: 4px;
       overflow: hidden;
@@ -917,25 +917,25 @@ function onKeyDown() {
         position: absolute;
         user-select: none;
         .add-icon {
-          width: $size;
-          height: $size;
+          width: @size;
+          height: @size;
         }
         .tower-wrap {
           position: absolute;
-          top: calc($size + 8px);
-          left: calc(50% - ($size * 2 + $size / 2));
+          top: calc(@size + 8px);
+          left: calc(50% - (@size * 2 + @size / 2));
           display: grid;
           gap: 10px;
-          grid-template-columns: repeat(4, $size);
-          grid-template-rows: repeat(2, $size);
+          grid-template-columns: repeat(4, @size);
+          grid-template-rows: repeat(2, @size);
           background: rgba(255, 255, 255, .4);
           border-radius: 16px;
           padding: 10px;
           z-index: 99;
           .tower {
             position: relative;
-            width: $size;
-            height: $size;
+            width: @size;
+            height: @size;
             border-radius: 8px;
             border: 2px solid #fff;
             margin-bottom: 10px;
@@ -951,7 +951,7 @@ function onKeyDown() {
               right: 0;
               bottom: 0;
               text-align: center;
-              font-size: calc($size * 0.26);
+              font-size: calc(@size * 0.26);
               color: #fff;
               background: rgba(0, 0, 0, .4);
             }
@@ -961,8 +961,8 @@ function onKeyDown() {
           }
         }
         .tower-wrap-row {
-          grid-template-rows: repeat(4, $size);
-          grid-template-columns: repeat(2, $size);
+          grid-template-rows: repeat(4, @size);
+          grid-template-columns: repeat(2, @size);
           grid-auto-flow: column;
           width: auto;
           .tower {
@@ -971,17 +971,17 @@ function onKeyDown() {
           }
         }
         .tower-wrap-row-top {
-          top: calc(50% - ($size * 2 + $size / 2));
+          top: calc(50% - (@size * 2 + @size / 2));
         }
         .tower-wrap-left {
-          left: calc($size + 8px);
+          left: calc(@size + 8px);
         }
         .tower-wrap-right {
-          right: calc($size + 8px);
+          right: calc(@size + 8px);
           left: auto;
         }
         .tower-wrap-bottom {
-          bottom: calc($size + 8px);
+          bottom: calc(@size + 8px);
           top: auto;
         }
       }
@@ -1030,14 +1030,14 @@ function onKeyDown() {
         }
         .terminal-icon {
           display: block;
-          width: calc($size * 2.5);
+          width: calc(@size * 2.5);
         }
         .money-icon {
           position: absolute;
           top: 0;
           left: 0;
-          width: calc($size * 1.6);
-          height: calc($size * 1.6);
+          width: calc(@size * 1.6);
+          height: calc(@size * 1.6);
         }
       }
       .gameover-wrap {
@@ -1059,8 +1059,8 @@ function onKeyDown() {
               display: flex;
               justify-content: center;
               align-items: center;
-              width: calc($size * 3);
-              height: calc($size * 3);
+              width: calc(@size * 3);
+              height: calc(@size * 3);
               border-radius: 50%;
               background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
               cursor: pointer;
@@ -1071,7 +1071,7 @@ function onKeyDown() {
               }
               .iconfont {
                 color: #fff;
-                font-size: calc($size * 1.6);
+                font-size: calc(@size * 1.6);
                 animation: pulse 2s linear infinite;
               }
               @keyframes pulse {

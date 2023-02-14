@@ -61,16 +61,16 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-@import '@/style.scss';
+<style lang='less' scoped>
+@import '@/style.less';
 .com-game-navbar {
-  $smallSize: calc($size * 0.6);
-  $fontSize: calc($size * 0.32);
+  @smallSize: calc(@size * 0.6);
+  @fontSize: calc(@size * 0.32);
   position: absolute;
   top: 0;
-  left: $smallSize;
-  right: $smallSize;
-  height: calc($size * 0.9);
+  left: @smallSize;
+  right: @smallSize;
+  height: calc(@size * 0.9);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -84,30 +84,30 @@ export default {
     position: relative;
     .icon-wrap {
       display: inline-block;
-      width: $smallSize;
-      height: $smallSize;
-      line-height: $smallSize;
+      width: @smallSize;
+      height: @smallSize;
+      line-height: @smallSize;
       text-align: center;
       background: linear-gradient(to left top, #fffc00, #fefdee);
-      border-radius: $size;
+      border-radius: @size;
       border: 1px solid #d8b356;
       .iconfont {
-        font-size: $fontSize;
+        font-size: @fontSize;
         color: #c87a1a;
       }
     }
     .money {
       margin-left: 10px;
-      font-size: $fontSize;
+      font-size: @fontSize;
       font-weight: bold;
-      color: $fontSize;
+      color: @fontSize;
     }
     .add-money {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: calc($fontSize * 0.9);
-      color: $fontSize;
+      font-size: calc(@fontSize * 0.9);
+      color: @fontSize;
       font-weight: bold;
       margin-left: 6px;
       opacity: 0;
@@ -115,15 +115,15 @@ export default {
     }
     @keyframes add-money {
       0% {
-        right: calc($size * -0.6);
+        right: calc(@size * -0.6);
         opacity: 0;
       }
       50% {
-        right: calc($size * -0.7);
+        right: calc(@size * -0.7);
         opacity: 1;
       }
       100% {
-        right: calc($size * -0.8);
+        right: calc(@size * -0.8);
         opacity: 0;
       }
     }
@@ -131,27 +131,27 @@ export default {
   .center {
     box-sizing: border-box;
     display: inline-block;
-    width: calc($size * 4);
+    width: calc(@size * 4);
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: $fontSize;
+    font-size: @fontSize;
     font-weight: bold;
-    color: $fontSize;
+    color: @fontSize;
     background: #1781c2;
-    border-radius: calc($size * 0.8);
-    border: 4px solid $fontSize;
+    border-radius: calc(@size * 0.8);
+    border: 4px solid @fontSize;
     box-shadow: -7px 4px 14px #1781c2,
       inset 3px 4px 6px #082a74;
     .fff-color {
       color: #fff;
     }
     .level {
-      font-size: $fontSize;
+      font-size: @fontSize;
     }
     .level2 {
-      font-size: calc($size * 0.48);
+      font-size: calc(@size * 0.48);
       line-height: 24px;
       margin-right: 8px;
     }
@@ -159,11 +159,11 @@ export default {
   .right {
     .icon-wrap {
       display: inline-block;
-      width: $smallSize;
-      height: $smallSize;
-      line-height: $smallSize;
+      width: @smallSize;
+      height: @smallSize;
+      line-height: @smallSize;
       text-align: center;
-      border-radius: $size;
+      border-radius: @size;
       background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
       margin-right: 20px;
       cursor: pointer;
@@ -175,7 +175,7 @@ export default {
         box-shadow: 2px 2px 5px 1px #439ce9;
       }
       .iconfont {
-        font-size: $fontSize;
+        font-size: @fontSize;
         color: #fff;
       }
     }
