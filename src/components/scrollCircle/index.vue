@@ -4,7 +4,8 @@ import { randomStr } from '@/utils/random';
 import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue';
 import { provideKey, classPrefix } from './provide';
 import { CircleInfoType, CircleTouchType, ScrollCircleProvide } from './type';
-import {classBem} from '@/utils/handleDom'
+import {changeEvent, classBem} from '@/utils/handleDom'
+import { isMobile } from '@/utils/tools';
 
 type ScrollCircleProps = {
   /** 传入卡片的数组 */
@@ -38,8 +39,6 @@ const props = withDefaults(defineProps<ScrollCircleProps>(), {
   height: '100%',
   initCartNum: 3,
   isAverage: true,
-  pageNum: 1,
-  pageSize: 10,
 })
 const provideState = reactive<ScrollCircleProvide>({
   circleR: 0,
@@ -110,6 +109,7 @@ const init = (isInit = false) => {
   const cInfo = document.querySelector(`.${idRef.value} .${classPrefix}-cardWrap`)
   info.cardH = cInfo?.clientHeight ?? 0
   const cW = cInfo?.clientWidth ?? 0
+  provideState.isVertical = window.innerHeight > window.innerWidth
   info.circleR = Math.round(provideState.isVertical ? window.innerHeight : window.innerWidth)
   // 每张卡片所占用的角度
   const _cardDeg = 2 * 180 * Math.atan(((info.cardH ?? 0) / 2) / (info.circleR - cW / 2)) / Math.PI + props.cardAddDeg
@@ -131,47 +131,54 @@ const init = (isInit = false) => {
   console.log(`可滚动区域高度: ${info.circleWrapHeight};\n卡片高度: ${info.cardH};\n圆的半径: ${info.circleR};\n卡片间的角度: ${cardDeg.value}度;\n可滚动区域占的度数: ${info.scrollViewDeg}度;`);
   provideState.circleR = info.circleR
   provideState.cardDeg = cardDeg.value
-  provideState.isVertical = window.innerHeight > window.innerWidth
   if(isInit) {
     rotateDeg.value = cardDeg.value * props.initCartNum
     props.onPageChange?.({...pageState})
   }
 }
 
-const onTouchStart = (e: MouseEvent) => {
-  touchInfo.isTouch = true
+const onTouchStart = (event: MouseEvent | TouchEvent) => {
+  const e = changeEvent(event)
+  if (!isMobile()) {
+    document.addEventListener('mousemove', onTouchMove, true);
+    document.addEventListener('mouseup', onTouchEnd, true);
+  }
   touchInfo.startY = provideState.isVertical ? e.clientY : -e.clientX
   touchInfo.startDeg = rotateDeg.value
   touchInfo.time = Date.now()
 }
-const onTouchMove = (e: MouseEvent) => {
-  if(!touchInfo.isTouch) {
-    return
-  }
-  const y = (provideState.isVertical ? e.clientY : -e.clientX) - touchInfo.startY
-  const deg = Math.round(touchInfo.startDeg - info.scrollViewDeg * (y / info.circleWrapHeight))
+const onTouchMove = (event: MouseEvent | TouchEvent) => {
+  const e = changeEvent(event)
+  const xy = (provideState.isVertical ? e.clientY : -e.clientX) - touchInfo.startY
+  const deg = Math.round(touchInfo.startDeg - info.scrollViewDeg * (xy / info.circleWrapHeight))
   rotateDeg.value = deg
 }
-const onTouchEnd = (e: MouseEvent) => {
+const onTouchEnd = (event: MouseEvent | TouchEvent) => {
+  console.log('onTouchEnd: ');
+  const e = changeEvent(event)
+  if (!isMobile()) {
+    document.removeEventListener('mousemove', onTouchMove, true);
+    document.removeEventListener('mouseup', onTouchEnd, true);
+  }
   const {startY, startDeg, time } = touchInfo
   // 移动的距离
-  const _y = (provideState.isVertical ? e.clientY : -e.clientX) - startY
+  const xy = (provideState.isVertical ? e.clientY : -e.clientX) - startY
   // 触摸的时间
   const _time = Date.now() - time
   let deg = rotateDeg.value
   // 触摸的始末距离大于卡片高度的一半，并且触摸时间小于300ms，则触摸距离和时间旋转更多
-  if((Math.abs(_y) > info.cardH / 2) && (_time < 300)) {
+  if((Math.abs(xy) > info.cardH / 2) && (_time < 300)) {
     // 增加角度变化 
     const v = _time / 300
-    const changeDeg = info.scrollViewDeg * (_y / info.circleWrapHeight) / v
+    const changeDeg = info.scrollViewDeg * (xy / info.circleWrapHeight) / v
     deg = Math.round(startDeg - changeDeg)
   }
-  // 处理转动的角度为：卡片的角度的倍数
+  // 处理转动的角度为：卡片的角度的倍数 (xy > 0 表示向上滑动)
   let mathMethods: 'ceil' | 'floor' = 'ceil'
-  if(Math.abs(_y) < info.cardH / 3) {
-    mathMethods = _y > 0 ? 'ceil' : 'floor'
+  if(Math.abs(xy) < info.cardH / 3) {
+    mathMethods = xy > 0 ? 'ceil' : 'floor'
   } else {
-    mathMethods = _y > 0 ? 'floor' : 'ceil'
+    mathMethods = xy > 0 ? 'floor' : 'ceil'
   }
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg
@@ -208,9 +215,10 @@ const onPageChange = (isAdd?: boolean) => {
     <div 
       :class="`${classPrefix}-area`"
       @mousedown="onTouchStart"
-      @mousemove="onTouchMove"
-      @mouseup="onTouchEnd"
-      @mouseleave="onTouchEnd"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
+      @touchcancel="onTouchEnd"
       :style="circleStyle"
     >
       <slot></slot>
