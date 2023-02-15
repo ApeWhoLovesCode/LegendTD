@@ -195,9 +195,12 @@ async function init() {
     baseDataState.money = 999999
   }
   gameConfigState.ctx = (canvasRef.value!.getContext("2d") as CanvasRenderingContext2D);
-  baseDataState.mapGridInfoItem = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
-  initMobileData()
+  const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
+  item.x *= baseDataState.gridInfo.size
+  item.y *= baseDataState.gridInfo.size
+  baseDataState.mapGridInfoItem = item
   baseDataState.floorTile.num = baseDataState.mapGridInfoItem.num
+  initMobileData()
   initAllGrid()
   initMovePath()
   onKeyDown()
@@ -699,7 +702,7 @@ function beginGame() {
 /** 移动端按比例缩放数据 */
 function initMobileData() {
   if(!source.isMobile) return
-  console.log('props.isMobile: ', source.isMobile);
+  console.log('isMobile: ', source.isMobile);
   const p = 0.4
   function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
@@ -708,8 +711,6 @@ function initMobileData() {
   baseDataState.offset.y *= p
   gameConfigState.defaultCanvas.w *= p
   gameConfigState.defaultCanvas.h *= p
-  baseDataState.mapGridInfoItem.x *= p
-  baseDataState.mapGridInfoItem.y *= p
   source.enemySource.forEach(item => {
     item.w = handleDecimals(item.w)
     item.h = handleDecimals(item.w)
@@ -728,13 +729,14 @@ function initMobileData() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const size = baseDataState.gridInfo.size
-  // 刚开始就右移了，所有该初始格不会算上去
-  const movePathItem = JSON.parse(JSON.stringify(baseDataState.mapGridInfoItem))
+  // 刚开始就右移了，所以该初始格不会算上去
+  const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(baseDataState.mapGridInfoItem))
+  const length = movePathItem.num!
   delete movePathItem.num
   const movePath: GridInfo[]  = []
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
-  for(let i = 0; i < baseDataState.floorTile.num; i++) {
+  for(let i = 0; i < length; i++) {
     const newXY = mapData[source.mapLevel][i]
     if(newXY) {
       x_y = newXY

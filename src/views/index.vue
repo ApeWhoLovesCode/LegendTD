@@ -3,17 +3,28 @@ import { onMounted, reactive } from 'vue';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
+import CoverCanvas from '@/components/coverCanvas.vue';
+import { loadImage } from '@/utils/handleImg';
+import floorData from '@/dataSource/floorData';
+import { useSourceStore } from '@/stores/source';
 
+const source = useSourceStore()
 const state = reactive({
   // 遍历的数据列表
   items: [] as LevelDataItem[],
   pageNum: 1,
-  pageSize: 20
+  pageSize: 20,
+  /** 是否可以加载了 */
+  isOnload: false
 })
 
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
   state.items = levelData.slice(preIndex, preIndex + state.pageSize)
+  loadImage(floorData[0]).then(res => {
+    source.imgOnloadObj.floor = res
+    state.isOnload = true
+  })
 }
 
 const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) => {
@@ -58,7 +69,10 @@ onMounted(() => {
         :index="i"
       >
         <div class="card">
-          <img class="card-bg" :src="item.cover" alt="">
+          <!-- <img class="card-bg" :src="item.cover" alt=""> -->
+          <div class="card-bg">
+            <CoverCanvas :isOnload="state.isOnload" :index="(state.pageNum - 1) * state.pageSize + i" />
+          </div>
           <div class="cardTitle">页码：{{ state.pageNum }}-{{ i }}</div>
         </div>
       </ScrollCircleItem>

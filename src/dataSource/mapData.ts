@@ -36,12 +36,12 @@ export default [
   // }
 ] as {[key in number]: DirectionType}[]
 
-/** 初始格子的位置信息和总格子数量 */
+/** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
 const mapGridInfoList: MapGridInfo[] = [
-  { x: 0, y: 250, x_y: 3, num: 72 },
-  { x: 0, y: 50, x_y: 3, num: 83 },
-  { x: 0, y: 50, x_y: 3, num: 96 },
-  { x: 0, y: 250, x_y: 3, num: 72 },
+  { x: 0, y: 5, x_y: 3, num: 72 },
+  { x: 0, y: 1, x_y: 3, num: 83 },
+  { x: 0, y: 1, x_y: 3, num: 96 },
+  { x: 0, y: 5, x_y: 3, num: 72 },
 ]
 export {
   mapGridInfoList
@@ -51,6 +51,7 @@ export {
 export type GridInfo = {
   x: number
   y: number
+  /** 下一步往上下左右哪边 */
   x_y: DirectionType
 }
 
