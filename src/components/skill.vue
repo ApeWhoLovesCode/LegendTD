@@ -3,18 +3,20 @@
     <!-- 游戏底部技能区 -->
     <div class="skill-wrap">
       <span v-for="(item, index) in skillList" :key="index">
-        <el-tooltip effect="dark" placement="top">
-          <div slot="content" class="com-skill-tooltip">
-            <div class="skill-name">{{item.name}}</div>
-            <div>{{item.instructions}}</div>
-            <div>金额：{{item.money}} cd：{{item.cd / 1000}}秒</div>
-          </div>
+        <ElTooltip effect="dark" placement="top">
+          <template #content>
+            <div class="com-skill-tooltip">
+              <div class="skill-name">{{item.name}}</div>
+              <div>{{item.instructions}}</div>
+              <div>金额：{{item.money}} cd：{{item.cd / 1000}}秒</div>
+            </div>
+          </template>
           <span class="skill-item">
-            <span class="skill iconfont" :class="item.icon" @click="!isDisable(item.money) && $emit('handleSkill', index)"></span>
+            <span class="skill iconfont" :class="item.icon" @click="!isDisable(item.money) && emit('handleSkill', index)"></span>
             <span v-show="isDisable(item.money)" class="skill-disable iconfont icon-disablecase"></span>
             <span v-show="item.curTime" class="skill-disable skill-time">{{item.curTime / 1000}}</span>
           </span>
-        </el-tooltip>
+        </ElTooltip>
       </span>
     </div>
     <!-- 技能: 肉弹冲击 -->
@@ -24,31 +26,24 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'skill',
-  props: {
-    skillList: {
-      type: Array,
-      default: () => []
-    },
-    money: {
-      type: Number,
-      default: 0
-    },
-    isPause: {
-      type: Boolean,
-      default: false
-    }
-  },
-  computed: {
-    isDisable() {
-      return (money) => {
-        return this.money < money || this.isPause
-      }
-    }
-  }
+<script setup lang="ts">
+import { SkillType } from "@/dataSource/skillData"
+import { ElTooltip } from "element-plus";
+
+const props = defineProps<{
+  skillList: SkillType[]
+  money: number
+  isPause: Boolean
+}>()
+
+const emit = defineEmits<{
+  (event: 'handleSkill', index: number): void
+}>()
+
+const isDisable = (money: number) => {
+  return props.money < money || props.isPause
 }
+
 </script>
 <style lang='less' scoped>
 @import '@/style.less';

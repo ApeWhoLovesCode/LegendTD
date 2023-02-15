@@ -3,40 +3,34 @@
     <div class="map-title">地图</div>
     <div 
       class="item" 
-      v-for="(item,index) in levelData" 
+      v-for="(item,index) in mapGridInfoList" 
       :key="index"
       :class="{'active': mapLevel === index}" 
       @click="switchMapLevel(index)"
     >
-      {{ index !== levelData.length - 1 ? item : '卍'}}
+      {{ index !== mapGridInfoList.length - 1 ? (index + 1) : '卍'}}
     </div>
   </div>
 </template>
 
-<script>
+<script setup lang='ts'>
 import { mapGridInfoList } from '../dataSource/mapData'
-export default {
-  name: '',
-  props: {
-    mapLevel: {
-      type: Number,
-      default: 0
-    }
-  },
-  data() {
-    return {
-      levelData: []
-    };
-  },
-  created() {
-    this.levelData = mapGridInfoList.map((item, i) => i + 1)
-  },
-  methods: {
-    switchMapLevel(index) {
-      this.$emit('switchMapLevel', index)
-    }
+
+defineProps({
+  mapLevel: {
+    type: Number,
+    default: 0
   }
+})
+
+const emit = defineEmits<{
+  (event: 'switchMapLevel', index: number): void
+}>()
+
+const switchMapLevel = (index: number) => {
+  emit('switchMapLevel', index)
 }
+
 </script>
 <style lang='less' scoped>
 @import '@/style.less';

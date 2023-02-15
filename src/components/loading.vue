@@ -1,55 +1,37 @@
 <template>
   <div class="loading-wrap">
-    <div class="loading">
-      <div class="loading-item"></div>
-      <div class="loading-item"></div>
-      <div class="loading-item"></div>
-    </div>
+    <div class="loading-item"></div>
+    <div class="loading-item"></div>
+    <div class="loading-item"></div>
   </div>
 </template>
 
-<script>
-export default {
-  name: '',
-}
-</script>
 <style lang='less' scoped>
 @import '@/style.less';
 // 加载中
 .loading-wrap {
   display: flex;
+  align-items: center;
   justify-content: center;
-  .loading, .loading > .loading-item {
-    position: relative;
-    box-sizing: border-box;
-  }
-  .loading {
-    color: #ffffff;
-    font-size: 0;
-  }
-  .loading > .loading-item {
+  .loading-item {
     display: inline-block;
-    float: none;
-    background-color: currentColor;
-    border: 0 solid currentColor;
-  }
-  .loading > .loading-item:nth-child(1) {
-    animation-delay: -200ms;
-  }
-  .loading > .loading-item:nth-child(2) {
-    animation-delay: -100ms;
-  }
-  .loading > .loading-item:nth-child(3) {
-    animation-delay: 0ms;
-  }
-  .loading > .loading-item {
-    width: 30px;
-    height: 30px;
-    margin: 15px;
+    width: 2rem;
+    height: 2rem;
+    margin: 1rem;
+    background-color: currentcolor;
     border-radius: 100%;
-    animation: ball-pulse 1s ease infinite;
+    animation: point-animation 1s ease infinite;
+    &:nth-child(1) {
+      animation-delay: -200ms;
+    }
+    &:nth-child(2) {
+      animation-delay: -100ms;
+    }
+    &:nth-child(3) {
+      animation-delay: 0;
+    }
   }
-  @keyframes ball-pulse {
+  @keyframes point-animation {
     0%,
     60%,
     100% {

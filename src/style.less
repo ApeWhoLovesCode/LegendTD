@@ -1,6 +1,3 @@
-/** https://www.iconfont.cn/manage/index?manage_type=myprojects&projectId=2495242 */
-// @import url(//at.alicdn.com/t/font_2495242_ni2vselsdk.css);
-
 /** 全局样式 */
 @size: 50px;
 
@@ -12,6 +9,10 @@
 img {
   cursor: pointer;
   display: block;
+}
+// 禁止浏览器下拉刷新
+body {
+  overscroll-behavior-y: contain;
 }
 
 @media (prefers-color-scheme: light) {
@@ -27,16 +28,16 @@ img {
   }
 }
 
-/* 大于等于1600px */
-@media screen and (min-width: 1600px) {
-  html {
-    font-size: 16px;
-  }
-}
 /* 大于等于950px */
 @media screen and (min-width: 950px) {
   html {
     font-size: 14px;
+  }
+}
+/* 大于等于1600px */
+@media screen and (min-width: 1600px) {
+  html {
+    font-size: 16px;
   }
 }
 /* 小于950px */

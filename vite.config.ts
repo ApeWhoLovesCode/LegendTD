@@ -10,6 +10,9 @@ export default defineConfig({
     vueJsx()
   ],
   server: {
+    // 允许局域网访问 (package.json中 ( "dev": "vite --host 0.0.0.0" ) 这样也行)
+    host: "0.0.0.0",
+    port: 16666,
     proxy: {
       '/api':{
         target: 'http://localhost:6110',

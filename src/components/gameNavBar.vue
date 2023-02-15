@@ -15,12 +15,12 @@
     </div>
     <div class="right">
       <el-tooltip effect="dark" content="开始 / 暂停游戏" placement="bottom">
-        <span class="icon-wrap icon-hover" @click="$emit('gamePause')">
+        <span class="icon-wrap icon-hover" @click="emit('gamePause')">
           <span class="iconfont" :class="isPause ? 'icon-kaishi1' : 'icon-24gf-pause2'"></span>
         </span>
       </el-tooltip>
       <el-tooltip effect="dark" content="播放 / 关闭音乐" placement="bottom">
-        <span class="icon-wrap icon-hover" @click="$emit('playBgAudio')">
+        <span class="icon-wrap icon-hover" @click="emit('playBgAudio')">
           <span class="iconfont" :class="isPlayBgAudio ? 'icon-mn_shengyin_fill' : 'icon-mn_shengyinwu_fill'"></span>
         </span>
       </el-tooltip>
@@ -33,32 +33,33 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'game-navbar',
-  props: {
-    money: {
-      type: Number,
-      default: 0,
-    },
-    addMoney: {
-      type: Object,
-      default: () => {}
-    },
-    level: {
-      type: Number,
-      default: 0
-    },
-    isPause: {
-      type: Boolean,
-      default: true
-    },
-    isPlayBgAudio: {
-      type: Boolean,
-      default: true
-    }
+<script setup lang="ts">
+defineProps({
+  money: {
+    type: Number,
+    default: 0,
+  },
+  addMoney: {
+    type: Object,
+    default: () => {}
+  },
+  level: {
+    type: Number,
+    default: 0
+  },
+  isPause: {
+    type: Boolean,
+    default: true
+  },
+  isPlayBgAudio: {
+    type: Boolean,
+    default: true
   }
-}
+})
+const emit = defineEmits<{
+  (event: 'gamePause'): void
+  (event: 'playBgAudio'): void
+}>()
 </script>
 
 <style lang='less' scoped>
