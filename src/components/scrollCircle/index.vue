@@ -40,8 +40,6 @@ type ScrollCircleProps = {
    * @default true
    */
   isClockwise?: boolean
-  /** 分页完成，触发回调改变页码 */
-  onPageChange?: (page: {pageNum: number, pageSize: number}) => void
 };
 
 const props = withDefaults(defineProps<ScrollCircleProps>(), {
@@ -52,6 +50,16 @@ const props = withDefaults(defineProps<ScrollCircleProps>(), {
   isAverage: true,
   isClockwise: true,
 })
+const emit = defineEmits<{
+  /** 分页完成，触发回调改变页码 */
+  (event: 'onPageChange', page: {pageNum: number, pageSize: number}): void;
+  /** 发生触摸的回调 */
+  (event: 'onTouchStart'): void
+  /** 发生滚动的回调 */
+  (event: 'onTouchMove'): void
+  /** 触摸结束的回调 */
+  (event: 'onTouchEnd'): void
+}>()
 const provideState = reactive<ScrollCircleProvide>({
   circleR: 0,
   cardDeg: 0,
@@ -155,7 +163,7 @@ const init = (isInit = true) => {
   // );
   provideState.circleR = info.circleR
   provideState.cardDeg = cardDeg.value
-  props.onPageChange?.({...pageState})
+  emit('onPageChange', {...pageState})
   if(isInit) {
     rotateDeg.value = cardDeg.value * props.initCartNum
   }
@@ -172,6 +180,7 @@ const onTouchStart = (event: MouseEvent | TouchEvent) => {
   touchInfo.startDeg = rotateDeg.value
   touchInfo.time = Date.now()
   duration.value = 0.1
+  emit('onTouchStart')
 }
 const onTouchMove = (event: MouseEvent | TouchEvent) => {
   event.stopPropagation()
@@ -179,6 +188,7 @@ const onTouchMove = (event: MouseEvent | TouchEvent) => {
   const xy = (provideState.isVertical ? e.clientY : -e.clientX) - touchInfo.startXY
   const deg = Math.round(touchInfo.startDeg - info.scrollViewDeg * (xy / info.circleWrapWH))
   rotateDeg.value = deg
+  emit('onTouchMove')
 }
 const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   event.stopPropagation()
@@ -211,6 +221,7 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   duration.value = _duration
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg
+  emit('onTouchEnd')
 }
 
 const disableLeft = computed(() => (
@@ -228,7 +239,7 @@ const onPageChange = (isAdd?: boolean) => {
   }
   pageState.pageNum += isAdd ? 1 : -1
   rotateDeg.value = 0
-  props.onPageChange?.({...pageState})
+  emit('onPageChange', {...pageState})
 }
 
 </script>

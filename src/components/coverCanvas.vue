@@ -80,6 +80,7 @@ function initMovePath() {
 /** 画地板 */
 function drawFloorTile() {
   if(!source.imgOnloadObj?.floor) return
+  state.ctx?.clearRect(0, 0, state.size, state.size)
   for(let f of state.movePath) {
     state.ctx?.drawImage(source.imgOnloadObj.floor!, f.x, f.y, state.size, state.size)
   }

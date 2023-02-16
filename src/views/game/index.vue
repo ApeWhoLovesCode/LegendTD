@@ -38,17 +38,18 @@ const state = reactive<IndexType>({
   newEnemySource: [],
   newTowerList: []
 })
-const sourceS = useSourceStore()
+const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
 const progressStep = computed<number>(() => {
-  return 95 / sourceS.enemySource.length
+  return 95 / source.enemySource.length
 })
 
 /** 初始化加载图片等内容 */
 async function init() {
   // 加载图片
   await handleEnemyImg()
+  source.imgOnloadObj.floor = await loadImage(floorData[0])
   await handleTowerImg()
   state.progress = 100
   // handleData()
@@ -68,8 +69,8 @@ async function init() {
 // }
 /** 切换地图 */
 function switchMapLevel(index: number) {
-  if(sourceS.mapLevel === index) return
-  sourceS.mapLevel = index
+  if(source.mapLevel === index) return
+  source.mapLevel = index
   router.push(`/game/${index + 1}`)
   state.isProtectTheHorse = false
   // handleData()
@@ -77,9 +78,9 @@ function switchMapLevel(index: number) {
 }
 /** 等待所有的敌人的gif图生成静态图片 */
 async function handleEnemyImg() {
-  sourceS.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
+  source.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
   return Promise.all(enemyData.map(async (item, index) => {
-    sourceS.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
+    source.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
     state.progress += progressStep.value
     return 
   })).then(res => {
@@ -88,16 +89,16 @@ async function handleEnemyImg() {
 }
 /** 处理塔防的图片 */
 async function handleTowerImg() {
-  sourceS.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
+  source.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
   return Promise.all(towerData.map(async (t, index) => {
-    sourceS.towerSource[index].onloadImg = await loadImage(t.img)
-    sourceS.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
+    source.towerSource[index].onloadImg = await loadImage(t.img)
+    source.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
     return
   })).then(() => {})
 }
 
 onMounted(() => {
-  sourceS.mapLevel = +(route.params.id ?? 1) - 1
+  source.mapLevel = +(route.params.id ?? 1) - 1
   if(isMobile()) {
     console.log('--is mobile--');
     setTheme('phone')
@@ -125,7 +126,7 @@ onMounted(() => {
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
     />
-    <LevelSelect :mapLevel="sourceS.mapLevel" @switchMapLevel="switchMapLevel" />
+    <LevelSelect :mapLevel="source.mapLevel" @switchMapLevel="switchMapLevel" />
     <ProgressBar v-if="state.isProgressBar" :progress="state.progress" />
   </div>
 </template>
