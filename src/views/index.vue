@@ -7,6 +7,7 @@ import CoverCanvas from '@/components/coverCanvas.vue';
 import { loadImage } from '@/utils/handleImg';
 import floorData from '@/dataSource/floorData';
 import { useSourceStore } from '@/stores/source';
+import FloatingBall from '@/components/floating-ball';
 
 const source = useSourceStore()
 const state = reactive({
@@ -53,25 +54,35 @@ onMounted(() => {
 
       </div>
       <div class="center">
-        
+
       </div>
       <div class="right">
 
       </div>
     </div>
+    <FloatingBall
+      magnetic="x"
+      :style="{
+        '--initial-position-top': '50px',
+        '--initial-position-right': '50px',
+        '--z-index': '1000',
+      }"
+    >
+      <div class="ball">头像</div>
+    </FloatingBall>
     <ScrollCircle 
       :list="levelData" 
       :on-page-change="onPageChange"
     >
       <ScrollCircleItem 
         v-for="(item, i) in state.items" 
-        :key="i" 
+        :key="(state.pageNum - 1) * state.pageSize + i" 
         :index="i"
       >
         <div class="card">
           <!-- <img class="card-bg" :src="item.cover" alt=""> -->
           <div class="card-bg">
-            <CoverCanvas :isOnload="state.isOnload" :index="(state.pageNum - 1) * state.pageSize + i" />
+            <CoverCanvas :index="(state.pageNum - 1) * state.pageSize + i" />
           </div>
           <div class="cardTitle">页码：{{ state.pageNum }}-{{ i }}</div>
         </div>
@@ -86,9 +97,16 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  .placeholder {
-    height: 100px;
-    background: green;
+  .ball {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    color: #fff;
+    font-size: 16px;
+    background-color: skyblue;
+    border-radius: 50%;
   }
   .card {
     position: relative;

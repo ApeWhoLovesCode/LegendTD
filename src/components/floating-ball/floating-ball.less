@@ -1,0 +1,15 @@
+@class-prefix: ~'retaroct-floating-ball';
+
+.@{class-prefix} {
+  &-button {
+    position: fixed;
+    top: var(--initial-position-top);
+    right: var(--initial-position-right);
+    bottom: var(--initial-position-bottom);
+    left: var(--initial-position-left);
+    z-index: var(--z-index);
+    transition: transform ease-out 0.1s;
+    user-select: none;
+    touch-action: none;
+  }
+}
