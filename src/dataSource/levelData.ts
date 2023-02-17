@@ -7,7 +7,7 @@ const levelData: LevelDataItem[] = [
   },
 ]
 
-for(let i = 0; i < 50; i++) {
+for(let i = 1; i < 50; i++) {
   levelData[i] = JSON.parse(JSON.stringify(levelData[0]))
 }
 

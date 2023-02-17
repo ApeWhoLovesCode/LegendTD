@@ -7,9 +7,9 @@ import CoverCanvas from '@/components/coverCanvas.vue';
 import { loadImage } from '@/utils/handleImg';
 import floorData from '@/dataSource/floorData';
 import { useSourceStore } from '@/stores/source';
-import FloatingBall from '@/components/floating-ball';
 import { useRouter } from 'vue-router';
 import mapData from '@/dataSource/mapData';
+import UserBall from '@/components/userBall.vue'
 
 const source = useSourceStore()
 const router = useRouter()
@@ -23,8 +23,6 @@ const state = reactive({
 })
 /** 禁止点击 */
 const isLock = ref(false)
-
-const isVertical = computed(() => window.innerHeight > window.innerWidth)
 
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
@@ -62,16 +60,6 @@ const onCardClick = (i: number) => {
 
 <template>
   <div class='page-index'>
-    <FloatingBall
-      magnetic="x"
-      :style="{
-        '--initial-position-top': '50px',
-        [isVertical ? '--initial-position-left' : '--initial-position-right']: '50px',
-        '--z-index': '1000',
-      }"
-    >
-      <div class="ball">头像</div>
-    </FloatingBall>
     <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
@@ -92,6 +80,7 @@ const onCardClick = (i: number) => {
         </div>
       </ScrollCircleItem>
     </ScrollCircle>
+    <UserBall />
   </div>
 </template>
 
@@ -102,17 +91,6 @@ const onCardClick = (i: number) => {
   height: 100vh;
   overflow: hidden;
   background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
-  .ball {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    color: #fff;
-    font-size: 16px;
-    background-color: skyblue;
-    border-radius: 50%;
-  }
   .card {
     position: relative;
     width: 24rem;
