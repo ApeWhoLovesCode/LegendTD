@@ -2,15 +2,19 @@
 import { computed, ref } from 'vue';
 import FloatingBall from '@/components/floating-ball';
 import { ElDialog, ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
+import Login from '@/components/login.vue';
+import { useUserInfoStore } from '@/stores/userInfo';
 
 const status = ref<-1 | 0 | 1>(1)
 const isRankDialog = ref(false)
+const loginVisible = ref(false)
+const {userInfo} = useUserInfoStore()
 
 const isVertical = computed(() => window.innerHeight > window.innerWidth)
 
 const ballItemStyle = (i: number) => {
-  const x = -100 * Math.cos((10 + i * 30) * Math.PI / 180) * status.value
-  const y = 100 * Math.sin((10 + i * 30) * Math.PI / 180) * (status.value ? 1 : 0)
+  const x = -100 * Math.cos((5 + i * 35) * Math.PI / 180) * status.value
+  const y = 100 * Math.sin((5 + i * 35) * Math.PI / 180) * (status.value ? 1 : 0)
   return {
     transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
     opacity: (status.value ? 1 : 0)
@@ -21,18 +25,22 @@ const onMagnetic = (isLeft: boolean) => {
   status.value = isLeft ? -1 : 1
 }
 
-const loginOut = () => {
-  ElMessageBox.confirm(
-    '您确定要退出登录吗？',
-    '退出登录',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    ElMessage('退出登录')
-  })
+const login = () => {
+  if(!userInfo) {
+    loginVisible.value = true
+  } else {
+    ElMessageBox.confirm(
+      '您确定要退出登录吗？',
+      '退出登录',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      ElMessage('退出登录')
+    })
+  }
 }
 
 </script>
@@ -60,12 +68,15 @@ const loginOut = () => {
         <ElDropdown size="small">
           <div class="ball-item-content">设置</div>
           <template #dropdown>
-            <ElDropdownItem @click="loginOut">退出登录</ElDropdownItem>
+            <ElDropdownItem @click="login">{{ userInfo ? '退出' : '' }}登录</ElDropdownItem>
           </template>
         </ElDropdown>
       </div>
     </div>
   </FloatingBall>
+  <Login 
+    v-model:visible="loginVisible"
+  />
   <ElDialog v-model="isRankDialog" title="排行榜">
     123
   </ElDialog>

@@ -56,15 +56,13 @@ const onTouchStart = () => {
   isLock.value = false
 }
 const onTouchMove = () => {
-  console.log('Date: ', Date.now() - touchTime.value);
   if(isLock.value) return
-  if(Date.now() - touchTime.value > 200) {
+  if(Date.now() - touchTime.value > 100) {
     isLock.value = true
   }
 }
 
 const onCardClick = (i: number) => {
-  console.log('isLock.value: ', isLock.value);
   if(!isLock.value && mapData[i]) {
     router.push(`/game/${i + 1}`)
   }
