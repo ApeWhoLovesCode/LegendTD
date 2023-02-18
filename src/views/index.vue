@@ -23,6 +23,7 @@ const state = reactive({
 })
 /** 禁止点击 */
 const isLock = ref(false)
+const touchTime = ref(0)
 
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
@@ -50,7 +51,20 @@ onMounted(() => {
   init()
 })
 
+const onTouchStart = () => {
+  touchTime.value = Date.now()
+  isLock.value = false
+}
+const onTouchMove = () => {
+  console.log('Date: ', Date.now() - touchTime.value);
+  if(isLock.value) return
+  if(Date.now() - touchTime.value > 200) {
+    isLock.value = true
+  }
+}
+
 const onCardClick = (i: number) => {
+  console.log('isLock.value: ', isLock.value);
   if(!isLock.value && mapData[i]) {
     router.push(`/game/${i + 1}`)
   }
@@ -63,8 +77,8 @@ const onCardClick = (i: number) => {
     <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
-      @on-touch-start="isLock = false"
-      @on-touch-move="isLock = true"
+      @on-touch-start="onTouchStart"
+      @on-touch-move="onTouchMove"
       >
       <ScrollCircleItem 
         v-for="(item, i) in state.items" 
