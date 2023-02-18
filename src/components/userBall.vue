@@ -4,11 +4,12 @@ import FloatingBall from '@/components/floating-ball';
 import { ElDialog, ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import Login from '@/components/login.vue';
 import { useUserInfoStore } from '@/stores/userInfo';
+import UserIcon from '@/assets/img/user.png'
 
 const status = ref<-1 | 0 | 1>(1)
 const isRankDialog = ref(false)
 const loginVisible = ref(false)
-const {userInfo} = useUserInfoStore()
+const userInfoStore = useUserInfoStore()
 
 const isVertical = computed(() => window.innerHeight > window.innerWidth)
 
@@ -26,7 +27,7 @@ const onMagnetic = (isLeft: boolean) => {
 }
 
 const login = () => {
-  if(!userInfo) {
+  if(!userInfoStore.userInfo) {
     loginVisible.value = true
   } else {
     ElMessageBox.confirm(
@@ -37,8 +38,9 @@ const login = () => {
         cancelButtonText: '取消',
         type: 'warning'
       }
-    ).then(() => {
-      ElMessage('退出登录')
+    ).then(async () => {
+      await userInfoStore.logout()
+      ElMessage.info('登录已退出')
     })
   }
 }
@@ -57,7 +59,7 @@ const login = () => {
     @on-magnetic="onMagnetic"
   >
     <div class="ball-wrap">
-      <img class="avatar" src="https://cdn.lightwork.com.cn/img/20220921141442-h4AHAn.png" alt="">
+      <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? UserIcon" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
         <div class="ball-item-content">个人信息</div>
       </div>
@@ -68,7 +70,7 @@ const login = () => {
         <ElDropdown size="small">
           <div class="ball-item-content">设置</div>
           <template #dropdown>
-            <ElDropdownItem @click="login">{{ userInfo ? '退出' : '' }}登录</ElDropdownItem>
+            <ElDropdownItem @click="login">{{ userInfoStore.userInfo ? '退出' : '' }}登录</ElDropdownItem>
           </template>
         </ElDropdown>
       </div>

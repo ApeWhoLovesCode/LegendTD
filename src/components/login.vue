@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, ref, reactive } from 'vue';
-import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, FormInstance} from 'element-plus'
+import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage, FormInstance} from 'element-plus'
+import { useUserInfoStore } from '@/stores/userInfo';
 
 const {visible} = defineProps({
   visible: {
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   (event: 'update:visible', v: boolean): void
 }>()
 
+const userInfoStore = useUserInfoStore()
 const ruleFormRef = ref<FormInstance>()
 const userInfo = reactive({
   name: '',
@@ -43,8 +45,12 @@ const rules = reactive({
   pass: [{ validator: validatePass, trigger: 'blur' }],
 })
 
-const login = () => {
-  emit('update:visible', false)
+const login = async () => {
+  const res = await userInfoStore.login({username: userInfo.name, password: userInfo.pass})
+  if(res) {
+    emit('update:visible', false)
+    ElMessage.success('登录成功')
+  }
 }
 
 </script>
