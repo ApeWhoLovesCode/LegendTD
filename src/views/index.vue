@@ -21,9 +21,6 @@ const state = reactive({
   /** 是否可以加载了 */
   isOnload: false
 })
-/** 禁止点击 */
-const isLock = ref(false)
-const touchTime = ref(0)
 
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
@@ -51,21 +48,8 @@ onMounted(() => {
   init()
 })
 
-const onTouchStart = () => {
-  touchTime.value = Date.now()
-  isLock.value = false
-}
-const onTouchMove = () => {
-  if(isLock.value) return
-  if(Date.now() - touchTime.value > 100) {
-    isLock.value = true
-  }
-}
-
 const onCardClick = (i: number) => {
-  if(!isLock.value && mapData[i]) {
-    router.push(`/game/${i + 1}`)
-  }
+  router.push(`/game/${i + 1}`)
 }
 
 </script>
@@ -75,15 +59,14 @@ const onCardClick = (i: number) => {
     <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
-      @on-touch-start="onTouchStart"
-      @on-touch-move="onTouchMove"
-      >
+    >
       <ScrollCircleItem 
         v-for="(item, i) in state.items" 
         :key="(state.pageNum - 1) * state.pageSize + i" 
         :index="i"
+        @on-click="onCardClick(i)"
       >
-        <div class="card" @click="onCardClick(i)">
+        <div class="card">
           <div class="card-bg">
             <CoverCanvas :index="(state.pageNum - 1) * state.pageSize + i" />
             <div v-if="!mapData[i]" class="card-disable iconfont icon-disablecase"></div>
@@ -102,7 +85,7 @@ const onCardClick = (i: number) => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
+  // background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
   .card {
     position: relative;
     width: 24rem;

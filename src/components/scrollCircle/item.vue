@@ -9,6 +9,11 @@ type ScrollRotateItemProps = {
 }
 
 const props = defineProps<ScrollRotateItemProps>()
+
+const emit = defineEmits<{
+  (event: 'onClick', i: number): void
+}>()
+
 const provideState = inject<ScrollCircleProvide>(provideKey)
 
 const cardStyle = computed(() => {
@@ -30,7 +35,11 @@ const cardStyle = computed(() => {
 </script>
 
 <template>
-  <div :class="`${classPrefix}-cardWrap`" :style="cardStyle">
+  <div 
+    :class="`${classPrefix}-cardWrap`" 
+    :style="cardStyle" 
+    @click="provideState?.isClick && emit('onClick', index)"
+  >
     <slot></slot>
   </div>
 </template>

@@ -51,7 +51,7 @@ const props = withDefaults(defineProps<ScrollCircleProps>(), {
   isClockwise: true,
 })
 const emit = defineEmits<{
-  /** 分页完成，触发回调改变页码 */
+  /** 分页触发回调改变页码 */
   (event: 'onPageChange', page: {pageNum: number, pageSize: number}): void;
   /** 发生触摸的回调 */
   (event: 'onTouchStart'): void
@@ -65,6 +65,7 @@ const provideState = reactive<ScrollCircleProvide>({
   cardDeg: 0,
   isVertical: window.innerHeight > window.innerWidth,
   isClockwise: !!props.isClockwise,
+  isClick: false
 })
 provide(provideKey, provideState)
 const idRef = ref(randomStr(classPrefix))
@@ -218,6 +219,7 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   } else {
     mathMethods = xy > 0 ? 'floor' : 'ceil'
   }
+  provideState.isClick = _time < 150
   duration.value = _duration
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg

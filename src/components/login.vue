@@ -16,41 +16,36 @@ const emit = defineEmits<{
 }>()
 
 const userInfoStore = useUserInfoStore()
-const ruleFormRef = ref<FormInstance>()
 const userInfo = reactive({
   name: '',
   pass: '',
 })
 
-const validateName = (rule: any, value: any, callback: any) => {
-  if (value === '') {
-    callback(new Error('请输入用户名'))
-  } else {
-    if (!ruleFormRef.value) return
-    callback()
-  }
-}
-const validatePass = (rule: any, value: any, callback: any) => {
-  if (value === '') {
-    callback(new Error('请输入密码'))
-  } else {
-    if (!ruleFormRef.value) return
-    ruleFormRef.value.validateField('checkPass', () => null)
-    callback()
-  }
-}
-
+const ruleFormRef = ref<FormInstance>()
 const rules = reactive({
-  name: [{ validator: validateName, trigger: 'blur' }],
-  pass: [{ validator: validatePass, trigger: 'blur' }],
+  name: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 10, message: '用户名应在3-10位之间', trigger: 'blur' },
+  ],
+  pass: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 3, max: 10, message: '密码应在3-10位之间', trigger: 'blur' },
+  ],
 })
 
-const login = async () => {
-  const res = await userInfoStore.login({username: userInfo.name, password: userInfo.pass})
-  if(res) {
-    emit('update:visible', false)
-    ElMessage.success('登录成功')
-  }
+const login = () => {
+  ruleFormRef.value?.validate(valid => {
+    if(!valid) return
+    userInfoStore.login({
+      username: userInfo.name,
+      password: userInfo.pass
+    }).then((res) => {
+      if(res) {
+        emit('update:visible', false)
+        ElMessage.success('登录成功')
+      }
+    })
+  })
 }
 
 </script>
@@ -59,7 +54,7 @@ const login = async () => {
   <ElDialog 
     v-model="visible"
     title="登录"
-    width="60%"
+    width="50%"
     draggable
     @close="emit('update:visible', false)"
   >
@@ -70,10 +65,10 @@ const login = async () => {
       label-width="100px"
     >
       <ElFormItem label="用户名" prop="name">
-        <ElInput v-model="userInfo.name" show-word-limit maxLength="10" />
+        <ElInput v-model="userInfo.name" show-word-limit maxlength="10" />
       </ElFormItem>
       <ElFormItem label="密码" prop="pass">
-        <ElInput v-model="userInfo.pass" type="password" autocomplete="off" show-word-limit maxLength="10" />
+        <ElInput v-model="userInfo.pass" type="password" autocomplete="off" show-word-limit maxlength="10" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -85,6 +80,6 @@ const login = async () => {
   </ElDialog>
 </template>
 
-<style lang='less'>
+<style lang='less' scoped>
 
 </style>

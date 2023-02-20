@@ -1,13 +1,16 @@
 <script setup lang='ts'>
 import { computed, ref } from 'vue';
 import FloatingBall from '@/components/floating-ball';
-import { ElDialog, ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
+import { ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import Login from '@/components/login.vue';
 import { useUserInfoStore } from '@/stores/userInfo';
 import UserIcon from '@/assets/img/user.png'
+import RankList from './rankList.vue';
+import UserInfo from './userInfo.vue'
 
-const status = ref<-1 | 0 | 1>(1)
-const isRankDialog = ref(false)
+const status = ref<-1 | 0 | 1>(window.innerHeight > window.innerWidth ? -1 : 1)
+const userInfoVisible = ref(false)
+const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const userInfoStore = useUserInfoStore()
 
@@ -45,6 +48,14 @@ const login = () => {
   }
 }
 
+const openUser = () => {
+  if(userInfoStore.userInfo) {
+    userInfoVisible.value = true
+  } else {
+    ElMessage.info('请先登录')
+  }
+}
+
 </script>
 
 <template>
@@ -61,10 +72,10 @@ const login = () => {
     <div class="ball-wrap">
       <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? UserIcon" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
-        <div class="ball-item-content">个人信息</div>
+        <div class="ball-item-content" :class="{'ball-item-disable': !userInfoStore.userInfo}" @click="openUser">个人信息</div>
       </div>
       <div class="ball-item" :style="ballItemStyle(1)">
-        <div class="ball-item-content" @click="isRankDialog = true">排行榜</div>
+        <div class="ball-item-content" @click="rankListVisible = true">排行榜</div>
       </div>
       <div class="ball-item" :style="ballItemStyle(2)">
         <ElDropdown size="small">
@@ -76,12 +87,14 @@ const login = () => {
       </div>
     </div>
   </FloatingBall>
+  <UserInfo v-if="userInfoStore.userInfo" v-model:visible="userInfoVisible"/>
+  <RankList 
+    v-model:visible="rankListVisible"
+  />
   <Login 
     v-model:visible="loginVisible"
   />
-  <ElDialog v-model="isRankDialog" title="排行榜">
-    123
-  </ElDialog>
+
 </template>
 
 <style lang='less'>
@@ -107,7 +120,7 @@ const login = () => {
     top: 50%;
     left: 50%;
     transition: transform ease 0.8s, opacity ease 0.6s;
-    .ball-item-content {
+    &-content {
       box-sizing: content-box;
       width: 28px;
       height: 28px;
@@ -126,6 +139,13 @@ const login = () => {
       &:hover {
         font-size: 14px;
         background-color: @purple2;
+      }
+    }
+    &-disable {
+      opacity: 0.7;
+      &:hover {
+        font-size: 14px;
+        background-color: @purple1;
       }
     }
   }

@@ -30,12 +30,10 @@ service.interceptors.request.use(config => {
 
 // 3.响应拦截器
 service.interceptors.response.use(response => {
-  //接收到响应数据并成功后的一些共有的处理
-  const code = response.data?.code
-  // 失败的请求
-  if(code !== 200) {
+  // 处理后端返回的一些失败的请求
+  if(response.data?.code !== 200) {
     let errMsg = ''
-    switch (code) {
+    switch (response.data?.code) {
       case -2: break;
       case -1: errMsg = `${response.data.data || '请求错误'}`; break;
       case 401: {
@@ -50,6 +48,7 @@ service.interceptors.response.use(response => {
   }
   return response.data.data
 }, error => {
+  console.log('error: ', error);
   /***** 接收到异常响应的处理开始 *****/
   if (error && error.response) {
     switch (error.response.status) {
@@ -77,7 +76,7 @@ service.interceptors.response.use(response => {
   }
 
   ElMessage.error(error.message)
-  return Promise.resolve(error.response)
+  return Promise.reject(error)
 })
 
 const http = {

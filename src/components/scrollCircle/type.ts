@@ -3,6 +3,7 @@ export type ScrollCircleProvide = {
   cardDeg: number
   isVertical: boolean
   isClockwise: boolean
+  isClick: boolean
 }
 
 export type ScrollCircleProps = {
