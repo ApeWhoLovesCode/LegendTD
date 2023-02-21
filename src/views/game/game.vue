@@ -475,7 +475,8 @@ function handleSkill(index: number) {
 function getMouse(e: MouseEvent) {
   e.stopPropagation()
   const size = baseDataState.gridInfo.size
-  const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
+  // const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
+  const _x = e.offsetX, _y = e.offsetY
   // 当前点击的格子的索引值
   const col = Math.floor(_y / size), row = Math.floor(_x / size)
   const gridVal = baseDataState.gridInfo.arr[col][row]
@@ -1113,4 +1114,13 @@ function onKeyDown() {
     }
   }
 }
+// @media screen and (orientation: portrait) {
+//   .canvas-wrap {
+//     -webkit-transform: rotate(90deg);
+//     -moz-transform: rotate(90deg);
+//     -ms-transform: rotate(90deg);
+//     transform: rotate(90deg);
+//     transform-origin: 0% 0%;
+//   }
+// }
 </style>
