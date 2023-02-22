@@ -68,7 +68,7 @@ const onCardClick = (i: number) => {
       >
         <div class="card">
           <div class="card-bg">
-            <CoverCanvas :index="(state.pageNum - 1) * state.pageSize + i" />
+            <CoverCanvas v-if="state.isOnload" :index="(state.pageNum - 1) * state.pageSize + i" />
             <div v-if="!mapData[i]" class="card-disable iconfont icon-disablecase"></div>
           </div>
           <div class="card-level">{{ (state.pageNum - 1) * state.pageSize + i + 1 }}</div>

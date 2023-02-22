@@ -50,7 +50,7 @@ const terminalStyle = computed(() => {
 /** 塔防容器的样式 */
 const buildingStyle = computed(() => {
   const {left, top} = towerState.building
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   return {left: left + size + 'px', top: top + size + 'px'}
 })
 /** 塔防容器的类目 */
@@ -73,8 +73,8 @@ const buildingClass = computed(() => {
 })
 /** 攻击范围的样式 */
 const buildingScopeStyle = computed(() => {
-  const padding = baseDataState.gridInfo.size
-  const size = baseDataState.gridInfo.size / 2
+  const padding = gameConfigState.size
+  const size = gameConfigState.size / 2
   const {left, top, r} = towerState.buildingScope
   return {left: left + padding + size + 'px', top: top + padding + size + 'px', width: r * 2 + 'px', height: r * 2 + 'px'}
 })
@@ -191,16 +191,16 @@ onBeforeUnmount(() => {
 })
 
 async function init() {
+  initMobileData()
   if(isInfinite.value) {
     baseDataState.money = 999999
   }
   gameConfigState.ctx = (canvasRef.value!.getContext("2d") as CanvasRenderingContext2D);
   const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
-  item.x *= baseDataState.gridInfo.size
-  item.y *= baseDataState.gridInfo.size
+  item.x *= gameConfigState.size
+  item.y *= gameConfigState.size
   baseDataState.mapGridInfoItem = item
   baseDataState.floorTile.num = baseDataState.mapGridInfoItem.num
-  initMobileData()
   initAllGrid()
   initMovePath()
   onKeyDown()
@@ -290,7 +290,7 @@ function drawEnemy(index: number) {
 /** 生成敌人 */
 function setEnemy() {
   const enemyItemSource = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   const {audioKey, name, h} = enemyItemSource
   // 设置敌人的初始位置
   const id = Date.now()
@@ -354,7 +354,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyType, i: number) {
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   const { curFloorI, w, h, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = Date.now() + i
@@ -409,7 +409,7 @@ function moveEnemy(index: number) {
     playAudio('ma-nansou', 'End')
     return true
   }
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   // 将格子坐标同步到敌人的坐标
   const { x, y, x_y } = enemyState.movePath[curFloorI]
   // 敌人需要站在地板中间区域
@@ -474,7 +474,7 @@ function handleSkill(index: number) {
 /** 点击获取鼠标位置 操作塔防 */
 function getMouse(e: MouseEvent) {
   e.stopPropagation()
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   // const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
   const _x = e.offsetX, _y = e.offsetY
   // 当前点击的格子的索引值
@@ -498,7 +498,7 @@ function buildTower(index: number) {
   if(baseDataState.money < money) return
   baseDataState.money -= money
   const {left: x, top: y} = towerState.building
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   // 将该塔防数据放入场上塔防数组中
   // 射击的防抖函数
   const shootFun = _.throttle((eIdList, t_i) => {
@@ -517,7 +517,7 @@ function buildTower(index: number) {
 }
 /** 画塔防 */
 function drawTower(item?: TowerStateType) {
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   if(item) {
     gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
   } else {
@@ -528,7 +528,7 @@ function drawTower(item?: TowerStateType) {
 }
 /** 售卖防御塔 */
 function saleTower(index: number) {
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[y / size][x / size] = 0
@@ -547,7 +547,7 @@ function shootBullet(eIdList: string[], t_i: number) {
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
     const {x: t_x, y: t_y, speed, name, id, isThrough } = towerList[t_i]
-    const size_2 = baseDataState.gridInfo.size / 2
+    const size_2 = gameConfigState.size / 2
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
     // 两坐标间的差值
@@ -648,7 +648,7 @@ function drawAndMoveBullet() {
   const enemy = enemyList.find(e => e.id === e_id)
   // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
   if(!enemy || towerList[t_i].isThrough) return
-  const size_2 = baseDataState.gridInfo.size / 2
+  const size_2 = gameConfigState.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
@@ -704,17 +704,21 @@ function beginGame() {
 function initMobileData() {
   if(!source.isMobile) return
   console.log('isMobile: ', source.isMobile);
-  const p = 0.4
+  const {w, h} = gameConfigState.defaultCanvas
+  const wp = document.documentElement.clientWidth / (h + 100)
+  const hp = document.documentElement.clientHeight / (w + 100)
+  const p = Math.floor(Math.min(wp, hp) * 10) / 10
+  console.log('p: ', p);
   function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
   }
-  baseDataState.gridInfo.size *= p
+  gameConfigState.size *= p
   baseDataState.offset.y *= p
   gameConfigState.defaultCanvas.w *= p
   gameConfigState.defaultCanvas.h *= p
   source.enemySource.forEach(item => {
     item.w = handleDecimals(item.w)
-    item.h = handleDecimals(item.w)
+    item.h = handleDecimals(item.h)
     item.curSpeed = handleDecimals(item.curSpeed)
     item.speed = handleDecimals(item.speed)
     item.hp.size = handleDecimals(item.hp.size)
@@ -729,7 +733,7 @@ function initMobileData() {
 
 /** 初始化行动轨迹 */
 function initMovePath() {
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   // 刚开始就右移了，所以该初始格不会算上去
   const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(baseDataState.mapGridInfoItem))
   const length = movePathItem.num!
@@ -754,7 +758,7 @@ function initMovePath() {
 
 /** 画地板 */
 function drawFloorTile() {
-  const size = baseDataState.gridInfo.size
+  const size = gameConfigState.size
   for(let f of enemyState.movePath) {
     gameConfigState.ctx.drawImage(source.imgOnloadObj.floor!, f.x, f.y, size, size)
   }
@@ -832,7 +836,7 @@ function onKeyDown() {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <div class="game-wrap">
+    <div class="game-wrap" :style="{'--size': gameConfigState.size + 'px'}">
       <div class="canvas-wrap" @click="hiddenTowerOperation">
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
@@ -910,6 +914,7 @@ function onKeyDown() {
     align-items: center;
     border: 1px solid #eee;
     border-radius: 8px;
+    @size: var(--size);
     .canvas-wrap {
       position: relative;
       padding: @size;

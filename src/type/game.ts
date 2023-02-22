@@ -12,6 +12,8 @@ export type GameConfigType = {
   resizeTimer: NodeJS.Timer | null,
   /** canvas 默认大小 */
   defaultCanvas: {w: number, h: number},
+  /** 一格的大小 */
+  size: number
   /** canvas 对象 */
   canvas: {},
   /** 得到 canvas 的 2d 上下文 */

@@ -21,8 +21,8 @@ export default [
   {name: '弗利萨',   x: 0, y: 0, w: 90, h: 90, curFloorI: 0,  curSpeed: 1.5, speed: 1.5, reward: 200, hp: {cur: 800, sum: 800, size: 8}, skill: {time: 5000}, audioKey: 'pvz-fulisha', type: 'png', imgSource: new URL("../assets/img/zombies/fulisha.png", import.meta.url).href, imgList: [], imgIndex: 0},
   {name: '舞王小兵', x: 0, y: 0, w: 75, h: 75, curFloorI: 0,  curSpeed: 2, speed: 2, reward: 5, hp: {cur: 30, sum: 30, size: 8},       audioKey: 'pvz-dance-little', type: 'gif', imgSource: new URL("../assets/img/zombies/zombies_10_move.gif", import.meta.url).href, imgList: [], imgIndex: 0},
   {name: '小鬼僵尸', x: 0, y: 0, w: 75, h: 75, curFloorI: 0,  curSpeed: 3, speed: 3, reward: 5, hp: {cur: 20, sum: 20, size: 8},       audioKey: 'pvz-little', type: 'gif', imgSource: new URL("../assets/img/zombies/zombies_11_move.gif", import.meta.url).href, imgList: [], imgIndex: 0},
-  // {name: '坤坤',     x: 0, y: 0, w: 90, h: 90, curFloorI: 0,  curSpeed: 2, speed: 2, reward: 250, hp: {cur: 700, sum: 700, size: 8},     skill: {time: 10000}, audioKey: 'kunkun', type: 'png', imgSource: new URL("../assets/img/zombies/kunkun.png", import.meta.url).href, imgList: [], imgIndex: 0},
-  {name: '坤坤',     x: 0, y: 0, w: 90, h: 90, curFloorI: 0,  curSpeed: 2, speed: 2, reward: 250, hp: {cur: 700, sum: 700, size: 8},     skill: {time: 10000}, audioKey: 'kunkun', type: 'gif', imgSource: new URL("../assets/img/zombies/kunkun.gif", import.meta.url).href, imgList: [], imgIndex: 0},
+  {name: '坤坤',     x: 0, y: 0, w: 90, h: 90, curFloorI: 0,  curSpeed: 2, speed: 2, reward: 250, hp: {cur: 700, sum: 700, size: 8},     skill: {time: 10000}, audioKey: 'kunkun', type: 'png', imgSource: new URL("../assets/img/zombies/kunkun.png", import.meta.url).href, imgList: [], imgIndex: 0},
+  // {name: '坤坤',     x: 0, y: 0, w: 90, h: 90, curFloorI: 0,  curSpeed: 2, speed: 2, reward: 250, hp: {cur: 700, sum: 700, size: 8},     skill: {time: 10000}, audioKey: 'kunkun', type: 'gif', imgSource: new URL("../assets/img/zombies/kunkun.gif", import.meta.url).href, imgList: [], imgIndex: 0},
 ] as EnemyType[]
  
 export type EnemyType = {

@@ -26,17 +26,6 @@ const state = reactive<IndexType>({
   isProgressBar: true,
   // 控制游戏区域的显示与隐藏
   isProtectTheHorse: false,
-  // 加载完成的静态图片
-  imgOnloadObj: {},
-  // 塔防加载完成图片
-  towerOnloadImg: {},
-  // 塔防子弹加载完成图片
-  towerBulletOnloadImg: {},
-  // 判断是否是手机
-  isMobile: false,
-  // 用于切换关卡克隆出来的一份数据
-  newEnemySource: [],
-  newTowerList: []
 })
 const source = useSourceStore()
 const route = useRoute()
@@ -58,22 +47,12 @@ async function init() {
     state.isProtectTheHorse = true
   }, 100);
 }
-// function handleData() {
-//   if(state.isMobile) {
-//     state.newEnemySource = _.cloneDeep(enemyData)
-//     state.newTowerList = _.cloneDeep(towerData)
-//   } else {
-//     state.newEnemySource = enemyData
-//     state.newTowerList = towerData
-//   }
-// }
 /** 切换地图 */
 function switchMapLevel(index: number) {
   if(source.mapLevel === index) return
   source.mapLevel = index
   router.push(`/game/${index + 1}`)
   state.isProtectTheHorse = false
-  // handleData()
   nextTick(() => {state.isProtectTheHorse = true})
 }
 /** 等待所有的敌人的gif图生成静态图片 */
@@ -83,9 +62,7 @@ async function handleEnemyImg() {
     source.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
     state.progress += progressStep.value
     return 
-  })).then(res => {
-    
-  })
+  })).then(res => {})
 }
 /** 处理塔防的图片 */
 async function handleTowerImg() {
@@ -102,22 +79,12 @@ onMounted(() => {
   if(isMobile()) {
     console.log('--is mobile--');
     setTheme('phone')
-    state.isMobile = true
+    source.isMobile = true
   }
   init()
 })
 
 </script>
-
-<!-- 
-:isMobile="state.isMobile"
-:mapLevel="state.mapLevel" 
-:enemySource="state.newEnemySource"
-:towerSource="state.newTowerList"
-:imgOnloadObj="state.imgOnloadObj"
-:towerOnloadImg="state.towerOnloadImg"
-:towerBulletOnloadImg="state.towerBulletOnloadImg"
--->
 
 <template>
   <div id='protect-horse-index'>

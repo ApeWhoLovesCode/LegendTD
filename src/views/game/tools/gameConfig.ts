@@ -7,6 +7,8 @@ export default function useGameConfig() {
     resizeTimer: null,
     // canvas 默认大小
     defaultCanvas: {w: 1050, h: 600},
+    /** 一格的大小 */
+    size: 50,
     // canvas 对象
     canvas: {},
     // canvas 画布距离浏览器左边和顶部的距离

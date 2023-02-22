@@ -65,6 +65,7 @@ const emit = defineEmits<{
 <style lang='less' scoped>
 @import '@/style.less';
 .com-game-navbar {
+  @size: var(--size);
   @smallSize: calc(@size * 0.6);
   @fontSize: calc(@size * 0.32);
   position: absolute;

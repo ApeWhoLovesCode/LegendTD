@@ -48,6 +48,7 @@ const isDisable = (money: number) => {
 <style lang='less' scoped>
 @import '@/style.less';
 .com-skill {
+  @size: var(--size);
   .skill-wrap {
     position: absolute;
     bottom: 0;
