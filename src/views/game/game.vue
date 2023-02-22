@@ -1114,13 +1114,13 @@ function onKeyDown() {
     }
   }
 }
-// @media screen and (orientation: portrait) {
-//   .canvas-wrap {
-//     -webkit-transform: rotate(90deg);
-//     -moz-transform: rotate(90deg);
-//     -ms-transform: rotate(90deg);
-//     transform: rotate(90deg);
-//     transform-origin: 0% 0%;
-//   }
-// }
+@media screen and (orientation: portrait) {
+  .canvas-wrap {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+    // transform-origin: 0% 0%;
+  }
+}
 </style>

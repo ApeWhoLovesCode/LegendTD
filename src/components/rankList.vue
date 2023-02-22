@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { reactive } from 'vue';
-import { ElAvatar, ElDialog, ElTable, ElTableColumn } from 'element-plus'
+import { ElAvatar, ElDialog, ElPagination, ElTable, ElTableColumn } from 'element-plus'
 import { getRankListApi, RankItem } from '@/service/rank';
 
 const {visible} = defineProps({
@@ -14,15 +14,17 @@ const emit = defineEmits<{
   (event: 'update:visible', v: boolean): void
 }>()
 
-const state = reactive<{
-  rankList: RankItem[]
-}>({rankList: []})
+const state = reactive({
+  rankList: [] as RankItem[],
+  total: 0
+})
 
 const getRankList = async () => {
   try {
     const res = await getRankListApi('101')
     console.log('res: ', res);
     state.rankList = res
+    state.total = res.length
   } catch (error) {
     console.log('error: ', error);
   }
@@ -53,9 +55,17 @@ const getRankList = async () => {
       <ElTableColumn prop="name" label="用户名"></ElTableColumn>
       <ElTableColumn prop="g101" label="得分"></ElTableColumn>
     </ElTable>
+    <div class="paginationWrap">
+      <ElPagination layout="prev, pager, next" :total="state.total" />
+    </div>
   </ElDialog>
 </template>
 
 <style lang='less' scoped>
-
+.paginationWrap {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 </style>
