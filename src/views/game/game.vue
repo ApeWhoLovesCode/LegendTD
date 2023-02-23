@@ -258,14 +258,18 @@ function makeEnemy() {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = enemyList[index]
+  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed } = enemyList[index]
   const ctx = gameConfigState.ctx
-  // 翻转图片 start
-  ctx.save() // 保存画布
-  ctx.translate(w + x * 2, 0); // 移动画布
-  ctx.scale(-1, 1) // 翻转画布
-  ctx.drawImage(imgList[imgIndex], x, y, w, h) 
-  ctx.restore() // 还原画布
+  if(!isForward) {
+    // 翻转图片 start
+    ctx.save() // 保存画布
+    ctx.translate(w + x * 2, 0); // 移动画布
+    ctx.scale(-1, 1) // 翻转画布
+    ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+    ctx.restore() // 还原画布
+  } else {
+    ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  }
   // 翻转图片 end
   // 绘画减速效果
   if(curSpeed !== speed) {
@@ -405,7 +409,7 @@ function removeEnemy(e_idList: string[]) {
 
 /** 敌人移动 */
 function moveEnemy(index: number) {
-  const { w, h, curSpeed, speed, curFloorI, id } = enemyList[index]
+  const { w, h, curSpeed, speed, curFloorI, isForward, id } = enemyList[index]
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
@@ -420,9 +424,17 @@ function moveEnemy(index: number) {
   const _y = y - (size - (size * 2 - h - baseDataState.offset.y))
   const _x = x - (w - size)
   switch (x_y) {
-    case 1: enemyList[index].x -= curSpeed; break;
+    case 1: {
+      enemyList[index].x -= curSpeed;
+      if(!isForward) enemyList[index].isForward = true
+      break;
+    }
     case 2: enemyList[index].y -= curSpeed; break;
-    case 3: enemyList[index].x += curSpeed; break;
+    case 3: {
+      enemyList[index].x += curSpeed;
+      if(isForward) enemyList[index].isForward = false
+      break;
+    } 
     case 4: enemyList[index].y += curSpeed; break;
   }
   const { x: eX, y: eY } = enemyList[index]
