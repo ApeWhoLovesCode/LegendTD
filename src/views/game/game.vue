@@ -259,32 +259,36 @@ function makeEnemy() {
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
   const { x, y, w, h, imgList, imgIndex, hp, curSpeed, speed } = enemyList[index]
-  // 翻转图片
-  // ctx.translate(200, 0);
-  // imgList[imgIndex].scale(-1, 1)
-  gameConfigState.ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  const ctx = gameConfigState.ctx
+  // 翻转图片 start
+  ctx.save() // 保存画布
+  ctx.translate(w + x * 2, 0); // 移动画布
+  ctx.scale(-1, 1) // 翻转画布
+  ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  ctx.restore() // 还原画布
+  // 翻转图片 end
   // 绘画减速效果
   if(curSpeed !== speed) {
-    gameConfigState.ctx.beginPath();
-    gameConfigState.ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
-    gameConfigState.ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
-    gameConfigState.ctx.fill()
-    gameConfigState.ctx.strokeStyle = '#022ef1'
-    gameConfigState.ctx.stroke()
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
+    ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
+    ctx.fill()
+    ctx.strokeStyle = '#022ef1'
+    ctx.stroke()
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
   const w_2 = w - hp.size
-  gameConfigState.ctx.fillStyle = '#0066a1'
-  gameConfigState.ctx.fillRect(x, y - hp.size, w_2, hp.size)
-  gameConfigState.ctx.fillStyle = '#49ca00'
-  gameConfigState.ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
+  ctx.fillStyle = '#0066a1'
+  ctx.fillRect(x, y - hp.size, w_2, hp.size)
+  ctx.fillStyle = '#49ca00'
+  ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
   // 画边框
-  gameConfigState.ctx.beginPath();
-  gameConfigState.ctx.lineWidth = 1;
-  gameConfigState.ctx.strokeStyle = "#cff1d3"; //边框颜色
-  gameConfigState.ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
-  gameConfigState.ctx.stroke();
+  ctx.beginPath();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#cff1d3"; //边框颜色
+  ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
+  ctx.stroke();
 }
 
 /** 生成敌人 */
@@ -475,7 +479,6 @@ function handleSkill(index: number) {
 function getMouse(e: MouseEvent) {
   e.stopPropagation()
   const size = gameConfigState.size
-  // const _x = e.x - gameConfigState.canvasInfo.left, _y = e.y - gameConfigState.canvasInfo.top
   const _x = e.offsetX, _y = e.offsetY
   // 当前点击的格子的索引值
   const col = Math.floor(_y / size), row = Math.floor(_x / size)
@@ -783,8 +786,8 @@ function proMoneyClick() {
 function getCanvasMargin() {
   clearTimeout(gameConfigState.resizeTimer as NodeJS.Timer)
   gameConfigState.resizeTimer = setTimeout(() => {
-    gameConfigState.canvasInfo.left = canvasRef.value?.getBoundingClientRect().left ?? 0;
-    gameConfigState.canvasInfo.top = canvasRef.value?.getBoundingClientRect().top ?? 0;
+    // gameConfigState.canvasInfo.left = canvasRef.value?.getBoundingClientRect().left ?? 0;
+    // gameConfigState.canvasInfo.top = canvasRef.value?.getBoundingClientRect().top ?? 0;
   }, 50);
 }
 

@@ -102,14 +102,14 @@ const emit = defineEmits<{
       margin-left: 10px;
       font-size: @fontSize;
       font-weight: bold;
-      color: @fontSize;
+      color: @theme3;
     }
     .add-money {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
       font-size: calc(@fontSize * 0.9);
-      color: @fontSize;
+      color: @theme3;
       font-weight: bold;
       margin-left: 6px;
       opacity: 0;
@@ -140,10 +140,10 @@ const emit = defineEmits<{
     align-items: center;
     font-size: @fontSize;
     font-weight: bold;
-    color: @fontSize;
+    color: @theme3;
     background: #1781c2;
     border-radius: calc(@size * 0.8);
-    border: 4px solid @fontSize;
+    border: 4px solid @theme3;
     box-shadow: -7px 4px 14px #1781c2,
       inset 3px 4px 6px #082a74;
     .fff-color {

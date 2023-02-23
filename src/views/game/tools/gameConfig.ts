@@ -11,8 +11,6 @@ export default function useGameConfig() {
     size: 50,
     // canvas 对象
     canvas: {},
-    // canvas 画布距离浏览器左边和顶部的距离
-    canvasInfo: {left: 0, top: 0},
     // requestAnimationFrame api的保存对象
     animationFrame: null,
     // 得到 canvas 的 2d 上下文

@@ -18,8 +18,6 @@ export type GameConfigType = {
   canvas: {},
   /** 得到 canvas 的 2d 上下文 */
   ctx: CanvasRenderingContext2D,
-  /** canvas 画布距离浏览器左边和顶部的距离 */
-  canvasInfo: {left: number, top: number},
   /** requestAnimationFrame api的保存对象 */
   animationFrame: any,
   /** 是否加载完成 */

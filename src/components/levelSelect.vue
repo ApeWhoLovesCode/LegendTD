@@ -35,8 +35,9 @@ const switchMapLevel = (index: number) => {
 <style lang='less' scoped>
 @import '@/style.less';
 .com-level-select {
+  @size: var(--size);
   position: fixed;
-  left: calc(@size * -1);
+  left: -10%;
   top: 50%;
   background: rgba(109, 218, 245, 0.8);
   padding: calc(@size * 0.3);

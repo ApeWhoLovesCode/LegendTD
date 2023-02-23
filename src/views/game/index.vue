@@ -6,7 +6,6 @@ import ProgressBar from '@/components/progressBar.vue'
 import LevelSelect from '@/components/levelSelect.vue'
 import ProtectTheHorse from './game.vue'
 
-import { setTheme } from '@/assets/theme/theme'
 import { loadImage, gifToStaticImg } from '@/utils/handleImg'
 import { isMobile } from '@/utils/tools'
 
@@ -41,7 +40,6 @@ async function init() {
   source.imgOnloadObj.floor = await loadImage(floorData[0])
   await handleTowerImg()
   state.progress = 100
-  // handleData()
   setTimeout(() => {
     state.isProgressBar = false
     state.isProtectTheHorse = true
@@ -78,7 +76,6 @@ onMounted(() => {
   source.mapLevel = +(route.params.id ?? 1) - 1
   if(isMobile()) {
     console.log('--is mobile--');
-    setTheme('phone')
     source.isMobile = true
   }
   init()
