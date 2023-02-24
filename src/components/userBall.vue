@@ -12,6 +12,9 @@ import SelectLevelPop from './selectLevelPop.vue'
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3
 })
+const emit = defineEmits<{
+  (event: 'switchMapLevel', index: number): void;
+}>()
 
 const status = ref<-1 | 0 | 1>(window.innerHeight > window.innerWidth ? -1 : 1)
 const userInfoVisible = ref(false)
@@ -106,7 +109,11 @@ const openUser = () => {
   <Login 
     v-model:visible="loginVisible"
   />
-  <SelectLevelPop v-if="props.itemsNum === 4" v-model:visible="selectLevelVisible" />
+  <SelectLevelPop 
+    v-if="props.itemsNum === 4" 
+    v-model:visible="selectLevelVisible"
+    @switch-map-level="i => emit('switchMapLevel', i)"
+  />
 
 </template>
 

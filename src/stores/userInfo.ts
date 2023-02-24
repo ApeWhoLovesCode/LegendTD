@@ -37,6 +37,7 @@ export const useUserInfoStore = defineStore('userInfo', {
         return res
       } catch (error) {
         console.log('logout-error: ', error);
+        this.$state.userInfo = void 0
       }
     }
   },

@@ -1,12 +1,14 @@
 <script setup lang='ts'>
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData';
 import { useSourceStore } from '@/stores/source';
+import { randomStr } from '@/utils/random';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 const props = defineProps<{
   index: number;
 }>()
 const source = useSourceStore()
+const idRef = ref(randomStr('com-cover-canvas'))
 const canvasRef = ref<HTMLCanvasElement>()
 const state = reactive({
   ctx: null as CanvasRenderingContext2D | null,
@@ -17,8 +19,8 @@ const state = reactive({
 })
 
 onMounted(() => {
-  getCanvasWH()
   setTimeout(() => {
+    getCanvasWH()
     init()
   }, 10);
   window.addEventListener("resize", resizeFn);
@@ -42,7 +44,7 @@ function init() {
 }
 
 function getCanvasWH() {
-  const dom = document.querySelector('.com-cover-canvas')
+  const dom = document.querySelector(`.${idRef.value}`)
   const width = dom?.clientWidth ?? 0
   state.canvasInfo.w = width
   state.canvasInfo.h = dom?.clientHeight ?? 0
@@ -89,7 +91,7 @@ function drawFloorTile() {
 </script>
 
 <template>
-  <div class='com-cover-canvas'>
+  <div class='com-cover-canvas' :class="idRef">
     <canvas 
       ref="canvasRef"
       :width="state.canvasInfo.w"

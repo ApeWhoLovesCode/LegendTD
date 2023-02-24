@@ -305,7 +305,7 @@ const onPageChange = (isAdd?: boolean) => {
     transition: transform .6s ease-out;
   }
   &-arrow {
-    position: fixed;
+    position: absolute;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;

@@ -3,11 +3,9 @@ import { nextTick, onMounted, reactive, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 import ProgressBar from '@/components/progressBar.vue'
-import LevelSelect from '@/components/levelSelect.vue'
 import ProtectTheHorse from './game.vue'
 
 import { loadImage, gifToStaticImg } from '@/utils/handleImg'
-import { isMobile } from '@/utils/tools'
 
 import towerData from '@/dataSource/towerData'
 import enemyData from '@/dataSource/enemyData'
@@ -17,6 +15,7 @@ import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
 import floorData from '@/dataSource/floorData';
 import { EnemyStateType, TowerStateType } from '@/type/game';
+import UserBall from '@/components/userBall.vue'
 
 const state = reactive<IndexType>({
   title: '保卫大司马',
@@ -74,10 +73,6 @@ async function handleTowerImg() {
 
 onMounted(() => {
   source.mapLevel = +(route.params.id ?? 1) - 1
-  if(isMobile()) {
-    console.log('--is mobile--');
-    source.isMobile = true
-  }
   init()
 })
 
@@ -90,8 +85,8 @@ onMounted(() => {
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
     />
-    <LevelSelect :mapLevel="source.mapLevel" @switchMapLevel="switchMapLevel" />
     <ProgressBar v-if="state.isProgressBar" :progress="state.progress" />
+    <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" />
   </div>
 </template>
 
@@ -106,6 +101,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  overflow: hidden;
   .title {
     position: absolute;
     left: 50%;

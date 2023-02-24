@@ -1,8 +1,14 @@
 <script setup lang='ts'>
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive } from 'vue';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
+import CoverCanvas from '@/components/coverCanvas.vue';
+import { ElDrawer } from 'element-plus';
+import mapData from '@/dataSource/mapData';
+import { useSourceStore } from '@/stores/source';
+
+const source = useSourceStore()
 
 const {visible} = defineProps({
   visible: {
@@ -12,7 +18,8 @@ const {visible} = defineProps({
   }
 })
 const emit = defineEmits<{
-  (event: 'update:visible', v: boolean): void
+  (event: 'update:visible', v: boolean): void;
+  (event: 'switchMapLevel', index: number): void;
 }>()
 
 const state = reactive({
@@ -44,63 +51,133 @@ onMounted(() => {
   init()
 })
 
-const onCardClick = (i: number) => {
-  console.log('i: ', i);
-}
+const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 </script>
 
 <template>
-  <div 
-    v-show="visible"
-    class='selectLevelPop' 
+  <ElDrawer 
+    v-model="visible"
+    custom-class='selectLevelPop' 
+    :with-header="false"
+    size="50vh"
+    @close="emit('update:visible', false)"
   >
-    <div class="area" :style="{transform: `translateX(${visible ? '-30vw' : '0'})`}">
+    <div class="selectLevelPop-area">
       <ScrollCircle 
         :list="levelData" 
         @on-page-change="onPageChange"
+        :card-add-deg="3"
       >
         <ScrollCircleItem 
-          v-for="(item, i) in state.items" 
-          :key="(state.pageNum - 1) * state.pageSize + i" 
+          v-for="(_, i) in state.items" 
+          :key="cardIndex(i)" 
           :index="i"
-          @on-click="onCardClick(i)"
+          @on-click="() => {
+            emit('switchMapLevel', cardIndex(i));
+            emit('update:visible', false)
+          }"
         >
           <div class="card">
-            <div class="card-level">{{ (state.pageNum - 1) * state.pageSize + i + 1 }}</div>
+            <div v-if="source.mapLevel === cardIndex(i)" class="card-selected"></div>
+            <div class="card-bg">
+              <CoverCanvas :index="cardIndex(i)" />
+              <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
+            </div>
+            <div class="card-level">{{ cardIndex(i) + 1 }}</div>
           </div>
         </ScrollCircleItem>
       </ScrollCircle>
+      <div class="selectLevelPop-close iconfont icon-close" @click="emit('update:visible', false)"></div>
     </div>
-  </div>
+  </ElDrawer>
 </template>
 
-<style lang='less' scoped>
+<style lang='less'>
+@import '@/style.less'; 
 .selectLevelPop {
-  position: fixed;
-  right: 0;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 1001;
-  background-color: rgba(0, 0, 0, 0.5);
-  .area {
-    position: absolute;
-    right: -30vw;
-    top: 0;
-    width: 30vw;
+  background-color: transparent;
+  .el-drawer__body {
+    padding: 0;
+  }
+  &-area {
+    width: 50vh;
     height: 100vh;
-    box-shadow: 0px 16px 48px 16px rgba(0, 0, 0, 0.08),0px 12px 32px rgba(0, 0, 0, 0.12),0px 8px 16px -8px rgba(0, 0, 0, 0.16);
-    transition: transform 0.6s;
+    .card {
+      position: relative;
+      width: 11rem;
+      height: 8rem;
+      border: 2px solid #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-drag: none;
+      &-bg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        width: 100%;
+        height: 100%;
+      }
+      &-disable {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        text-align: center;
+        line-height: 8rem;
+        font-size: 3rem;
+        color: rgba(255, 255, 255, .5);
+      }
+      &-level {
+        position: absolute;
+        left: -1rem;
+        top: -1rem;
+        width: 2rem;
+        height: 2rem;
+        line-height: 2rem;
+        text-align: center;
+        font-size: 1rem;
+        font-weight: bold;
+        color: #fff;
+        border-radius: 50%;
+        background: @red;
+      }
+      &-selected {
+        @size: 0.5rem;
+        position: absolute;
+        left: -@size;
+        top: -@size;
+        width: calc(100% + @size * 2);
+        height: calc(100% + @size * 2);
+        // border: @size dashed @red;
+        background: repeating-linear-gradient(135deg, transparent, transparent 3px, @red 3px, @red 8px);
+        border-radius: 8px;
+        animation: shine 2s infinite linear;
+        opacity: 0.8;
+        overflow: hidden;
+        z-index: -2;
+      }
+      @keyframes shine {
+        0% { background-position: -1px -1px;}
+        100% { background-position: -12px -12px;}
+      }
+    }
   }
-  .card {
-    width: 60px;
-    height: 60px;
-    text-align: center;
-    line-height: 60px;
-    font-size: 14px;
-    background-color: skyblue;
+  &-close {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 20px;
+    cursor: pointer;
+    &:hover {
+      filter: drop-shadow(1px 1px 5px rgba(255, 255, 255, 0.8));
+    }
   }
-  
 }
 </style>

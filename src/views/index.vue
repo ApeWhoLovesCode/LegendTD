@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive } from 'vue';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
@@ -52,40 +52,43 @@ const onCardClick = (i: number) => {
   router.push(`/game/${i + 1}`)
 }
 
+const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
+
 </script>
 
 <template>
   <div class='page-index'>
-    <!-- <ScrollCircle 
+    <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
     >
       <ScrollCircleItem 
-        v-for="(item, i) in state.items" 
-        :key="(state.pageNum - 1) * state.pageSize + i" 
+        v-for="(_, i) in state.items" 
+        :key="cardIndex(i)" 
         :index="i"
-        @on-click="onCardClick(i)"
+        @on-click="onCardClick(cardIndex(i))"
       >
         <div class="card">
           <div class="card-bg">
-            <CoverCanvas v-if="state.isOnload" :index="(state.pageNum - 1) * state.pageSize + i" />
-            <div v-if="!mapData[i]" class="card-disable iconfont icon-disablecase"></div>
+            <CoverCanvas v-if="state.isOnload" :index="cardIndex(i)" />
+            <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
           </div>
-          <div class="card-level">{{ (state.pageNum - 1) * state.pageSize + i + 1 }}</div>
+          <div class="card-level">{{ cardIndex(i) + 1 }}</div>
         </div>
       </ScrollCircleItem>
-    </ScrollCircle> -->
-    <UserBall :items-num="4" />
+    </ScrollCircle>
+    <UserBall />
   </div>
 </template>
 
 <style lang='less' scoped>
+@import '@/style.less'; 
 .page-index {
   position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  // background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
+  background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
   .card {
     position: relative;
     width: 24rem;
@@ -93,6 +96,7 @@ const onCardClick = (i: number) => {
     border: 5px solid #fff;
     border-radius: 12px;
     overflow: hidden;
+    cursor: pointer;
     user-select: none;
     -webkit-user-drag: none;
     filter: drop-shadow(8px 8px 20px rgba(0, 0, 0, 0.5));
@@ -126,7 +130,7 @@ const onCardClick = (i: number) => {
       font-size: 1rem;
       font-weight: bold;
       color: #fff;
-      background: #f74764;
+      background: @red;
       transform: rotate(45deg);
       filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
     }

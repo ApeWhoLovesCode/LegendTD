@@ -1,7 +1,10 @@
 <script setup lang='ts'>
-import { onMounted, ref, reactive } from 'vue';
+import { ref, reactive } from 'vue';
 import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage, FormInstance} from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo';
+import { useSourceStore } from '@/stores/source';
+
+const source = useSourceStore()
 
 const {visible} = defineProps({
   visible: {
@@ -54,7 +57,7 @@ const login = () => {
   <ElDialog 
     v-model="visible"
     title="登录"
-    width="50%"
+    :width="source.isMobile ? '85%' : '50%'"
     draggable
     @close="emit('update:visible', false)"
   >

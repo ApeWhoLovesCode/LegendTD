@@ -1,6 +1,19 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
+import { onBeforeMount } from 'vue';
+import { isMobile } from '@/utils/tools'
+
+import { useSourceStore } from './stores/source';
+
+const source = useSourceStore()
+
+const init = () => {
+  source.isMobile = !!isMobile()
+}
+
+onBeforeMount(() => {
+  init()
+})
+
 </script>
 
 <template>
