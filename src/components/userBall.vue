@@ -7,18 +7,27 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import UserIcon from '@/assets/img/user.png'
 import RankList from './rankList.vue';
 import UserInfo from './userInfo.vue'
+import SelectLevelPop from './selectLevelPop.vue'
+
+const props = withDefaults(defineProps<{itemsNum?: number}>(), {
+  itemsNum: 3
+})
 
 const status = ref<-1 | 0 | 1>(window.innerHeight > window.innerWidth ? -1 : 1)
 const userInfoVisible = ref(false)
 const rankListVisible = ref(false)
 const loginVisible = ref(false)
+const selectLevelVisible = ref(false)
 const userInfoStore = useUserInfoStore()
 
 const isVertical = computed(() => window.innerHeight > window.innerWidth)
 
 const ballItemStyle = (i: number) => {
-  const x = -100 * Math.cos((5 + i * 35) * Math.PI / 180) * status.value
-  const y = 100 * Math.sin((5 + i * 35) * Math.PI / 180) * (status.value ? 1 : 0)
+  const initDeg = -60
+  const changeDeg = (-initDeg + 80) / (props.itemsNum)
+  const r = 28 * props.itemsNum
+  const x = -r * Math.cos((initDeg + (i + 1) * changeDeg) * Math.PI / 180) * status.value
+  const y = r * Math.sin((initDeg + (i + 1) * changeDeg) * Math.PI / 180) * (status.value ? 1 : 0)
   return {
     transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
     opacity: (status.value ? 1 : 0)
@@ -77,7 +86,10 @@ const openUser = () => {
       <div class="ball-item" :style="ballItemStyle(1)">
         <div class="ball-item-content" @click="rankListVisible = true">排行榜</div>
       </div>
-      <div class="ball-item" :style="ballItemStyle(2)">
+      <div v-if="props.itemsNum === 4" class="ball-item" :style="ballItemStyle(2)">
+        <div class="ball-item-content" @click="selectLevelVisible = true">选关</div>
+      </div>
+      <div class="ball-item" :style="ballItemStyle(props.itemsNum - 1)">
         <ElDropdown size="small">
           <div class="ball-item-content">设置</div>
           <template #dropdown>
@@ -94,6 +106,7 @@ const openUser = () => {
   <Login 
     v-model:visible="loginVisible"
   />
+  <SelectLevelPop v-if="props.itemsNum === 4" v-model:visible="selectLevelVisible" />
 
 </template>
 

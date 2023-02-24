@@ -56,7 +56,7 @@ const onCardClick = (i: number) => {
 
 <template>
   <div class='page-index'>
-    <ScrollCircle 
+    <!-- <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
     >
@@ -74,8 +74,8 @@ const onCardClick = (i: number) => {
           <div class="card-level">{{ (state.pageNum - 1) * state.pageSize + i + 1 }}</div>
         </div>
       </ScrollCircleItem>
-    </ScrollCircle>
-    <UserBall />
+    </ScrollCircle> -->
+    <UserBall :items-num="4" />
   </div>
 </template>
 
