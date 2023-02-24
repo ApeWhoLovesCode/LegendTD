@@ -60,15 +60,21 @@ const emit = defineEmits<{
   /** 触摸结束的回调 */
   (event: 'onTouchEnd'): void
 }>()
+
+const idRef = ref(randomStr(classPrefix))
 const provideState = reactive<ScrollCircleProvide>({
   circleR: 0,
   cardDeg: 0,
-  isVertical: window.innerHeight > window.innerWidth,
+  isVertical: (document.querySelector(`.${idRef.value}`)?.clientHeight ?? 0) > (document.querySelector(`.${idRef.value}`)?.clientWidth ?? 0),
   isClockwise: !!props.isClockwise,
   isClick: false
 })
 provide(provideKey, provideState)
-const idRef = ref(randomStr(classPrefix))
+/** 组件盒子的宽和高 */
+const circleDiv = reactive({
+  w: 0,
+  h: 0,
+})
 /** 滚动盒子需要的信息 */
 const info = reactive<CircleInfoType>({
   circleWrapWH: 0,
@@ -96,9 +102,9 @@ const pageState = reactive({
 const duration = ref(0.6);
 
 const circleStyle = computed(() => {
-  let w = 0, h = window.innerHeight / 2;
+  let w = 0, h = info.circleR;
   if(provideState.isVertical) {
-    w = window.innerWidth / 2;
+    w = info.circleR;
     h = 0
   }
   return {
@@ -132,14 +138,17 @@ const resizeFn = () => {
 }
 
 const init = (isInit = true) => {
-  provideState.isVertical = window.innerHeight > window.innerWidth
   // 获取滚动区域和卡片的宽高信息
   const circleWrap = document.querySelector(`.${idRef.value}`)
   const cInfo = document.querySelector(`.${idRef.value} .${classPrefix}-cardWrap`)
-  info.circleWrapWH = circleWrap?.[provideState.isVertical ? 'clientHeight' : 'clientWidth'] ?? 0
+  // 组件的宽和高
+  circleDiv.w = circleWrap?.clientWidth ?? 0;
+  circleDiv.h = circleWrap?.clientHeight ?? 0;
+  provideState.isVertical = circleDiv.h > circleDiv.w
+  info.circleWrapWH = provideState.isVertical ? circleDiv.h : circleDiv.w
   info.cardWH = cInfo?.[provideState.isVertical ? 'clientHeight' : 'clientWidth'] ?? 0
   const cWH = cInfo?.[provideState.isVertical ? 'clientWidth' : 'clientHeight'] ?? 0
-  info.circleR = Math.round(provideState.isVertical ? window.innerHeight : window.innerWidth)
+  info.circleR = Math.round(provideState.isVertical ? circleDiv.h : circleDiv.w)
   // 屏幕宽高度对应的圆的角度
   info.scrollViewDeg = getLineAngle(info.circleWrapWH, info.circleR)
   // 每张卡片所占用的角度
@@ -219,7 +228,7 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   } else {
     mathMethods = xy > 0 ? 'floor' : 'ceil'
   }
-  provideState.isClick = _time < 150
+  provideState.isClick = _time < 120
   duration.value = _duration
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg
@@ -250,8 +259,8 @@ const onPageChange = (isAdd?: boolean) => {
   <div 
     :class="`${classPrefix} ${idRef}`"
     :style="{
-      width: provideState.isVertical ? `${info.circleR * 2}px` : props.width,
-      height: provideState.isVertical ? props.height : `${info.circleR * 2}px`,
+      width: props.width,
+      height: props.height,
     }"
   >
     <div 
