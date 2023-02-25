@@ -8,6 +8,7 @@ import UserIcon from '@/assets/img/user.png'
 import RankList from './rankList.vue';
 import UserInfo from './userInfo.vue'
 import SelectLevelPop from './selectLevelPop.vue'
+import { useSourceStore } from '@/stores/source';
 
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3
@@ -21,14 +22,23 @@ const userInfoVisible = ref(false)
 const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
+const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
 
-const isVertical = computed(() => window.innerHeight > window.innerWidth)
+const floatingBallStyle = computed(() => {
+  let distance = source.isMobile ? '1rem' : '50px'
+  return {
+    '--initial-position-top': distance,
+    [source.isMobile ? '--initial-position-left' : '--initial-position-right']: distance,
+    '--z-index': '1000',
+  }
+})
 
 const ballItemStyle = (i: number) => {
-  const initDeg = -60
-  const changeDeg = (-initDeg + 80) / (props.itemsNum)
-  const r = 28 * props.itemsNum
+  const initDeg = source.isMobile ? -40 : -60
+  const endDeg = source.isMobile ? 100 : 80
+  const changeDeg = (-initDeg + endDeg) / (props.itemsNum)
+  const r = 28 * props.itemsNum * (source.isMobile ? 0.7 : 1)
   const x = -r * Math.cos((initDeg + (i + 1) * changeDeg) * Math.PI / 180) * status.value
   const y = r * Math.sin((initDeg + (i + 1) * changeDeg) * Math.PI / 180) * (status.value ? 1 : 0)
   return {
@@ -73,15 +83,11 @@ const openUser = () => {
 <template>
   <FloatingBall
     magnetic="x"
-    :style="{
-      '--initial-position-top': '50px',
-      [isVertical ? '--initial-position-left' : '--initial-position-right']: '50px',
-      '--z-index': '1000',
-    }"
+    :style="floatingBallStyle"
     @on-offset-change="status = 0"
     @on-magnetic="onMagnetic"
   >
-    <div class="ball-wrap">
+    <div class="ball-wrap" :class="{'ball-mobile': source.isMobile}">
       <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? UserIcon" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
         <div class="ball-item-content" :class="{'ball-item-disable': !userInfoStore.userInfo}" @click="openUser">个人信息</div>
@@ -121,8 +127,8 @@ const openUser = () => {
 @import '@/style.less';
 .ball-wrap {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 6rem;
+  height: 6rem;
   filter: drop-shadow(0px 0px 8px rgba(0, 0, 0, 0.25));
   .avatar {
     width: 100%;
@@ -140,18 +146,19 @@ const openUser = () => {
     top: 50%;
     left: 50%;
     transition: transform ease 0.8s, opacity ease 0.6s;
+    font-size: 14px;
     &-content {
       box-sizing: content-box;
-      width: 28px;
-      height: 28px;
-      padding: 6px;
+      width: 2em;
+      height: 2em;
+      padding: 0.4em;
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
       line-height: 14px;
-      font-size: 12px;
       font-weight: bold;
+      font-size: 14px;
       color: #fff;
       background-color: @purple1;
       cursor: pointer;
@@ -167,6 +174,16 @@ const openUser = () => {
         font-size: 14px;
         background-color: @purple1;
       }
+    }
+  }
+}
+.ball-mobile {
+  width: 4rem;
+  height: 4rem;
+  .ball-item {
+    font-size: 12px;
+    &-content {
+      font-size: 12px;
     }
   }
 }
