@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useSourceStore } from '@/stores/source';
 import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from 'vue';
 
 const props =  defineProps({
@@ -17,6 +18,8 @@ const props =  defineProps({
     default: 0
   }
 })
+
+const source = useSourceStore()
 
 const progressCanvasRef = ref<HTMLCanvasElement>()
 const state = reactive({
@@ -45,8 +48,9 @@ onBeforeUnmount(() => {
 
 const getCanvasInfo = () => {
   state.ctx = progressCanvasRef.value!.getContext("2d");
-  state.canvasInfo.w = Math.round(document.documentElement.clientWidth * 0.6)
-  state.canvasInfo.h = Math.round(document.documentElement.clientHeight * 0.05)
+  const progressDom = document.querySelector('.com-progress-bar')
+  state.canvasInfo.w = Math.round(progressDom!.clientWidth * 0.6)
+  state.canvasInfo.h = Math.round(progressDom!.clientHeight * (source.isMobile ? 0.08 : 0.05))
 }
 /** 开启动画绘画 */
 const startAnimation = (newVal: number) => {
@@ -78,14 +82,14 @@ const drawProgress = (newVal: number) => {
 .com-progress-bar {
   position: fixed;
   left: 0;
-  right: 0;
   top: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, .3);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1001;
   .progress-wrap {
     .progress-title {
       margin-bottom: 12px;
@@ -101,6 +105,18 @@ const drawProgress = (newVal: number) => {
       font-weight: bold;
       color: #5bb3e5;
     }
+  }
+}
+@media screen and (orientation: portrait) {
+  .com-progress-bar {
+    left: 50%;
+    top: 50%;
+    width: 100vh;
+    height: 100vw;
+    -webkit-transform: translate(-50%, -50%) rotate(90deg);
+    -moz-transform: translate(-50%, -50%) rotate(90deg);
+    -ms-transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(90deg);
   }
 }
 </style>
