@@ -80,8 +80,7 @@ onMounted(() => {
 
 <template>
   <div id='protect-horse-index'>
-    <div class="back" @click="$router.push('/')">回到首页</div>
-    <div class="title">{{state.title}}</div>
+    <div class="title" @click="$router.push('/')">{{state.title}}</div>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
     />
@@ -103,13 +102,12 @@ onMounted(() => {
   flex-direction: column;
   overflow: hidden;
   .title {
-    position: absolute;
+    position: fixed;
     left: 50%;
+    top: 1rem;
     transform: translateX(-50%);
     font-size: 24px;
     font-weight: bold;
-    height: 30px;
-    line-height: 30px;
     color: #eee;
     text-align: center;
     user-select: none;
@@ -125,21 +123,5 @@ onMounted(() => {
       top: 1%;
     }
   }
-  .back {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    color: #fff;
-    background: rgba(255, 255, 255, .3);
-    padding: 4px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    user-select: none;
-    &:hover {
-      opacity: .8;
-    }
-  }
-  
 }
 </style>

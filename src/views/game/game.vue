@@ -923,10 +923,7 @@ function onKeyDown() {
   .game-wrap {
     position: relative;
     display: inline-block;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding: 1rem;
     border: 1px solid #eee;
     border-radius: 8px;
     @size: var(--size);
@@ -1072,6 +1069,7 @@ function onKeyDown() {
       }
       .game-begin {
         .info {
+          color: #fff;
           .begin-wrap {
             display: flex;
             flex-direction: column;
@@ -1135,7 +1133,7 @@ function onKeyDown() {
   }
 }
 @media screen and (orientation: portrait) {
-  .canvas-wrap {
+  .game-wrap {
     -webkit-transform: rotate(90deg);
     -moz-transform: rotate(90deg);
     -ms-transform: rotate(90deg);

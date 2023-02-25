@@ -49,7 +49,9 @@ onMounted(() => {
 })
 
 const onCardClick = (i: number) => {
-  router.push(`/game/${i + 1}`)
+  if(mapData[i]) {
+    router.push(`/game/${i + 1}`)
+  }
 }
 
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i

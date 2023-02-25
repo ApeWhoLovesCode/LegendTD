@@ -74,8 +74,10 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
           :key="cardIndex(i)" 
           :index="i"
           @on-click="() => {
-            emit('switchMapLevel', cardIndex(i));
-            emit('update:visible', false)
+            if(mapData[cardIndex(i)]) {
+              emit('switchMapLevel', cardIndex(i));
+              emit('update:visible', false);
+            }
           }"
         >
           <div class="card">

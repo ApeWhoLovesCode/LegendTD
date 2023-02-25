@@ -77,24 +77,28 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   background: #d2f5fa;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  border-bottom-left-radius: @fontSize;
+  border-bottom-right-radius: @fontSize;
   padding: 0 20px;
   box-shadow: -7px 4px 14px #1781c2;
   user-select: none;
   .left {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     .icon-wrap {
-      display: inline-block;
       width: @smallSize;
       height: @smallSize;
-      line-height: @smallSize;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: linear-gradient(to left top, #fffc00, #fefdee);
       border-radius: @size;
       border: 1px solid #d8b356;
       .iconfont {
         font-size: @fontSize;
+        line-height: @fontSize;
         color: #c87a1a;
       }
     }
@@ -132,18 +136,18 @@ const emit = defineEmits<{
   }
   .center {
     box-sizing: border-box;
-    display: inline-block;
     width: calc(@size * 4);
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: @fontSize;
+    line-height: @fontSize;
     font-weight: bold;
     color: @theme3;
     background: #1781c2;
     border-radius: calc(@size * 0.8);
-    border: 4px solid @theme3;
+    border: calc(@fontSize * 0.2) solid @theme3;
     box-shadow: -7px 4px 14px #1781c2,
       inset 3px 4px 6px #082a74;
     .fff-color {
@@ -154,17 +158,19 @@ const emit = defineEmits<{
     }
     .level2 {
       font-size: calc(@size * 0.48);
-      line-height: 24px;
       margin-right: 8px;
     }
   } 
   .right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     .icon-wrap {
-      display: inline-block;
       width: @smallSize;
       height: @smallSize;
-      line-height: @smallSize;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border-radius: @size;
       background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
       margin-right: 20px;

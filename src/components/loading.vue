@@ -18,7 +18,7 @@
     width: 2rem;
     height: 2rem;
     margin: 1rem;
-    background-color: currentcolor;
+    background-color: currentColor;
     border-radius: 100%;
     animation: point-animation 1s ease infinite;
     &:nth-child(1) {
