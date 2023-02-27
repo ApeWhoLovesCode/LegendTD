@@ -1,9 +1,4 @@
 <script lang="ts" setup>
-/**
- * 必要优化-待完成
- * 1.敌人图片翻转
- * 2.手机屏幕翻转兼容
- */
 import { nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import _ from 'lodash'
 import { ElMessage } from 'element-plus'
@@ -260,17 +255,17 @@ function drawEnemy(index: number) {
   if(!enemyList[index]) return
   const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed } = enemyList[index]
   const ctx = gameConfigState.ctx
-  if(!isForward) {
-    // 翻转图片 start
-    ctx.save() // 保存画布
-    ctx.translate(w + x * 2, 0); // 移动画布
-    ctx.scale(-1, 1) // 翻转画布
-    ctx.drawImage(imgList[imgIndex], x, y, w, h) 
-    ctx.restore() // 还原画布
+  ctx.save() // 保存画布
+  // 翻转图片
+  if(!isForward) { 
+    // ctx.translate(w + x * 2 + (-w / 2), -h / 2)
+    ctx.translate(w + x * 2, -h / 2)
+    ctx.scale(-1, 1); // 翻转画布
   } else {
-    ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+    ctx.translate(-w / 2, -h / 2) // 居中图片
   }
-  // 翻转图片 end
+  ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {
     ctx.beginPath();
@@ -298,14 +293,13 @@ function drawEnemy(index: number) {
 /** 生成敌人 */
 function setEnemy() {
   const enemyItemSource = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
-  const size = gameConfigState.size
-  const {audioKey, name, h} = enemyItemSource
+  const {audioKey, name} = enemyItemSource
   // 设置敌人的初始位置
   const id = Date.now()
   const enemyItem: EnemyStateType = {...enemyItemSource, id: audioKey + id}
   const {x, y} = baseDataState.mapGridInfoItem
   enemyItem.x = x
-  enemyItem.y = y - (size - (size * 2 - h - baseDataState.offset.y))
+  enemyItem.y = y
   enemyList.push(enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, enemyItem.id)
@@ -409,7 +403,7 @@ function removeEnemy(e_idList: string[]) {
 
 /** 敌人移动 */
 function moveEnemy(index: number) {
-  const { w, h, curSpeed, speed, curFloorI, isForward, id } = enemyList[index]
+  const { curSpeed, speed, curFloorI, isForward, isFlip, id } = enemyList[index]
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
@@ -417,29 +411,25 @@ function moveEnemy(index: number) {
     playAudio('ma-nansou', 'End')
     return true
   }
-  const size = gameConfigState.size
   // 将格子坐标同步到敌人的坐标
-  const { x, y, x_y } = enemyState.movePath[curFloorI]
-  // 敌人需要站在地板中间区域
-  const _y = y - (size - (size * 2 - h - baseDataState.offset.y))
-  const _x = x - (w - size)
+  const { x: _x, y: _y, x_y } = enemyState.movePath[curFloorI]
   switch (x_y) {
     case 1: {
       enemyList[index].x -= curSpeed;
-      if(!isForward) enemyList[index].isForward = true
+      if(!isForward) enemyList[index].isForward = !isFlip
       break;
     }
     case 2: enemyList[index].y -= curSpeed; break;
     case 3: {
       enemyList[index].x += curSpeed;
-      if(isForward) enemyList[index].isForward = false
+      if(isForward) enemyList[index].isForward = isFlip
       break;
     } 
     case 4: enemyList[index].y += curSpeed; break;
   }
   const { x: eX, y: eY } = enemyList[index]
   // 敌人到达下一个格子
-  if((eX >= _x &&  eX <= _x + speed) && (eY >= _y &&  eY <= _y + speed)) {
+  if((eX >= _x && eX <= _x + speed) && (eY >= _y && eY <= _y + speed)) {
     enemyList[index].curFloorI++
   }
 }
@@ -708,8 +698,8 @@ function checkBulletInEnemy({x, y, w, h}: TargetInfo, e_id: string) {
 
 /** 开始游戏 */
 function beginGame() {
-  audioLevelRef.value?.play()
-  playBgAudio()
+  // audioLevelRef.value?.play()
+  // playBgAudio()
   gameConfigState.isGameBeginMask = false
   baseDataState.isPause = false
   ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
@@ -718,12 +708,10 @@ function beginGame() {
 /** 移动端按比例缩放数据 */
 function initMobileData() {
   if(!source.isMobile) return
-  console.log('isMobile: ', source.isMobile);
   const {w, h} = gameConfigState.defaultCanvas
   const wp = document.documentElement.clientWidth / (h + 100)
   const hp = document.documentElement.clientHeight / (w + 100)
   const p = Math.floor(Math.min(wp, hp) * 10) / 10
-  console.log('p: ', p);
   function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
   }
@@ -753,7 +741,7 @@ function initMovePath() {
   const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(baseDataState.mapGridInfoItem))
   const length = movePathItem.num!
   delete movePathItem.num
-  const movePath: GridInfo[]  = []
+  const movePath: GridInfo[] = []
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
   for(let i = 0; i < length; i++) {

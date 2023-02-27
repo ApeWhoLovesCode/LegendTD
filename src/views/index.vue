@@ -90,7 +90,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
+  // background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
   .card {
     position: relative;
     width: 24rem;
