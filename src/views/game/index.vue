@@ -18,7 +18,7 @@ import { EnemyStateType, TowerStateType } from '@/type/game';
 import UserBall from '@/components/userBall.vue'
 
 const state = reactive<IndexType>({
-  title: '保卫大司马',
+  title: '塔防联盟',
   // 当前加载进度
   progress: 0,
   isProgressBar: true,

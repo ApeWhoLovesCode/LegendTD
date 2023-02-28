@@ -258,11 +258,8 @@ function drawEnemy(index: number) {
   ctx.save() // 保存画布
   // 翻转图片
   if(!isForward) { 
-    // ctx.translate(w + x * 2 + (-w / 2), -h / 2)
-    ctx.translate(w + x * 2, -h / 2)
+    ctx.translate(w + x * 2, 0)
     ctx.scale(-1, 1); // 翻转画布
-  } else {
-    ctx.translate(-w / 2, -h / 2) // 居中图片
   }
   ctx.drawImage(imgList[imgIndex], x, y, w, h) 
   ctx.restore() // 还原画布
@@ -293,13 +290,13 @@ function drawEnemy(index: number) {
 /** 生成敌人 */
 function setEnemy() {
   const enemyItemSource = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
-  const {audioKey, name} = enemyItemSource
+  const {audioKey, name, w, h} = enemyItemSource
   // 设置敌人的初始位置
   const id = Date.now()
   const enemyItem: EnemyStateType = {...enemyItemSource, id: audioKey + id}
   const {x, y} = baseDataState.mapGridInfoItem
-  enemyItem.x = x
-  enemyItem.y = y
+  enemyItem.x = x - w / 4
+  enemyItem.y = y - h / 2
   enemyList.push(enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, enemyItem.id)
@@ -403,7 +400,7 @@ function removeEnemy(e_idList: string[]) {
 
 /** 敌人移动 */
 function moveEnemy(index: number) {
-  const { curSpeed, speed, curFloorI, isForward, isFlip, id } = enemyList[index]
+  const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemyList[index]
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
@@ -412,7 +409,8 @@ function moveEnemy(index: number) {
     return true
   }
   // 将格子坐标同步到敌人的坐标
-  const { x: _x, y: _y, x_y } = enemyState.movePath[curFloorI]
+  const { x, y, x_y } = enemyState.movePath[curFloorI]
+  const _x = x - w / 4, _y = y - h / 2
   switch (x_y) {
     case 1: {
       enemyList[index].x -= curSpeed;
@@ -699,7 +697,7 @@ function checkBulletInEnemy({x, y, w, h}: TargetInfo, e_id: string) {
 /** 开始游戏 */
 function beginGame() {
   // audioLevelRef.value?.play()
-  // playBgAudio()
+  playBgAudio()
   gameConfigState.isGameBeginMask = false
   baseDataState.isPause = false
   ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
@@ -793,6 +791,7 @@ function getCanvasMargin() {
 
 /** 播放背景音乐 */
 function playBgAudio() {
+  return
   baseDataState.isPlayBgAudio = !baseDataState.isPlayBgAudio
   if(baseDataState.isPlayBgAudio) {
     audioBgRef.value!.volume = 0.65
