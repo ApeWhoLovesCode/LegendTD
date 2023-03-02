@@ -15,7 +15,7 @@ import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
 import Skill from '@/components/skill.vue'
 
-import { createProbNum, limitRange, randomNum, waitTime } from '@/utils/tools'
+import { createProbNum, limitRange, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval from '@/utils/keepInterval'
 
 import levelData from '@/dataSource/levelData'
@@ -136,13 +136,8 @@ watch(() => baseDataState.level, (val) => {
     if(val < enemyDataArr.length && !isInfinite.value) {
       enemyState.levelEnemy = enemyDataArr[val]
     } else {
-      const list = [0]
-      const isUpdate = (val / 2) > enemyDataArr.length ? true : false
-      const enemyNum = isInfinite.value ? ~~((val + 1) * 5) : ~~(val * 1.3)
-      for(let i = 0; i < enemyNum; i++) {
-        list.push(createProbNum(isUpdate))
-      }
-      enemyState.levelEnemy = list
+      const levelNum = baseDataState.level + (isInfinite.value ? 5 : 0)
+      enemyState.levelEnemy = randomNumList(levelNum)
     }
     if(val) {
       if((val / 10) % 1 === 0) {
@@ -353,14 +348,15 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyType, i: number) {
-  const size = gameConfigState.size
   const { curFloorI, w, h, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = Date.now() + i
-  const _newEnemy: EnemyStateType = {id: audioKey + id, ...newEnemy}
-  _newEnemy.x = x - (w - size)
-  _newEnemy.y = y - (size - (size * 2 - h - baseDataState.offset.y))
-  return _newEnemy
+  return {
+    ...newEnemy,
+    id: audioKey + id,
+    x: x - w / 4,
+    y: y - h / 2
+  } as EnemyStateType
 }
 
 /** 消灭敌人 */
