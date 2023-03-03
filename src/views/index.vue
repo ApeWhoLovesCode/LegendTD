@@ -60,7 +60,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 <template>
   <div class='page-index'>
-    <ScrollCircle 
+    <!-- <ScrollCircle 
       :list="levelData" 
       @on-page-change="onPageChange"
     >
@@ -78,7 +78,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
           <div class="card-level">{{ cardIndex(i) + 1 }}</div>
         </div>
       </ScrollCircleItem>
-    </ScrollCircle>
+    </ScrollCircle> -->
     <UserBall />
   </div>
 </template>
