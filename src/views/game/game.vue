@@ -24,6 +24,7 @@ import { useSourceStore } from '@/stores/source';
 import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
+import { TowerType } from '@/dataSource/towerData';
 
 // 全局资源
 const source = useSourceStore()
@@ -227,7 +228,7 @@ function startDraw() {
     if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
     else enemyList[index].imgIndex++
   }
-  drawAndMoveBullet()
+  handleBulletMove()
 }
 
 /** 按间隔时间生成敌人 */
@@ -508,6 +509,12 @@ function buildTower(index: number) {
   const tower: TowerStateType = {
     ...ret, x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
+  if(tower.name === 'lanbo') {
+    tower.scale = 1
+    const {r, speed, bSize: {w, h}} = tower
+    const l = powAndSqrt(w / 2, h / 2)
+    tower.addScale = (r / l - 1) / ((r - l) / speed)
+  }
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[y / size][x / size] = 10 + index
@@ -535,7 +542,7 @@ function saleTower(index: number) {
   removeAudio(id)
   towerList.splice(index, 1)
 }
-/** 发射子弹  enemy:敌人索引数组，t_i:塔索引 */
+/** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
 function shootBullet(eIdList: string[], t_i: number) {
   // 添加攻击目标的索引
   towerList[t_i].targetIndexList = eIdList
@@ -565,10 +572,10 @@ function shootBullet(eIdList: string[], t_i: number) {
   }
 }
 
-/** 画并处理子弹 */
-function drawAndMoveBullet() {
+/** 处理子弹的移动 */
+function handleBulletMove() {
   const e_idList = []
-  for(const t_i in towerList) {
+  for(let t_i = 0; t_i < towerList.length; t_i++) {
     const t = towerList[t_i]
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
       const {w, h} = t.bSize
@@ -625,12 +632,21 @@ function drawAndMoveBullet() {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
           t.bulletArr.splice(b_i, 1)
         }
-        gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
+        // if(t.name !== 'lanbo') {
+          gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
+        // }
       }
       // 清除穿透性子弹
       if(t.isThrough && checkThroughBullet({x,y,w,h})) {
         t.bulletArr.splice(b_i, 1)
       }
+    }
+    if(!t.isBulleting) {
+      t.isBulleting = !!t.bulletArr.length
+    }
+    // 有子弹才绘画
+    if(t.isBulleting) {
+      drawTowerBullet(t_i)
     }
   }
   // 消灭敌人
@@ -639,11 +655,34 @@ function drawAndMoveBullet() {
   }
 }
 
+/** 画塔防的特殊子弹 */
+function drawTowerBullet(t_i: number) {
+  const t = towerList[t_i]
+  const {w, h} = t.bSize
+  // 当前塔防的当前子弹
+  const ctx = gameConfigState.ctx
+  if(t.name === 'lanbo') {
+    let {x, y, scale = 1, r, addScale} = t
+    if(scale * w / 2 <= r) {
+      scale += addScale ?? 0.3
+    } else {
+      scale = 1
+      t.isBulleting = false
+    }
+    ctx.save()
+    ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
+    ctx.scale(scale, scale)
+    ctx.drawImage(t.onloadbulletImg, x, y, w, h)
+    ctx.restore()
+    t.scale = scale
+  }
+}
+
 /** 
  * 计算子弹和敌人的距离
  * 返回 x,y方向需要增加的值， xy: 塔和敌人的距离
  */
-  function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
+function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
   const enemy = enemyList.find(e => e.id === e_id)
   // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
   if(!enemy || towerList[t_i].isThrough) return
@@ -657,7 +696,11 @@ function drawAndMoveBullet() {
   // 子弹和敌人的距离
   const distance = powAndSqrt(diff.x, diff.y)
   return {
-    addX: speed * diff.x / distance, addY: speed * diff.y / distance, xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
+    // addX: speed * diff.x / distance,
+    // addY: speed * diff.y / distance,
+    addX: (distance + speed) * diff.x / distance - diff.x,
+    addY: (distance + speed) * diff.y / distance - diff.y,
+    xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
   }
 }
 
@@ -703,8 +746,8 @@ function beginGame() {
 function initMobileData() {
   if(!source.isMobile) return
   const {w, h} = gameConfigState.defaultCanvas
-  const wp = document.documentElement.clientWidth / (h + 100)
-  const hp = document.documentElement.clientHeight / (w + 100)
+  const wp = document.documentElement.clientWidth / (h + 80)
+  const hp = document.documentElement.clientHeight / (w + 80)
   const p = Math.floor(Math.min(wp, hp) * 10) / 10
   function handleDecimals(val: number) {
     return val * (p * 1000) / 1000
@@ -859,7 +902,7 @@ function onKeyDown() {
               :key="index"
               @click="buildTower(index)"
             >
-              <img :src="item.img" alt="" class="tower-icon">
+              <img :src="item.cover || item.img" alt="" class="tower-icon">
               <div class="tower-info">￥{{item.money}}</div>
             </div>
           </div>

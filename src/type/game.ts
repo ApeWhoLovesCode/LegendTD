@@ -104,6 +104,12 @@ export type TowerStateType = {
   onloadbulletImg: CanvasImageSource
   /** 是否是可穿透的 */
   isThrough?: boolean 
+  /** 子弹的缩放倍数 */
+  scale?: number 
+  /** 子弹的缩放倍数变化值 */
+  addScale?: number
+  /** 子弹发射中 */
+  isBulleting?: boolean
 } & TowerType
 /** 塔防的数据 */
 export type TowerState = {
