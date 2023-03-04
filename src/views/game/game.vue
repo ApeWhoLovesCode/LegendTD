@@ -513,7 +513,8 @@ function buildTower(index: number) {
     tower.scale = 1
     const {r, speed, bSize: {w, h}} = tower
     const l = powAndSqrt(w / 2, h / 2)
-    tower.addScale = (r / l - 1) / ((r - l) / speed)
+    // 这里 speed + 1 是为了让子弹扩散的效果快于真实子弹
+    tower.addScale = (r / l - 1) / ((r - l) / (speed + 1))
   }
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
@@ -566,6 +567,9 @@ function shootBullet(eIdList: string[], t_i: number) {
       bullet.attactIdSet = new Set()
     }
     towerList[t_i].bulletArr.push(bullet)
+    if(towerList[t_i].name === 'lanbo') {
+      towerList[t_i].isBulleting = true
+    }
     if(name === 'PDD') {
       playDomAudio(id, 0.4)
     }
@@ -632,19 +636,16 @@ function handleBulletMove() {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
           t.bulletArr.splice(b_i, 1)
         }
-        // if(t.name !== 'lanbo') {
+        if(t.name !== 'lanbo') {
           gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
-        // }
+        }
       }
       // 清除穿透性子弹
       if(t.isThrough && checkThroughBullet({x,y,w,h})) {
         t.bulletArr.splice(b_i, 1)
       }
     }
-    if(!t.isBulleting) {
-      t.isBulleting = !!t.bulletArr.length
-    }
-    // 有子弹才绘画
+    // 有需要额外的子弹才绘画
     if(t.isBulleting) {
       drawTowerBullet(t_i)
     }
@@ -666,8 +667,9 @@ function drawTowerBullet(t_i: number) {
     if(scale * w / 2 <= r) {
       scale += addScale ?? 0.3
     } else {
-      scale = 1
+      t.scale = 1
       t.isBulleting = false
+      return
     }
     ctx.save()
     ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
@@ -696,10 +698,8 @@ function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
   // 子弹和敌人的距离
   const distance = powAndSqrt(diff.x, diff.y)
   return {
-    // addX: speed * diff.x / distance,
-    // addY: speed * diff.y / distance,
-    addX: (distance + speed) * diff.x / distance - diff.x,
-    addY: (distance + speed) * diff.y / distance - diff.y,
+    addX: speed * diff.x / distance,
+    addY: speed * diff.y / distance,
     xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
   }
 }
@@ -806,6 +806,7 @@ function drawFloorTile() {
 
 /** 开启创建金钱定时器 */
 function startMoneyTimer() {
+  return
   keepInterval.set('startMoneyTimer', () => {
     gameSkillState.proMoney.isShow = true
     playAudio('ma-qifei', 'End')
