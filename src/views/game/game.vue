@@ -636,9 +636,19 @@ function handleBulletMove() {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
           t.bulletArr.splice(b_i, 1)
         }
-        if(t.name !== 'lanbo') {
-          gameConfigState.ctx.drawImage(t.onloadbulletImg, x - w / 2, y - h / 2, w, h)
-        }
+        const ctx = gameConfigState.ctx
+        const imgX = x - w / 2, imgY = y - h / 2
+        if(t.name === 'fengche') {
+          t.rotateDeg = (t.rotateDeg ?? 0) + 0.04
+          ctx.save()
+          ctx.translate(imgX + w / 2, imgY + h / 2)
+          ctx.rotate(t.rotateDeg)
+          ctx.translate(-(imgX + w / 2), -(imgY + h / 2))
+          ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
+          ctx.restore()
+        } else if(t.name !== 'lanbo') {
+          ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
+        } 
       }
       // 清除穿透性子弹
       if(t.isThrough && checkThroughBullet({x,y,w,h})) {
