@@ -15,7 +15,7 @@ import Loading from '@/components/loading.vue'
 import GameNavBar from '@/components/gameNavBar.vue'
 import Skill from '@/components/skill.vue'
 
-import { createProbNum, limitRange, randomNum, randomNumList, waitTime } from '@/utils/tools'
+import { limitRange, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval from '@/utils/keepInterval'
 
 import levelData from '@/dataSource/levelData'
@@ -24,7 +24,6 @@ import { useSourceStore } from '@/stores/source';
 import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
-import { TowerType } from '@/dataSource/towerData';
 
 // 全局资源
 const source = useSourceStore()
@@ -333,7 +332,7 @@ function setEnemySkill(enemyName: string, e_id: string) {
     enemyList[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
     volume = 0.7
   }
-  playDomAudio(id, volume)
+  playDomAudio({id, volume})
 }
 
 /** 处理敌人技能 */
@@ -505,9 +504,8 @@ function buildTower(index: number) {
     shootBullet(eIdList, t_i)
   }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
-  const id = Date.now()
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + id, shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   if(tower.name === 'lanbo') {
     tower.scale = 1
@@ -520,7 +518,8 @@ function buildTower(index: number) {
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[y / size][x / size] = 10 + index
   drawTower(tower)
-  createAudio(audioKey, String(id))
+  createAudio(`${audioKey}-choose`, tower.id)
+  playDomAudio({id: tower.id, volume: 0.5})
 }
 /** 画塔防 */
 function drawTower(item?: TowerStateType) {
@@ -570,9 +569,10 @@ function shootBullet(eIdList: string[], t_i: number) {
     if(towerList[t_i].name === 'lanbo') {
       towerList[t_i].isBulleting = true
     }
-    if(name === 'PDD') {
-      playDomAudio(id, 0.4)
-    }
+    // 这里可以放发射子弹音频
+    // if(name === 'PDD') {
+    //   playDomAudio({id, volume: 0.4})
+    // }
   }
 }
 
@@ -622,9 +622,10 @@ function handleBulletMove() {
             baseDataState.money += enemy.reward
             e_idList.push(e_id)
             t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
-            if(t.name === '茄子') {
-              playDomAudio(t.id)
-            }
+            // 这里可以放击杀音频
+            // if(t.name === '茄子') {
+            //   playDomAudio({id: t.id})
+            // }
           } else {
             // 判断减速
             if(t.slow) {

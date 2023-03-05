@@ -13,7 +13,8 @@ export default {
   'ma-roudan': new URL("../assets/audio/ma-roudan.mp3", import.meta.url).href,
   'ma-gameover': new URL("../assets/audio/ma-gameover.mp3", import.meta.url).href,
   'ma-haha': new URL("../assets/audio/ma-haha.mp3", import.meta.url).href,
-  'qizi-wujie': new URL("../assets/audio/qizi-wujie.mp3", import.meta.url).href,
-  'pdd-heihei': new URL("../assets/audio/pdd-heihaha.wav", import.meta.url).href,
+  'qizi-choose': new URL("../assets/audio/qizi-wujie.mp3", import.meta.url).href,
+  'pdd-choose': new URL("../assets/audio/pdd-heihaha.wav", import.meta.url).href,
   'kunkun': new URL("../assets/audio/kunkun.mp3", import.meta.url).href,
+  'lanbo-choose': new URL("../assets/audio/lanbo-choose.wav", import.meta.url).href,
 } as {[key in string]: string}
