@@ -519,7 +519,7 @@ function buildTower(index: number) {
   baseDataState.gridInfo.arr[y / size][x / size] = 10 + index
   drawTower(tower)
   createAudio(`${audioKey}-choose`, tower.id)
-  playDomAudio({id: tower.id, volume: 0.5})
+  playDomAudio({id: tower.id})
 }
 /** 画塔防 */
 function drawTower(item?: TowerStateType) {

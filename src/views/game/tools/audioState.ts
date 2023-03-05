@@ -23,7 +23,7 @@ export default function useAudioState() {
   }
   
   /** 播放创建出来的dom(防御塔和僵尸)的音乐 */
-  function playDomAudio({id, audioKey, volume = 1}: {id: string, audioKey?: string, volume?: number}) {
+  function playDomAudio({id, audioKey, volume = 0.5}: {id: string, audioKey?: string, volume?: number}) {
     const audioWrap = document.querySelector('#audio-wrap')
     const audioDom = (audioWrap?.querySelector(`#${id}`) as HTMLAudioElement)
     if(!audioDom) return
