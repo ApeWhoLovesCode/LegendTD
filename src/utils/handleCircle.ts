@@ -10,6 +10,13 @@ export const toAngle = (start: Location, end: Location) => {
   return 360 * Math.atan(_y / _x) / (2 * Math.PI)
 }
 
+/** 传入两个坐标，以坐标系顺时针的形势返回角度 */
+export const getAngle = (start: Location, end: Location) => {
+  const x = end.x - start.x, y = end.y - start.y;
+  const deg = 180 * Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI;
+  return y < 0 ? 360 - deg : deg;
+}
+
 /**
  * 获取圆上一条直线两个点之间的角度(线的长度, 半径)
  */

@@ -24,6 +24,7 @@ import { useSourceStore } from '@/stores/source';
 import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
+import { getAngle } from '@/utils/handleCircle';
 
 // 全局资源
 const source = useSourceStore()
@@ -549,11 +550,11 @@ function shootBullet(eIdList: string[], t_i: number) {
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
+    const size_2 = gameConfigState.size / 2
     const {x, y, w, h} = enemy
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough } = towerList[t_i]
-    const size_2 = gameConfigState.size / 2
+    const {x: t_x, y: t_y, speed, name, id, isThrough, bulletInitDeg } = towerList[t_i]
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
     // 两坐标间的差值
@@ -565,15 +566,32 @@ function shootBullet(eIdList: string[], t_i: number) {
     if(isThrough) {
       bullet.attactIdSet = new Set()
     }
-    towerList[t_i].bulletArr.push(bullet)
-    if(towerList[t_i].name === 'lanbo') {
-      towerList[t_i].isBulleting = true
+    if(bulletInitDeg !== void 0) {
+      const deg = getAngle({x: begin.x, y: begin.y}, {x: _x, y: _y})
+      bullet.deg = -bulletInitDeg + deg
     }
+    towerList[t_i].bulletArr.push(bullet)
     // 这里可以放发射子弹音频
     // if(name === 'PDD') {
     //   playDomAudio({id, volume: 0.4})
     // }
   }
+  if(towerList[t_i].name === 'lanbo') {
+    towerList[t_i].isBulleting = true
+  }
+}
+
+/** 旋转子弹 */
+function drawRotateBullet({x, y, w, h, deg, img}: {
+  x: number; y: number; w: number; h:number; deg: number; img: CanvasImageSource
+}) {
+  const ctx = gameConfigState.ctx
+  ctx.save()
+  ctx.translate(x + w / 2, y + h / 2)
+  ctx.rotate(deg * Math.PI / 180)
+  ctx.translate(-(x + w / 2), -(y + h / 2))
+  ctx.drawImage(img, x, y, w, h)
+  ctx.restore()
 }
 
 /** 处理子弹的移动 */
@@ -587,13 +605,13 @@ function handleBulletMove() {
       const bItem = t.bulletArr[b_i]
       let {x, y, addX, addY, e_id, attactIdSet} = bItem
       // 重新计算子弹离敌人的距离
-      const b_e_distance = bulletEnemyDistance(e_id, +t_i, b_i)
+      const b_e_distance = bulletEnemyDistance(e_id, +t_i, bItem.x, bItem.y)
       if(b_e_distance) {
-        const {addX: _addX, addY: _addY, xy} = b_e_distance
+        const {addX: _addX, addY: _addY, x_y} = b_e_distance
         addX = _addX, addY = _addY
         bItem.addX = _addX
         bItem.addY = _addY
-        bItem.x_y = xy
+        bItem.x_y = x_y
       }
       bItem.x += addX
       bItem.y += addY
@@ -640,15 +658,14 @@ function handleBulletMove() {
         const ctx = gameConfigState.ctx
         const imgX = x - w / 2, imgY = y - h / 2
         if(t.name === 'fengche') {
-          t.rotateDeg = (t.rotateDeg ?? 0) + 0.04
-          ctx.save()
-          ctx.translate(imgX + w / 2, imgY + h / 2)
-          ctx.rotate(t.rotateDeg)
-          ctx.translate(-(imgX + w / 2), -(imgY + h / 2))
-          ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
-          ctx.restore()
+          t.rotateDeg = (t.rotateDeg ?? 0) + 3
+          drawRotateBullet({deg: t.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
         } else if(t.name !== 'lanbo') {
-          ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
+          if(bItem.deg) { // 需要旋转的子弹
+            drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+          } else {
+            ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
+          }
         } 
       }
       // 清除穿透性子弹
@@ -693,9 +710,11 @@ function drawTowerBullet(t_i: number) {
 
 /** 
  * 计算子弹和敌人的距离
- * 返回 x,y方向需要增加的值， xy: 塔和敌人的距离
+ * 返回 x,y方向需要增加的值, distance: 子弹和敌人的距离, x_y: 塔和敌人的距离
  */
-function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
+function bulletEnemyDistance(
+  e_id: string, t_i: number, bx: number, by: number
+) {
   const enemy = enemyList.find(e => e.id === e_id)
   // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
   if(!enemy || towerList[t_i].isThrough) return
@@ -703,15 +722,15 @@ function bulletEnemyDistance(e_id: string, t_i: number, b_i: number) {
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
-  const { speed, bulletArr, x: tx, y: ty } = towerList[t_i]
+  const { speed,  x: tx, y: ty } = towerList[t_i]
   // 两坐标间的差值
-  const diff = {x: _x - bulletArr[b_i].x, y: _y - bulletArr[b_i].y}
+  const diff = {x: _x - bx, y: _y - by}
   // 子弹和敌人的距离
   const distance = powAndSqrt(diff.x, diff.y)
   return {
     addX: speed * diff.x / distance,
     addY: speed * diff.y / distance,
-    xy: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
+    x_y: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
   }
 }
 

@@ -79,12 +79,14 @@ export type BulletType = {
   addY: number
   /** 当前距离 */
   xy: number
-  /** 目标距离 */
+  /** 子弹和敌人的距离 */
   x_y: number
   /** 目标id */
   e_id: string
   /** 当前攻击的id集合 */
   attactIdSet?: Set<string>
+  /** 实际中子弹要旋转的角度 */
+  deg?: number
 }
 
 /** 塔防的类型 */
