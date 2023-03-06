@@ -25,9 +25,12 @@ import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
+import { updateScoreApi } from '@/service/rank';
+import { useUserInfoStore } from '@/stores/userInfo';
 
 // 全局资源
 const source = useSourceStore()
+const userInfoStore = useUserInfoStore()
 
 // 抽离的数据
 const { audioState, createAudio, playDomAudio, removeAudio} = useAudioState()
@@ -103,11 +106,18 @@ watch(() => baseDataState.money, (newVal, oldVal) => {
   })
 })
 // 游戏结束判断
-watch(() => baseDataState.hp, (val) => {
+watch(() => baseDataState.hp, () => {
   baseDataState.isGameOver = true
   baseDataState.isPause = true
   playAudio('ma-gameover', 'Skill')
   audioBgRef.value?.pause()
+  updateScoreApi({
+    userId: userInfoStore.userInfo?.id ?? '',
+    score: baseDataState.score,
+    level: source.mapLevel
+  }).then(res => {
+    ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
+  })
 })
 // 监听暂停
 watch(() => baseDataState.isPause, (val) => {

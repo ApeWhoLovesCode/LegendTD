@@ -46,6 +46,8 @@ export type GameBaseData = {
   level: number
   /** 生命值 */
   hp: number
+  /** 得分 */
+  score: number
   /** 金钱 */
   money: number
   /** 敌人生成间隔时间 */

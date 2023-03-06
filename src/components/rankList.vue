@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { reactive } from 'vue';
-import { ElAvatar, ElDialog, ElPagination, ElTable, ElTableColumn } from 'element-plus'
+import { ElAvatar, ElDialog, ElPagination, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import { getRankListApi, RankItem } from '@/service/rank';
 
 const {visible} = defineProps({
@@ -21,10 +21,9 @@ const state = reactive({
 
 const getRankList = async () => {
   try {
-    const res = await getRankListApi('101')
+    const res = await getRankListApi()
     console.log('res: ', res);
     state.rankList = res
-    state.total = res.length
   } catch (error) {
     console.log('error: ', error);
   }
@@ -37,7 +36,6 @@ const getRankList = async () => {
     v-model="visible" 
     title="排行榜"
     width="60%"
-    draggable
     @open="getRankList"
     @close="emit('update:visible', false)"
   >
@@ -53,11 +51,20 @@ const getRankList = async () => {
         </template>
       </ElTableColumn>
       <ElTableColumn prop="name" label="用户名"></ElTableColumn>
-      <ElTableColumn prop="g101" label="得分"></ElTableColumn>
+      <ElTableColumn prop="max" label="最高分">
+        <template #default="scope">
+          {{ scope.row.max.score }}
+        </template>
+      </ElTableColumn>
+      <ElTableColumn prop="max" label="所在关卡">
+        <template #default="scope">
+          <ElTag>{{ scope.row.max.level + 1 }}</ElTag>
+        </template>
+      </ElTableColumn>
     </ElTable>
-    <div class="paginationWrap">
+    <!-- <div class="paginationWrap">
       <ElPagination layout="prev, pager, next" :total="state.total" />
-    </div>
+    </div> -->
   </ElDialog>
 </template>
 

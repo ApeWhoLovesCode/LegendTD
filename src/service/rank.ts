@@ -16,8 +16,31 @@ export type RankItem = {
   avatar: string
   /** 用户名 */
   name: string
+  /** 所有关卡得分数组 */
+  scoreList?: number[]
+  /** 所有关卡中的最大得分以及对应的等级 */
+  max: {
+    score: number
+    level: number
+  }
 } & RankScore
 
-export const getRankListApi = (gameId: GameIdType) => {
-  return request.get<RankItem[]>(`/${api}/games/rankList`, { gameId })
+export const getRankListApi = () => {
+  return request.get<RankItem[]>(`/${api}/legendTD/getScoreList`)
+}
+
+export type UpdateScoreParasm = {
+  level: number
+  score: number
+  userId: string
+}
+export type UpdateScoreRes = {
+  /** 得分是否有更新 */
+  isUpdate: boolean
+  /** 上传的得分 */
+  score: number
+}
+/** 上传得分 */
+export const updateScoreApi = (params: UpdateScoreParasm) => {
+  return request.post<UpdateScoreRes>(`/${api}/legendTD/setScore`, params)
 }

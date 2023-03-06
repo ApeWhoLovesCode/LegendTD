@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import FloatingBall from '@/components/floating-ball';
 import { ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import Login from '@/components/login.vue';
@@ -22,6 +22,8 @@ const userInfoVisible = ref(false)
 const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
+const ballTimer = ref<NodeJS.Timer>()
+
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
 
@@ -49,6 +51,7 @@ const ballItemStyle = (i: number) => {
 
 const onMagnetic = (isLeft: boolean) => {
   status.value = isLeft ? -1 : 1
+  onBallSleep()
 }
 
 const login = () => {
@@ -77,6 +80,25 @@ const openUser = () => {
     ElMessage.info('请先登录')
   }
 }
+
+/** 监听球的3s后睡眠 */
+const onBallSleep = () => {
+  clearBallSleep()
+  ballTimer.value = setTimeout(() => {
+    status.value = 0
+  }, 3000);
+}
+
+const clearBallSleep = () => {
+  if(ballTimer.value) {
+    clearTimeout(ballTimer.value)
+    ballTimer.value = undefined
+  }
+}
+
+onMounted(() => onBallSleep())
+
+onBeforeUnmount(() => clearBallSleep())
 
 </script>
 

@@ -228,7 +228,8 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   } else {
     mathMethods = xy > 0 ? 'floor' : 'ceil'
   }
-  provideState.isClick = _time < 120
+  // 触摸距离小于10，并且触摸时间小于120ms才算点击
+  provideState.isClick = Math.abs(xy) < 10 && _time < 120
   duration.value = _duration
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg

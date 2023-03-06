@@ -38,7 +38,7 @@ service.interceptors.response.use(response => {
       case -1: errMsg = `${response.data.data || '请求错误'}`; break;
       case 401: {
         errMsg = '登录凭证过期，请重新登录'
-        router.push('/')
+        // router.push('/')
         break;
       }
       default: errMsg = `连接错误${response.data.data}`
