@@ -19,7 +19,7 @@ export type GameConfigType = {
   /** 得到 canvas 的 2d 上下文 */
   ctx: CanvasRenderingContext2D,
   /** requestAnimationFrame api的保存对象 */
-  animationFrame: any,
+  animationFrame: number,
   /** 是否加载完成 */
   loadingDone: boolean,
   /** 游戏开始遮罩 */
@@ -46,8 +46,6 @@ export type GameBaseData = {
   level: number
   /** 生命值 */
   hp: number
-  /** 得分 */
-  score: number
   /** 金钱 */
   money: number
   /** 敌人生成间隔时间 */

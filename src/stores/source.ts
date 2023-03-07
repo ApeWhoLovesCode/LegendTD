@@ -28,6 +28,6 @@ export const useSourceStore = defineStore('source', {
       floor: undefined
     },
     mapLevel: 0,
-    isMobile: false
+    isMobile: false,
   })
 })

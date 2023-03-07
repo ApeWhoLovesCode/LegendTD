@@ -9,6 +9,7 @@ import RankList from './rankList.vue';
 import UserInfo from './userInfo.vue'
 import SelectLevelPop from './selectLevelPop.vue'
 import { useSourceStore } from '@/stores/source';
+import SelectTowerPop from './selectTowerPop.vue';
 
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3
@@ -22,6 +23,7 @@ const userInfoVisible = ref(false)
 const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
+const selectTowerVisible = ref(false)
 const ballTimer = ref<NodeJS.Timer>()
 
 const source = useSourceStore()
@@ -112,7 +114,7 @@ onBeforeUnmount(() => clearBallSleep())
     <div class="ball-wrap" :class="{'ball-mobile': source.isMobile}">
       <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? UserIcon" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
-        <div class="ball-item-content" :class="{'ball-item-disable': !userInfoStore.userInfo}" @click="openUser">个人信息</div>
+        <div class="ball-item-content" @click="selectTowerVisible = true">塔防选择</div>
       </div>
       <div class="ball-item" :style="ballItemStyle(1)">
         <div class="ball-item-content" @click="rankListVisible = true">排行榜</div>
@@ -124,6 +126,7 @@ onBeforeUnmount(() => clearBallSleep())
         <ElDropdown size="small">
           <div class="ball-item-content">设置</div>
           <template #dropdown>
+            <ElDropdownItem v-if="userInfoStore.userInfo" @click="openUser">个人信息</ElDropdownItem>
             <ElDropdownItem @click="login">{{ userInfoStore.userInfo ? '退出' : '' }}登录</ElDropdownItem>
           </template>
         </ElDropdown>
@@ -131,12 +134,9 @@ onBeforeUnmount(() => clearBallSleep())
     </div>
   </FloatingBall>
   <UserInfo v-if="userInfoStore.userInfo" v-model:visible="userInfoVisible"/>
-  <RankList 
-    v-model:visible="rankListVisible"
-  />
-  <Login 
-    v-model:visible="loginVisible"
-  />
+  <RankList v-model:visible="rankListVisible"/>
+  <Login v-model:visible="loginVisible"/>
+  <SelectTowerPop v-model:visible="selectTowerVisible" />
   <SelectLevelPop 
     v-if="props.itemsNum === 4" 
     v-model:visible="selectLevelVisible"
@@ -192,10 +192,6 @@ onBeforeUnmount(() => clearBallSleep())
     }
     &-disable {
       opacity: 0.7;
-      &:hover {
-        font-size: 14px;
-        background-color: @purple1;
-      }
     }
   }
 }

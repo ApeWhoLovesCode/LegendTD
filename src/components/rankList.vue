@@ -51,7 +51,7 @@ const getRankList = async () => {
         </template>
       </ElTableColumn>
       <ElTableColumn prop="name" label="用户名"></ElTableColumn>
-      <ElTableColumn prop="max" label="最高分">
+      <ElTableColumn prop="max" label="抵御波数">
         <template #default="scope">
           {{ scope.row.max.score }}
         </template>

@@ -12,11 +12,14 @@ export type UserInfo = {
 
 type StateType = {
   userInfo?: UserInfo
+  /** 选择的塔防索引 */
+  towerSelectList: number[]
 }
 
 export const useUserInfoStore = defineStore('userInfo', {
   state: (): StateType => ({
-    userInfo: void 0
+    userInfo: void 0,
+    towerSelectList: [0,1,2,3,4,5,6,7],
   }),
   actions: {
     async login({username, password}: LoginApiParams) {
@@ -39,7 +42,7 @@ export const useUserInfoStore = defineStore('userInfo', {
         console.log('logout-error: ', error);
         this.$state.userInfo = void 0
       }
-    }
+    },
   },
   // 持久化
   persist: {

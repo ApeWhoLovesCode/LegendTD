@@ -12,9 +12,9 @@ export default function useGameConfig() {
     // canvas 对象
     canvas: {},
     // requestAnimationFrame api的保存对象
-    animationFrame: null,
+    animationFrame: 0,
     // 得到 canvas 的 2d 上下文
-    ctx: null,
+    ctx: null as unknown as CanvasRenderingContext2D,
     // 是否加载完成
     loadingDone: false,
     isGameBeginMask: true,

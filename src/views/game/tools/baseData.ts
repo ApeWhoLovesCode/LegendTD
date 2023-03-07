@@ -21,8 +21,6 @@ export default function useBaseData() {
     level: 0,
     // 生命值
     hp: 10,
-    // 得分
-    score: 0,
     // 金钱
     money: 6000,
     // 敌人生成间隔时间

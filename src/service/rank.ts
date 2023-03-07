@@ -30,14 +30,16 @@ export const getRankListApi = () => {
 }
 
 export type UpdateScoreParasm = {
+  /** 选择的地铁 */
   level: number
+  /** 闯过的关卡 */
   score: number
   userId: string
 }
 export type UpdateScoreRes = {
   /** 得分是否有更新 */
   isUpdate: boolean
-  /** 上传的得分 */
+  /** 上传的成绩 */
   score: number
 }
 /** 上传得分 */

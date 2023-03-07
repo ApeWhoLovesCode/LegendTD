@@ -111,13 +111,21 @@ watch(() => baseDataState.hp, () => {
   baseDataState.isPause = true
   playAudio('ma-gameover', 'Skill')
   audioBgRef.value?.pause()
-  updateScoreApi({
-    userId: userInfoStore.userInfo?.id ?? '',
-    score: baseDataState.score,
-    level: source.mapLevel
-  }).then(res => {
-    ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
-  })
+  const {userInfo} = userInfoStore
+  if(userInfo) {
+    if(!baseDataState.level) {
+      return ElMessage.info('很遗憾你一波敌人都没抵御成功')
+    }
+    updateScoreApi({
+      userId: userInfo.id,
+      score: baseDataState.level,
+      level: source.mapLevel
+    }).then(res => {
+      ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
+    })
+  } else {
+    ElMessage.info('登录后才能上传成绩~~')
+  }
 })
 // 监听暂停
 watch(() => baseDataState.isPause, (val) => {
