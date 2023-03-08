@@ -23,3 +23,6 @@ export const changeEvent = (event: MouseEvent | TouchEvent) => {
     (event as MouseEvent)
   );
 };
+
+/** 加载图片 */
+export const requireImg = (url: string) => new URL(`../assets/img/${url}`, import.meta.url).href

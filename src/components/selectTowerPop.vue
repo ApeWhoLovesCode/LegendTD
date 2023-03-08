@@ -1,11 +1,11 @@
 <script setup lang='ts'>
-import { useSourceStore } from '@/stores/source';
 import { onMounted, reactive } from 'vue';
 import { ElDrawer } from 'element-plus';
-import towerData, { TowerType } from '@/dataSource/towerData';
+import towerData, { TowerType, towerStaticData } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import { useUserInfoStore } from '@/stores/userInfo';
+import TowerCanvas from './towerCanvas.vue';
 
 const userStore = useUserInfoStore()
 
@@ -60,7 +60,12 @@ const selectTower = (i: number) => {
     <div class="selectTowerPop-header">
       <div class="mask mask-left"></div>
       <div class="selectTowerPop-header-content">
-        <div v-for="i in userStore.towerSelectList" :key="towerData[i]?.name" class="towerBox">
+        <div 
+          v-for="i in userStore.towerSelectList" 
+          :key="towerData[i]?.name" 
+          class="towerBox" 
+          @click="selectTower(i)"
+        >
           <img :src="towerData[i]?.img" alt="" class="towerImg">
           <div class="towerName">{{ towerData[i]?.name }}</div>
         </div>
@@ -83,7 +88,11 @@ const selectTower = (i: number) => {
       >
         <div class="card">
           <!-- <img :src="item.img" class="towerImg" alt=""> -->
-          <div>{{ item.name }}</div>
+          <div class="towerImg"> 
+            <TowerCanvas :index="cardIndex(i)" />
+          </div>
+          <div class="name">{{ item.name }}</div>
+          <div class="explain">{{ towerStaticData[item.name].explain }}</div>
         </div>
       </ScrollCircleItem>
     </ScrollCircle>
@@ -160,15 +169,16 @@ const selectTower = (i: number) => {
     width: 100%;
     height: calc(70vh - @headerHeight);
     .card {
-      width: 20rem;
-      height: 15rem;
+      width: 25rem;
+      height: 20rem;
       border: 1px solid #ccc;
       cursor: pointer;
       user-select: none;
       -webkit-user-drag: none;
+      @gridSize: 2.3rem;
       .towerImg {
-        width: 7rem;
-        height: 7rem;
+        width: calc(9 * @gridSize);
+        height: calc(7 * @gridSize);
       }
     }
   }

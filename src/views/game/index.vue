@@ -36,7 +36,9 @@ const progressStep = computed<number>(() => {
 async function init() {
   // 加载图片
   await handleEnemyImg()
-  source.imgOnloadObj.floor = await loadImage(floorData[0])
+  if(!source.imgOnloadObj.floor) {
+    source.imgOnloadObj.floor = await loadImage(floorData[0])
+  }
   await handleTowerImg()
   state.progress = 100
   setTimeout(() => {
