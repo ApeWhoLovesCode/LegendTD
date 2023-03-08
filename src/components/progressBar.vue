@@ -12,7 +12,7 @@
 import { useSourceStore } from '@/stores/source';
 import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from 'vue';
 
-const props =  defineProps({
+const props = defineProps({
   progress: {
     type: Number,
     default: 0

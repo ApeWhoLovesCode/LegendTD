@@ -1,31 +1,29 @@
 <script setup lang='ts'>
 import UserBall from '@/components/userBall.vue';
-import floorData from '@/dataSource/floorData';
 import { useSourceStore } from '@/stores/source';
 import { useUserInfoStore } from '@/stores/userInfo';
-import { loadImage } from '@/utils/handleImg';
 import { onMounted, ref } from 'vue';
+import TowerCanvas from '@/components/towerCanvas.vue';
 
 const userInfoStore = useUserInfoStore()
 const source = useSourceStore()
 
 const isOnload = ref(false)
 
-
 onMounted(() => {
-  if(!source.imgOnloadObj.floor) {
-    loadImage(floorData[0]).then(res => {
-      source.imgOnloadObj.floor = res
-      isOnload.value = true
-    })
-  }
+  source.loadingAllImg().then(() => {
+    isOnload.value = true
+  })
 })
 
 </script>
 
 <template>
   <div class='test'>
-    <UserBall v-if="isOnload" />
+    <UserBall />
+    <div class="towerImg"> 
+      <TowerCanvas v-if="isOnload" :index="1" />
+    </div>
   </div>
 </template>
 
@@ -34,5 +32,10 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   background-color: #aaa;
+  @gridSize: 2.3rem;
+  .towerImg {
+    width: calc(9 * @gridSize);
+    height: calc(7 * @gridSize);
+  }
 }
 </style>

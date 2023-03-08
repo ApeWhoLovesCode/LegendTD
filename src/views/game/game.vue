@@ -178,6 +178,7 @@ watch(() => enemyList, (enemyList) => {
     const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
     // 进入攻击范围，开始射击 
     if(eIdList.length) {
+      console.log('shoot');
       towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
     }
   }

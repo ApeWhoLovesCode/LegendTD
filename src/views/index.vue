@@ -4,8 +4,6 @@ import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
 import CoverCanvas from '@/components/coverCanvas.vue';
-import { loadImage } from '@/utils/handleImg';
-import floorData from '@/dataSource/floorData';
 import { useSourceStore } from '@/stores/source';
 import { useRouter } from 'vue-router';
 import mapData from '@/dataSource/mapData';
@@ -25,8 +23,7 @@ const state = reactive({
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
   state.items = levelData.slice(preIndex, preIndex + state.pageSize)
-  loadImage(floorData[0]).then(res => {
-    source.imgOnloadObj.floor = res
+  source.loadingAllImg().then(() => {
     state.isOnload = true
   })
 }
