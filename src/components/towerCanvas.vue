@@ -7,7 +7,6 @@ import { randomStr } from '@/utils/random';
 import useBaseData from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
 import useTower from '@/views/game/tools/tower';
-import { carouselContextKey } from 'element-plus';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
@@ -101,7 +100,7 @@ function startDraw() {
 
 /** 点击建造塔防 */
 function buildTower() {
-  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = source.towerSource[props.index]
+  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } =  _.cloneDeep(source.towerSource[props.index])
   const size = state.size
   const x = 4 * size, y = 3 * size
   // 将该塔防数据放入场上塔防数组中
@@ -423,8 +422,8 @@ function drawEnemy(index: number) {
   // 绘画减速效果
   if(curSpeed !== speed) {
     ctx.save()
-    // ctx.globalAlpha = 1
-    ctx.drawImage(source.othOnloadImg.snow!, x + w / 1.5, y + h / 4, w / 1.5, w / 1.5)
+    ctx.globalAlpha = 0.9
+    ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
     ctx.restore()
     // ctx.beginPath();
     // ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)

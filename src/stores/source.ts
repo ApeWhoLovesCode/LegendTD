@@ -2,6 +2,7 @@ import enemyData from '@/dataSource/enemyData'
 import otherImgData from '@/dataSource/otherImgData'
 import towerData from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
+import { range } from '@/utils/format'
 import { gifToStaticImg, loadImage } from '@/utils/handleImg'
 import _ from 'lodash'
 import {defineStore} from 'pinia'
@@ -47,7 +48,7 @@ export const useSourceStore = defineStore('source', {
         this.handleEnemyImg(), 
         this.handleTowerImg(),
       ]).then(() => {
-        
+        this.$state.progress = range(this.$state.progress, 0, 100)
       })
     },
     async handleEnemyImg() {

@@ -86,7 +86,7 @@ const openUser = () => {
 }
 
 const progressChange = (v: number) => {
-  if(v === 100) {
+  if(v >= 100) {
     ElMessage.success('资源已加载完毕')
     setTimeout(() => {
       isCircleProgress.value = false

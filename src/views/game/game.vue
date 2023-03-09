@@ -178,7 +178,6 @@ watch(() => enemyList, (enemyList) => {
     const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
     // 进入攻击范围，开始射击 
     if(eIdList.length) {
-      console.log('shoot');
       towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
     }
   }
@@ -279,12 +278,10 @@ function drawEnemy(index: number) {
   ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {
-    ctx.beginPath();
-    ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
-    ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
-    ctx.fill()
-    ctx.strokeStyle = '#022ef1'
-    ctx.stroke()
+    ctx.save()
+    ctx.globalAlpha = 0.9
+    ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 2, w / 3, w / 3)
+    ctx.restore()
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
@@ -518,7 +515,7 @@ function getMouse(e: MouseEvent) {
 }
 /** 点击建造塔防 */
 function buildTower(index: number) {
-  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = source.towerSource[index]
+  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource[index]) 
   if(baseDataState.money < money) return
   baseDataState.money -= money
   const {left: x, top: y} = towerState.building
