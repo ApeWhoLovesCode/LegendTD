@@ -2,8 +2,9 @@ import { changeEvent } from '@/utils/handleDom';
 import { makeStringProp } from '@/utils/props';
 import { randomStr } from '@/utils/random';
 import { isMobile } from '@/utils/tools';
-import { CSSProperties, defineComponent, ExtractPropTypes, onMounted, reactive, ref } from 'vue';
+import { defineComponent, ExtractPropTypes, onMounted, reactive, ref } from 'vue';
 import type { PropType } from 'vue';
+import { StyleType } from '@/utils/native-props';
 
 const classPrefix = `retaroct-floating-ball`;
 
@@ -13,7 +14,6 @@ type StyleItem =
 | '--initial-position-top'
 | '--initial-position-bottom'
 | '--z-index'
-type StyleType = CSSProperties & Partial<Record<StyleItem, string>>
 
 export type FloatingBallEmit = {
   /** 贴边时触发 isLeft: true 代表是左或上方向上贴边 */
@@ -27,7 +27,7 @@ export const floatingBallProps = {
   axis: makeStringProp<'x' | 'y' | 'xy'>('xy'),
   /** 自动磁吸到边界 */
   magnetic: String as PropType<'x' | 'y'>,
-  style: Object as PropType<StyleType>
+  style: Object as PropType<StyleType<StyleItem>>
 }
 
 export type FloatingBallProps = ExtractPropTypes<typeof floatingBallProps>
@@ -36,7 +36,6 @@ const FloatingBall = defineComponent({
   props: floatingBallProps,
   emits: ['onMagnetic', 'onOffsetChange'],
   setup(props, ctx) {
-    const{ axis, magnetic, ...ret} = props
     const {emit, slots} = ctx
     const idRef = ref(randomStr(classPrefix))
     /** 悬浮球的宽，高，上下左右距离 */
@@ -67,8 +66,8 @@ const FloatingBall = defineComponent({
     const onTouchMove = (e: MouseEvent | TouchEvent) => {
       e.stopPropagation()
       const newE = changeEvent(e)
-      const x = axis === 'y' ? 0 : newE.clientX - touchRef.startX
-      const y = axis === 'x' ? 0 : newE.clientY - touchRef.startY
+      const x = props.axis === 'y' ? 0 : newE.clientX - touchRef.startX
+      const y = props.axis === 'x' ? 0 : newE.clientY - touchRef.startY
       info.x = x
       info.y = y
       emit('onOffsetChange', {x, y})
@@ -80,17 +79,17 @@ const FloatingBall = defineComponent({
         document.removeEventListener('mouseup', onTouchEnd, true)
       }
       const newE = changeEvent(e)
-      let x = axis === 'y' ? 0 : newE.clientX - touchRef.startX
-      let y = axis === 'x' ? 0 : newE.clientY - touchRef.startY
+      let x = props.axis === 'y' ? 0 : newE.clientX - touchRef.startX
+      let y = props.axis === 'x' ? 0 : newE.clientY - touchRef.startY
       const {w, h, l, r, t, b} = ball
-      if (magnetic === 'x') {
+      if (props.magnetic === 'x') {
         const l_r = l < r ? l : r
         const _v = l < r ? -1 : 1
         const middleX = window.innerWidth / 2 - l_r - w / 2 // 中间分隔线的值
         const distance = -1 * _v * (window.innerWidth - w - l_r * 2) // 另一边的位置
         x = (Math.abs(x) > middleX) ? (x * _v < 0 ? distance : 0) : 0
         emit('onMagnetic', x === 0 ? l < r : l > r)
-      } else if (magnetic === 'y') {
+      } else if (props.magnetic === 'y') {
         const l_r = t < b ? t : b
         const _v = t < b ? -1 : 1
         const middleX = window.innerHeight / 2 - l_r - h / 2 // 中间分隔线的值
@@ -137,7 +136,7 @@ const FloatingBall = defineComponent({
     }
   
     return () => (
-      <div class={`${classPrefix} ${idRef.value}`} {...ret}>
+      <div class={`${classPrefix} ${idRef.value}`} {...props}>
         <div
           ref={buttonRef}
           class={`${classPrefix}-button`}
@@ -156,8 +155,3 @@ const FloatingBall = defineComponent({
 })
 
 export default FloatingBall;
-
-type NativeProps<S extends string = never> = {
-  class?: string;
-  style?: CSSProperties & Partial<Record<S, string>>;
-}

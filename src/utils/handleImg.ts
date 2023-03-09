@@ -49,7 +49,3 @@ export function gifToStaticImg(target: {type: string, imgSource: string}) {
     }
   })
 }
-
-export function importUrl(url: string) {
-  return new URL(url, import.meta.url).href
-}

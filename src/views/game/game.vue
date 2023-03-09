@@ -225,7 +225,6 @@ function startAnimation() {
   (function go() {
     startDraw();
     if (!baseDataState.isPause) {
-      // 时间间隔为 1000/60 每秒 60 帧
       gameConfigState.animationFrame = requestAnimationFrame(go);
     } else {
       cancelAnimationFrame(gameConfigState.animationFrame)
@@ -304,11 +303,17 @@ function drawEnemy(index: number) {
 
 /** 生成敌人 */
 function setEnemy() {
-  const enemyItemSource = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
-  const {audioKey, name, w, h} = enemyItemSource
+  const item = _.cloneDeep(source.enemySource[enemyState.levelEnemy[enemyState.createdEnemyNum]])
+  const size = gameConfigState.size
+  item.w *= size
+  item.h *= size
+  item.curSpeed *= size
+  item.speed *= size
+  item.hp.size *= size
   // 设置敌人的初始位置
   const id = Date.now()
-  const enemyItem: EnemyStateType = {...enemyItemSource, id: audioKey + id}
+  const enemyItem: EnemyStateType = {...item, id: item.audioKey + id}
+  const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
@@ -527,6 +532,10 @@ function buildTower(index: number) {
   const tower: TowerStateType = {
     ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
+  tower.r *= size 
+  tower.speed *= size
+  tower.bSize.w *= size
+  tower.bSize.h *= size
   if(tower.name === 'lanbo') {
     tower.scale = 1
     const {r, speed, bSize: {w, h}} = tower
@@ -798,26 +807,22 @@ function initMobileData() {
   const wp = document.documentElement.clientWidth / (h + 80)
   const hp = document.documentElement.clientHeight / (w + 80)
   const p = Math.floor(Math.min(wp, hp) * 10) / 10
-  function handleDecimals(val: number) {
-    return val * (p * 1000) / 1000
-  }
   gameConfigState.size *= p
-  baseDataState.offset.y *= p
   gameConfigState.defaultCanvas.w *= p
   gameConfigState.defaultCanvas.h *= p
-  source.enemySource.forEach(item => {
-    item.w = handleDecimals(item.w)
-    item.h = handleDecimals(item.h)
-    item.curSpeed = handleDecimals(item.curSpeed)
-    item.speed = handleDecimals(item.speed)
-    item.hp.size = handleDecimals(item.hp.size)
-  })
-  source.towerSource.forEach(item => {
-    item.r = handleDecimals(item.r)
-    item.speed = handleDecimals(item.speed)
-    item.bSize.w = handleDecimals(item.bSize.w)
-    item.bSize.h = handleDecimals(item.bSize.h)
-  })
+  // source.enemySource.forEach(item => {
+  //   item.w = handleDecimals(item.w)
+  //   item.h = handleDecimals(item.h)
+  //   item.curSpeed = handleDecimals(item.curSpeed)
+  //   item.speed = handleDecimals(item.speed)
+  //   item.hp.size = handleDecimals(item.hp.size)
+  // })
+  // source.towerSource.forEach(item => {
+  //   item.r = handleDecimals(item.r)
+  //   item.speed = handleDecimals(item.speed)
+  //   item.bSize.w = handleDecimals(item.bSize.w)
+  //   item.bSize.h = handleDecimals(item.bSize.h)
+  // })
 }
 
 /** 初始化行动轨迹 */
@@ -849,7 +854,7 @@ function initMovePath() {
 function drawFloorTile() {
   const size = gameConfigState.size
   for(let f of enemyState.movePath) {
-    gameConfigState.ctx.drawImage(source.imgOnloadObj.floor!, f.x, f.y, size, size)
+    gameConfigState.ctx.drawImage(source.othOnloadImg.floor!, f.x, f.y, size, size)
   }
 }
 
@@ -961,7 +966,7 @@ function onKeyDown() {
         <div v-show="towerState.buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
           <span class="sale-wrap" @click="saleTower(towerState.buildingScope.towerIndex)" :style="saleTowerStyle">
             <span class="iconfont icon-ashbin"></span>
-            <span class="sale-num">{{towerList[towerState.buildingScope.towerIndex] && towerList[towerState.buildingScope.towerIndex].saleMoney}}</span>
+            <span class="sale-num">{{ towerList[towerState.buildingScope.towerIndex]?.saleMoney }}</span>
           </span>
         </div>
         <!-- 游戏底部技能区 -->

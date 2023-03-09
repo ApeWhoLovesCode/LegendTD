@@ -1,26 +1,18 @@
 <script setup lang='ts'>
-import { nextTick, onMounted, reactive, computed } from 'vue';
+import { nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 import ProgressBar from '@/components/progressBar.vue'
 import ProtectTheHorse from './game.vue'
 
-import { loadImage, gifToStaticImg } from '@/utils/handleImg'
-
-import towerData from '@/dataSource/towerData'
-import enemyData from '@/dataSource/enemyData'
 import _ from 'lodash'
 
 import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
-import floorData from '@/dataSource/floorData';
-import { EnemyStateType, TowerStateType } from '@/type/game';
 import UserBall from '@/components/userBall.vue'
 
 const state = reactive<IndexType>({
   title: '塔防联盟',
-  // 当前加载进度
-  progress: 0,
   isProgressBar: true,
   // 控制游戏区域的显示与隐藏
   isProtectTheHorse: false,
@@ -28,23 +20,15 @@ const state = reactive<IndexType>({
 const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
-const progressStep = computed<number>(() => {
-  return 95 / source.enemySource.length
-})
 
 /** 初始化加载图片等内容 */
 async function init() {
-  // 加载图片
-  await handleEnemyImg()
-  if(!source.imgOnloadObj.floor) {
-    source.imgOnloadObj.floor = await loadImage(floorData[0])
-  }
-  await handleTowerImg()
-  state.progress = 100
-  setTimeout(() => {
-    state.isProgressBar = false
-    state.isProtectTheHorse = true
-  }, 100);
+  source.loadingAllImg().then(() => {
+    setTimeout(() => {
+      state.isProgressBar = false
+      state.isProtectTheHorse = true
+    }, 100);
+  })
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {
@@ -53,24 +37,6 @@ function switchMapLevel(index: number) {
   router.push(`/game/${index + 1}`)
   state.isProtectTheHorse = false
   nextTick(() => {state.isProtectTheHorse = true})
-}
-/** 等待所有的敌人的gif图生成静态图片 */
-async function handleEnemyImg() {
-  source.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
-  return Promise.all(enemyData.map(async (item, index) => {
-    source.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
-    state.progress += progressStep.value
-    return 
-  })).then(res => {})
-}
-/** 处理塔防的图片 */
-async function handleTowerImg() {
-  source.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
-  return Promise.all(towerData.map(async (t, index) => {
-    source.towerSource[index].onloadImg = await loadImage(t.img)
-    source.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
-    return
-  })).then(() => {})
 }
 
 onMounted(() => {
@@ -86,7 +52,7 @@ onMounted(() => {
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
     />
-    <ProgressBar v-if="state.isProgressBar" :progress="state.progress" />
+    <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" />
     <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" />
   </div>
 </template>

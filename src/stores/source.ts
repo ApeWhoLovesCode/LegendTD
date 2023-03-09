@@ -1,5 +1,5 @@
 import enemyData from '@/dataSource/enemyData'
-import floorData from '@/dataSource/floorData'
+import otherImgData from '@/dataSource/otherImgData'
 import towerData from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
 import { gifToStaticImg, loadImage } from '@/utils/handleImg'
@@ -14,14 +14,20 @@ type StateType = {
   /** 塔防处理好的静态资源 */
   towerSource: TowerStateType[]
   /** 图片资源 */
-  imgOnloadObj: {
-    /** 地板资源 */
+  othOnloadImg: {
+    /** 地板 */
     floor?: HTMLImageElement
+    /** 金币 */
+    goldCoin?: HTMLImageElement
+    /** 减速雪花 */
+    snow?: HTMLImageElement
   }
   /** 当前选择的地图 */
   mapLevel: number
   /** 是否是手机 */
   isMobile: boolean
+  /** 进度 */
+  progress: number
 }
 
 export const useSourceStore = defineStore('source', {
@@ -29,41 +35,56 @@ export const useSourceStore = defineStore('source', {
     isGameInit: false,
     enemySource: [],
     towerSource: [],
-    imgOnloadObj: {
-      floor: undefined
-    },
+    othOnloadImg: {},
     mapLevel: 0,
     isMobile: false,
+    progress: 0,
   }),
   actions: {
     async loadingAllImg() {
       return Promise.all([
-        this.handleFloorImg(),
+        this.handleOtherImg(),
         this.handleEnemyImg(), 
         this.handleTowerImg(),
       ]).then(() => {
-
+        
       })
     },
     async handleEnemyImg() {
       this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
+      const step = 70 / enemyData.length
       return Promise.all(enemyData.map(async (item, index) => {
         this.$state.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
-        // state.progress += progressStep.value
+        this.$state.progress += step
         return 
-      })).then(() => {})
+      }))
     },
     async handleTowerImg() {
       this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
+      const step = 20 / towerData.length
       return Promise.all(towerData.map(async (t, index) => {
         this.$state.towerSource[index].onloadImg = await loadImage(t.img)
         this.$state.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
+        this.$state.progress += step
         return
-      })).then(() => {})
+      }))
     },
-    async handleFloorImg() {
-      const res = await loadImage(floorData[0])
-      this.$state.imgOnloadObj.floor = res
+    async handleOtherImg() {
+      const step = 10 / Object.keys(otherImgData).length
+      return Promise.all([
+        loadImage(otherImgData.floor[0]).then(res => {
+          this.$state.othOnloadImg.floor = res
+          this.$state.progress += step
+        }),
+        loadImage(otherImgData.goldCoin).then(res => {
+          this.$state.othOnloadImg.goldCoin = res
+          this.$state.progress += step
+        }),
+        loadImage(otherImgData.snow).then(res => {
+          this.$state.othOnloadImg.snow = res
+          this.$state.progress += step
+        }),
+      ])
     }
   }
 })

@@ -28,8 +28,6 @@ export type GameConfigType = {
 
 /** 游戏基本数据 */
 export type GameBaseData = {
-  /** 偏移量y 是用来计算敌人与地板底部的距离 (两个地板(50*2)-敌人(h(75)+y(10))) = 10 */
-  offset: {y: number},
   /** 终点位置 */
   terminal?: GridInfo,
   /** 地板：大小 数量 */
@@ -148,7 +146,7 @@ export type GameProps = {
   mapLevel: number
   enemySource: EnemyType[]
   towerSource: TowerType[]
-  imgOnloadObj: ImgLoadType
+  othOnloadImg: ImgLoadType
   towerOnloadImg: ImgLoadType
   towerBulletOnloadImg: ImgLoadType
   isMobile: boolean

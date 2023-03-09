@@ -3,8 +3,6 @@ import { reactive } from "vue";
 
 export default function useBaseData() {
   const baseDataState = reactive<GameBaseData>({
-    // 偏移量y 是用来计算敌人与地板底部的距离 (两个地板(50*2)-敌人(h(75)+y(10))) = 10
-    offset: {y: 10},
     // 终点位置
     terminal: undefined,
     // 地板：大小 数量

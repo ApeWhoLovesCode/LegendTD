@@ -10,6 +10,7 @@ import UserInfo from './userInfo.vue'
 import SelectLevelPop from './selectLevelPop.vue'
 import { useSourceStore } from '@/stores/source';
 import SelectTowerPop from './selectTowerPop.vue';
+import Circle from './circle';
 
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3
@@ -24,6 +25,7 @@ const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
 const selectTowerVisible = ref(false)
+const isCircleProgress = ref(true)
 const ballTimer = ref<NodeJS.Timer>()
 
 const source = useSourceStore()
@@ -83,6 +85,15 @@ const openUser = () => {
   }
 }
 
+const progressChange = (v: number) => {
+  if(v === 100) {
+    ElMessage.success('资源已加载完毕')
+    setTimeout(() => {
+      isCircleProgress.value = false
+    }, 400);
+  }
+}
+
 /** 监听球的3s后睡眠 */
 const onBallSleep = () => {
   clearBallSleep()
@@ -131,6 +142,16 @@ onBeforeUnmount(() => clearBallSleep())
           </template>
         </ElDropdown>
       </div>
+      <Circle 
+        v-if="isCircleProgress"
+        class="circle" 
+        :value="Math.ceil(source.progress)" 
+        :stroke-width="source.isMobile ? 4 : 6"
+        :speed="100"
+        :size="source.isMobile ? 62 : 90" 
+        layer-color="rgba(255,255,255,0.4)" 
+        @on-change="progressChange"
+      />
     </div>
   </FloatingBall>
   <UserInfo v-if="userInfoStore.userInfo" v-model:visible="userInfoVisible"/>
@@ -149,8 +170,8 @@ onBeforeUnmount(() => clearBallSleep())
 @import '@/style.less';
 .ball-wrap {
   position: relative;
-  width: 6rem;
-  height: 6rem;
+  width: 78px;
+  height: 78px;
   filter: drop-shadow(0px 0px 8px rgba(0, 0, 0, 0.25));
   .avatar {
     width: 100%;
@@ -194,10 +215,17 @@ onBeforeUnmount(() => clearBallSleep())
       opacity: 0.7;
     }
   }
+  .circle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+  }
 }
 .ball-mobile {
-  width: 4rem;
-  height: 4rem;
+  width: 54px;
+  height: 54px;
   .ball-item {
     font-size: 12px;
     &-content {

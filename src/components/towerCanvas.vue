@@ -7,6 +7,7 @@ import { randomStr } from '@/utils/random';
 import useBaseData from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
 import useTower from '@/views/game/tools/tower';
+import { carouselContextKey } from 'element-plus';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
@@ -16,13 +17,15 @@ const { enterAttackScopeList, powAndSqrt } = useBaseData()
 
 const props = withDefaults(defineProps<{
   index: number;
-  // eIndexList: number[];
+  eIndexList?: number[];
 }>(), {
   index: 1,
-  // eIndexList: () => ([1])
+  eIndexList: () => [1]
 })
 const source = useSourceStore()
 const idRef = ref(randomStr('com-cover-canvas'))
+/** canvas 提高清晰度 */
+const ratio = ref(window.devicePixelRatio ?? 1)
 const canvasRef = ref<HTMLCanvasElement>()
 const state = reactive({
   ctx: null as CanvasRenderingContext2D | null,
@@ -31,7 +34,7 @@ const state = reactive({
   size: 10,
   movePath: [] as GridInfo[],
   animationFrame: 0,
-  mapGridInfoItem: {x: 1, y: 5, x_y: 3, num: 20}
+  mapGridInfoItem: {x: 1, y: 5, x_y: 3, num: 20},
 })
 
 // 监听敌人的移动
@@ -50,20 +53,11 @@ onMounted(() => {
     getCanvasWH()
     init()
   }, 10);
-  window.addEventListener("resize", resizeFn);
 })
 
 onUnmounted(() => {
   cancelAnimationFrame(state.animationFrame)
-  window.removeEventListener('resize', resizeFn)
 })
-
-const resizeFn = () => {
-  getCanvasWH()
-  setTimeout(() => {
-    drawInit()
-  }, 10);
-}
 
 function init() {
   if(!canvasRef.value) return
@@ -119,14 +113,10 @@ function buildTower() {
   const tower: TowerStateType = {
     ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
-  const p = Math.floor(state.size / 50 * 10) / 10
-  function handleDecimals(val: number) {
-    return val * (p * 1000) / 1000
-  }
-  tower.r = handleDecimals(tower.r)
-  tower.speed = handleDecimals(tower.speed)
-  tower.bSize.w = handleDecimals(tower.bSize.w)
-  tower.bSize.h = handleDecimals(tower.bSize.h)
+  tower.r *= size 
+  tower.speed *= size
+  tower.bSize.w *= size
+  tower.bSize.h *= size
   if(tower.name === 'lanbo') {
     tower.scale = 1
     const {r, speed, bSize: {w, h}} = tower
@@ -352,11 +342,10 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 }
 
 function makeEnemy() {
-  const eIndexList = [1]
-  setEnemy(0)
-  for(let i = 1; i < eIndexList.length; i++) {
+  setEnemy(props.eIndexList[0])
+  for(let i = 1; i < props.eIndexList.length; i++) {
     setTimeout(() => {
-      setEnemy(eIndexList[i])
+      setEnemy(props.eIndexList[i])
     }, 900);
   }
 }
@@ -364,15 +353,12 @@ function makeEnemy() {
 /** 生成敌人 */
 function setEnemy(i: number) {
   const item = _.cloneDeep(source.enemySource[i])
-  const p = Math.floor(state.size / 50 * 10) / 10
-  function handleDecimals(val: number) {
-    return val * (p * 1000) / 1000
-  }
-  item.w = handleDecimals(item.w)
-  item.h = handleDecimals(item.h)
-  item.curSpeed = handleDecimals(item.curSpeed)
-  item.speed = handleDecimals(item.speed)
-  item.hp.size = handleDecimals(item.hp.size)
+  const size = state.size
+  item.w *= size
+  item.h *= size
+  item.curSpeed *= size
+  item.speed *= size
+  item.hp.size *= size
   const {audioKey, name, w, h} = item
   // 设置敌人的初始位置
   const id = Date.now()
@@ -436,12 +422,17 @@ function drawEnemy(index: number) {
   ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {
-    ctx.beginPath();
-    ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
-    ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
-    ctx.fill()
-    ctx.strokeStyle = '#022ef1'
-    ctx.stroke()
+    ctx.save()
+    // ctx.globalAlpha = 1
+    ctx.drawImage(source.othOnloadImg.snow!, x + w / 1.5, y + h / 4, w / 1.5, w / 1.5)
+    ctx.restore()
+    // ctx.beginPath();
+    // ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
+    // ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
+    // ctx.fill()
+    // ctx.strokeStyle = '#022ef1'
+    // ctx.stroke()
+
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
@@ -460,8 +451,8 @@ function drawEnemy(index: number) {
 
 function getCanvasWH() {
   const dom = document.querySelector(`.${idRef.value}`)
-  const width = dom?.clientWidth ?? 0
-  const height = dom?.clientHeight ?? 0
+  const width = (dom?.clientWidth ?? 0) * ratio.value
+  const height = (dom?.clientHeight ?? 0) * ratio.value
   state.canvasInfo.w = width
   state.canvasInfo.h = height
   state.size = height / 7
@@ -492,10 +483,10 @@ function initMovePath() {
 
 /** 画地板 */
 function drawFloorTile() {
-  if(!source.imgOnloadObj?.floor) return
+  if(!source.othOnloadImg?.floor) return
   state.ctx?.clearRect(0, 0, state.size, state.size)
   for(let f of state.movePath) {
-    state.ctx?.drawImage(source.imgOnloadObj.floor!, f.x, f.y, state.size, state.size)
+    state.ctx?.drawImage(source.othOnloadImg.floor!, f.x, f.y, state.size, state.size)
   }
 }
 
@@ -507,6 +498,10 @@ function drawFloorTile() {
       ref="canvasRef"
       :width="state.canvasInfo.w"
       :height="state.canvasInfo.h"
+      :style="{
+        width: state.canvasInfo.w / ratio + 'px',
+        height: state.canvasInfo.h / ratio + 'px',
+      }"
     ></canvas>
   </div>
 </template>

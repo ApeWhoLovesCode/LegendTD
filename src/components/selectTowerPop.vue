@@ -175,7 +175,7 @@ const selectTower = (i: number) => {
       cursor: pointer;
       user-select: none;
       -webkit-user-drag: none;
-      @gridSize: 2.3rem;
+      @gridSize: 36px;
       .towerImg {
         width: calc(9 * @gridSize);
         height: calc(7 * @gridSize);
