@@ -85,6 +85,8 @@ export type BulletType = {
   attactIdSet?: Set<string>
   /** 实际中子弹要旋转的角度 */
   deg?: number
+  /** 子弹是否回收中 */
+  isRecycling?: boolean
 }
 
 /** 塔防的类型 */
@@ -102,8 +104,6 @@ export type TowerStateType = {
   onloadImg: CanvasImageSource
   /** 子弹图片 */
   onloadbulletImg: CanvasImageSource
-  /** 是否是可穿透的 */
-  isThrough?: boolean 
   /** 旋转的角度 */
   rotateDeg?: number
   /** 子弹的缩放倍数 */

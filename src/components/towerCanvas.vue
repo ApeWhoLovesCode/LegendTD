@@ -149,6 +149,9 @@ function shootBullet(eIdList: string[], t_i: number) {
     if(isThrough) {
       bullet.attactIdSet = new Set()
     }
+    if(name === 'delaiwen') {
+      bullet.isRecycling = false
+    }
     if(bulletInitDeg !== void 0) {
       const deg = getAngle({x: begin.x, y: begin.y}, {x: _x, y: _y})
       bullet.deg = -bulletInitDeg + deg
@@ -189,7 +192,7 @@ function handleBulletMove() {
       let isAttact = t.isThrough && attactIdSet?.has(e_id)
       let isDelete = false
       // 子弹击中敌人
-      if(checkBulletInEnemy({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
+      if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
         // 穿透性子弹击中敌人
         if(t.isThrough) bItem.attactIdSet?.add(e_id)
         // 清除子弹
@@ -230,6 +233,18 @@ function handleBulletMove() {
       }
       // 清除穿透性子弹
       if(t.isThrough && checkThroughBullet({x,y,w,h})) {
+        if(t.name === 'delaiwen') {
+          if(!bItem.isRecycling) {
+            bItem.isRecycling = true
+            t.bulletArr[b_i].addX = -t.bulletArr[b_i].addX
+            t.bulletArr[b_i].addY = -t.bulletArr[b_i].addY
+          }
+        } else {
+          t.bulletArr.splice(b_i, 1)
+        }
+      }
+      // 清除回收子弹
+      if(t.name === 'delaiwen' && bItem.isRecycling && checkBulletInEnemyOrTower({x,y,w,h}, towerList[t_i].id, true)) {
         t.bulletArr.splice(b_i, 1)
       }
     }
@@ -294,7 +309,7 @@ function drawTowerBullet(t_i: number) {
 function handleThroughBulletEid(bItem: TargetInfo & {attactIdSet: Set<string>}) {
   const {x, y, w, h, attactIdSet} = bItem
   for(const eItem of enemyList) {
-    if(!attactIdSet.has(eItem.id) && checkBulletInEnemy({x,y,w,h}, eItem.id)) {
+    if(!attactIdSet.has(eItem.id) && checkBulletInEnemyOrTower({x,y,w,h}, eItem.id)) {
       return eItem.id
     }
   }
@@ -307,11 +322,12 @@ function checkThroughBullet(bItem: TargetInfo) {
   x = x - w / 2, y = y - h / 2
   return x + w < 0 || y + h < 0 || x > canvasW || y > canvasH
 }
-/** 判断敌人中心是否在子弹中 即击中敌人 */
-function checkBulletInEnemy({x, y, w, h}: TargetInfo, e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
-  if(!enemy) return
-  const {x:ex, y:ey, w:ew, h:eh} = enemy
+/** 判断子弹中是否击中敌人 或者回到塔防 */
+function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower?: boolean) {
+  const target = !isTower ? enemyList.find(e => e.id === id) : towerList.find(t => t.id === id)
+  if(!target) return
+  const size = state.size
+  const {x:ex, y:ey, w:ew = size, h:eh = size} = target as TargetInfo
   // 绘画子弹时的偏移
   x -= w / 2, y -= h / 2
   // 敌人中心
