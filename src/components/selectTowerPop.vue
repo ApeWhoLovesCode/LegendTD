@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import { onMounted, reactive } from 'vue';
-import { ElDrawer } from 'element-plus';
+import { reactive } from 'vue';
+import { ElDrawer, ElMessage } from 'element-plus';
 import towerData, { TowerType, towerStaticData } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
@@ -8,7 +8,6 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import TowerCanvas from './towerCanvas.vue';
 
 const userStore = useUserInfoStore()
-
 const {visible} = defineProps({
   visible: {
     type: Boolean,
@@ -42,7 +41,11 @@ const selectTower = (i: number) => {
   if(index !== -1) {
     userStore.towerSelectList.splice(index, 1)
   } else {
-    userStore.towerSelectList.push(i)
+    if(userStore.towerSelectList.length < 8) {
+      userStore.towerSelectList.push(i)
+    } else {
+      ElMessage.info('最多只能选8个英雄~')
+    }
   }
 }
 
@@ -64,38 +67,39 @@ const selectTower = (i: number) => {
           v-for="i in userStore.towerSelectList" 
           :key="towerData[i]?.name" 
           class="towerBox" 
-          @click="selectTower(i)"
         >
-          <img :src="towerData[i]?.img" alt="" class="towerImg">
+          <!-- <img :src="towerData[i]?.img" alt="" class="towerImg"> -->
           <div class="towerName">{{ towerData[i]?.name }}</div>
+          <span class="closeIcon iconfont icon-close" @click="selectTower(i)"></span>
         </div>
       </div>
       <div class="mask mask-right"></div>
+      <div class="selectNum">{{ userStore.towerSelectList.length }} / 8</div>
     </div>
-    <div class="selectTowerPop-content">
+    <div v-if="false" class="selectTowerPop-content">
       <ScrollCircle 
-      :list="towerData" 
-      @on-page-change="onPageChange"
-      :card-add-deg="3"
-    >
-      <ScrollCircleItem 
-        v-for="(item, i) in state.items" 
-        :key="cardIndex(i)" 
-        :index="i"
-        @on-click="() => {
-          selectTower(cardIndex(i))
-        }"
+        :list="towerData" 
+        @on-page-change="onPageChange"
+        :card-add-deg="3"
       >
-        <div class="card">
-          <!-- <img :src="item.img" class="towerImg" alt=""> -->
-          <div class="towerImg"> 
-            <TowerCanvas :index="cardIndex(i)" />
+        <ScrollCircleItem 
+          v-for="(item, i) in state.items" 
+          :key="cardIndex(i)" 
+          :index="i"
+          @on-click="() => {
+            selectTower(cardIndex(i))
+          }"
+        >
+          <div class="card">
+            <!-- <img :src="item.img" class="towerImg" alt=""> -->
+            <div class="towerImg"> 
+              <TowerCanvas :index="cardIndex(i)" />
+            </div>
+            <div class="name">{{ item.name }}</div>
+            <div class="explain">{{ towerStaticData[item.name].explain }}</div>
           </div>
-          <div class="name">{{ item.name }}</div>
-          <div class="explain">{{ towerStaticData[item.name].explain }}</div>
-        </div>
-      </ScrollCircleItem>
-    </ScrollCircle>
+        </ScrollCircleItem>
+      </ScrollCircle>
     </div>
   </ElDrawer>
 </template>
@@ -148,6 +152,22 @@ const selectTower = (i: number) => {
           background-color: rgba(0, 0, 0, .4);
           color: #fff;
         }
+        .closeIcon {
+          position: absolute;
+          right: 0;
+          top: 0;
+          display: inline-block;
+          width: 1.5rem;
+          height: 1.5rem;
+          line-height: 1.5rem;
+          text-align: center;
+          background-color: rgba(0, 0, 0, .4);
+          color: #fff;
+          font-weight: bold;
+          font-size: 14px;
+          border-bottom-left-radius: 4px;
+          cursor: pointer;
+        }
       }
     }
     .mask {
@@ -163,6 +183,19 @@ const selectTower = (i: number) => {
     .mask-right {
       right: 0;
       background: linear-gradient(to left, #fff, rgba(255, 255, 255, 0));
+    }
+    .selectNum {
+      position: absolute;
+      bottom: -24px;
+      right: 30px;
+      height: 24px;
+      width: 60px;
+      line-height: 24px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      border-radius: 24px;
+      border-bottom: 1px solid #aaa;
     }
   }
   &-content {

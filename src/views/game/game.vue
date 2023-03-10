@@ -965,14 +965,17 @@ function onKeyDown() {
           <img :src="BuildingImg" alt="" class="add-icon">
           <div class="tower-wrap" :class="buildingClass">
             <div 
+              v-for="(i, index) in userInfoStore.towerSelectList" 
               class="tower" 
-              :class="{'tower-no-money': baseDataState.money < item.money}" 
-              v-for="(item, index) in source.towerSource" 
+              :class="{
+                'tower-no-money': baseDataState.money < source.towerSource[i].money,
+                'tower-mobile': source.isMobile
+              }" 
               :key="index"
               @click="buildTower(index)"
             >
-              <img :src="item.cover || item.img" alt="" class="tower-icon">
-              <div class="tower-info">￥{{item.money}}</div>
+              <img :src="source.towerSource[i].cover || source.towerSource[i].img" alt="" class="tower-icon">
+              <div class="tower-info">￥{{source.towerSource[i].money}}</div>
             </div>
           </div>
         </div>
@@ -1055,20 +1058,26 @@ function onKeyDown() {
             border: 2px solid #fff;
             margin-bottom: 10px;
             box-sizing: border-box;
-            overflow: hidden;
             .tower-icon {
               width: 100%;
               height: 100%;
             }
+            @towerInfoSize: calc(@size * 0.26);
             .tower-info {
               position: absolute;
               left: 0;
               right: 0;
               bottom: 0;
               text-align: center;
-              font-size: calc(@size * 0.26);
+              font-size: @towerInfoSize;
               color: #fff;
               background: rgba(0, 0, 0, .4);
+            }
+          }
+          .tower-mobile {
+            border-radius: 2px;
+            .tower-info {
+              bottom: calc(-1 * @towerInfoSize);
             }
           }
           .tower-no-money {

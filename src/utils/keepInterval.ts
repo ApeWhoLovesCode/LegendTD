@@ -1,12 +1,9 @@
-/** 
- * 储存所有的定时器集合
- * 可以暂停与继续
- */
 class KeepInterval {
   private timerMap: Map<string, TimerMap> = new Map()
-  /** 私有的静态的实例对象 */
   static _instance: any
-  /** 公有的、静态的、访问该实例对象的方法 */
+  /** 
+   * 储存所有的定时器集合 (可以暂停与继续)
+   */
   static get instance(){
     if(!this._instance){
       this._instance = new KeepInterval()

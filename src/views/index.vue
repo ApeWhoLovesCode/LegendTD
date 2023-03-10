@@ -88,10 +88,11 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
   height: 100vh;
   overflow: hidden;
   // background-image: radial-gradient(circle 800px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
+  @gridSize: 1.2rem;
   .card {
     position: relative;
-    width: 24rem;
-    height: 18rem;
+    width: calc(21 * @gridSize);
+    height: calc(14 * @gridSize);
     border: 5px solid #fff;
     border-radius: 12px;
     overflow: hidden;
