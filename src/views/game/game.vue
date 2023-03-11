@@ -106,7 +106,8 @@ watch(() => baseDataState.money, (newVal, oldVal) => {
   })
 })
 // 游戏结束判断
-watch(() => baseDataState.hp, () => {
+watch(() => baseDataState.hp, (hp) => {
+  if(hp) return
   baseDataState.isGameOver = true
   baseDataState.isPause = true
   playAudio('ma-gameover', 'Skill')
@@ -370,14 +371,20 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyType, i: number) {
-  const { curFloorI, w, h, audioKey } = newEnemy
+  const { curFloorI, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = Date.now() + i
+  const size = gameConfigState.size
+  newEnemy.w *= size
+  newEnemy.h *= size
+  newEnemy.curSpeed *= size
+  newEnemy.speed *= size
+  newEnemy.hp.size *= size
   return {
     ...newEnemy,
     id: audioKey + id,
-    x: x - w / 4,
-    y: y - h / 2
+    x: x - newEnemy.w / 4,
+    y: y - newEnemy.h / 2
   } as EnemyStateType
 }
 
@@ -432,13 +439,17 @@ function moveEnemy(index: number) {
   switch (x_y) {
     case 1: {
       enemyList[index].x -= curSpeed;
-      if(!isForward) enemyList[index].isForward = !isFlip
+      if(isForward === isFlip) {
+        enemyList[index].isForward = !isForward
+      }
       break;
     }
     case 2: enemyList[index].y -= curSpeed; break;
     case 3: {
       enemyList[index].x += curSpeed;
-      if(isForward) enemyList[index].isForward = isFlip
+      if(!isForward === isFlip) {
+        enemyList[index].isForward = !isForward
+      }
       break;
     } 
     case 4: enemyList[index].y += curSpeed; break;

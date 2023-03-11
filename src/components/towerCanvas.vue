@@ -407,13 +407,17 @@ function moveEnemy(index: number) {
   switch (x_y) {
     case 1: {
       enemyList[index].x -= curSpeed;
-      if(!isForward) enemyList[index].isForward = !isFlip
+      if(isForward === isFlip) {
+        enemyList[index].isForward = !isForward
+      }
       break;
     }
     case 2: enemyList[index].y -= curSpeed; break;
     case 3: {
       enemyList[index].x += curSpeed;
-      if(isForward) enemyList[index].isForward = isFlip
+      if(!isForward === isFlip) {
+        enemyList[index].isForward = !isForward
+      }
       break;
     } 
     case 4: enemyList[index].y += curSpeed; break;
