@@ -203,6 +203,11 @@ function handleBulletMove() {
         // 敌人扣血
         const enemy = enemyList.find(e => e.id === e_id)
         if(enemy) {
+          let hp = enemy.hp.cur - t.damage
+          if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
+            hp = 0
+          }
+          enemy.hp.cur = hp
           if(enemy.hp.cur <= 0) {
             enemy.hp.cur = enemy.hp.sum
           } else {
