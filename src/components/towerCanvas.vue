@@ -221,8 +221,11 @@ function handleBulletMove() {
         const ctx = state.ctx!
         const imgX = x - w / 2, imgY = y - h / 2
         if(t.name === 'fengche') {
-          t.rotateDeg = (t.rotateDeg ?? 0) + 3
-          drawRotateBullet({deg: t.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 3
+          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+        } else if(t.name === 'delaiwen') {
+          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
+          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
         } else if(t.name !== 'lanbo') {
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})

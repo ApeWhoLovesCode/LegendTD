@@ -87,6 +87,8 @@ export type BulletType = {
   deg?: number
   /** 子弹是否回收中 */
   isRecycling?: boolean
+  /** 子弹旋转的角度 */
+  rotateDeg?: number
 }
 
 /** 塔防的类型 */
@@ -104,8 +106,6 @@ export type TowerStateType = {
   onloadImg: CanvasImageSource
   /** 子弹图片 */
   onloadbulletImg: CanvasImageSource
-  /** 旋转的角度 */
-  rotateDeg?: number
   /** 子弹的缩放倍数 */
   scale?: number 
   /** 子弹的缩放倍数变化值 */

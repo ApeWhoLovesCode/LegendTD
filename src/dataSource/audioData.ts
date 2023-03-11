@@ -20,4 +20,5 @@ export default {
   'ejiate-choose': new URL("../assets/audio/ejiate-choose.wav", import.meta.url).href,
   'nanqiang-choose': new URL("../assets/audio/nanqiang-choose.wav", import.meta.url).href,
   'ez-choose': new URL("../assets/audio/ez-choose.wav", import.meta.url).href,
+  'delaiwen-choose': new URL("../assets/audio/delaiwen-choose.wav", import.meta.url).href,
 } as {[key in string]: string}

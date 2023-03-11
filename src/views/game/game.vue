@@ -665,9 +665,15 @@ function handleBulletMove() {
         if(enemy) {
           enemy.hp.cur -= t.damage
           if(enemy.hp.cur <= 0) {
-            baseDataState.money += enemy.reward
             e_idList.push(e_id)
             t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
+            let reward = enemy.reward
+            if(t.name === 'delaiwen') {
+              if(Math.floor(Math.random()*10) === 9) { // 随机 0-9
+                reward = enemy.reward * 2
+              }
+            }
+            baseDataState.money += reward
             // 这里可以放击杀音频
             // if(t.name === '茄子') {
             //   playDomAudio({id: t.id})
@@ -686,8 +692,11 @@ function handleBulletMove() {
         const ctx = gameConfigState.ctx
         const imgX = x - w / 2, imgY = y - h / 2
         if(t.name === 'fengche') {
-          t.rotateDeg = (t.rotateDeg ?? 0) + 3
-          drawRotateBullet({deg: t.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 3
+          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+        } else if(t.name === 'delaiwen') {
+          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
+          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
         } else if(t.name !== 'lanbo') {
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
@@ -824,19 +833,6 @@ function initMobileData() {
   gameConfigState.size *= p
   gameConfigState.defaultCanvas.w *= p
   gameConfigState.defaultCanvas.h *= p
-  // source.enemySource.forEach(item => {
-  //   item.w = handleDecimals(item.w)
-  //   item.h = handleDecimals(item.h)
-  //   item.curSpeed = handleDecimals(item.curSpeed)
-  //   item.speed = handleDecimals(item.speed)
-  //   item.hp.size = handleDecimals(item.hp.size)
-  // })
-  // source.towerSource.forEach(item => {
-  //   item.r = handleDecimals(item.r)
-  //   item.speed = handleDecimals(item.speed)
-  //   item.bSize.w = handleDecimals(item.bSize.w)
-  //   item.bSize.h = handleDecimals(item.bSize.h)
-  // })
 }
 
 /** 初始化行动轨迹 */
@@ -972,7 +968,7 @@ function onKeyDown() {
                 'tower-mobile': source.isMobile
               }" 
               :key="index"
-              @click="buildTower(index)"
+              @click="buildTower(i)"
             >
               <img :src="source.towerSource[i].cover || source.towerSource[i].img" alt="" class="tower-icon">
               <div class="tower-info">￥{{source.towerSource[i].money}}</div>
@@ -1050,6 +1046,7 @@ function onKeyDown() {
           border-radius: 16px;
           padding: 10px;
           z-index: 99;
+          @towerInfoSize: calc(@size * 0.26);
           .tower {
             position: relative;
             width: @size;
@@ -1062,7 +1059,6 @@ function onKeyDown() {
               width: 100%;
               height: 100%;
             }
-            @towerInfoSize: calc(@size * 0.26);
             .tower-info {
               position: absolute;
               left: 0;

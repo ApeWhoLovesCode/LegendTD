@@ -43,6 +43,9 @@ export const useSourceStore = defineStore('source', {
   }),
   actions: {
     async loadingAllImg() {
+      if(this.$state.progress === 100) {
+        return
+      }
       return Promise.all([
         this.handleOtherImg(),
         this.handleEnemyImg(), 

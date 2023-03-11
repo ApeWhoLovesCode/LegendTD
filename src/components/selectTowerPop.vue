@@ -36,6 +36,8 @@ const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) 
 
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
+const isSelect = (i: number) => (userStore.towerSelectList.find(index => index === i) !== void 0)
+
 const selectTower = (i: number) => {
   const index = userStore.towerSelectList.findIndex(ti => ti === i)
   if(index !== -1) {
@@ -56,7 +58,7 @@ const selectTower = (i: number) => {
     v-model="visible"
     custom-class='selectTowerPop' 
     :with-header="false"
-    size="70vh"
+    size="80vh"
     direction="btt"
     @close="emit('update:visible', false)"
   >
@@ -68,15 +70,15 @@ const selectTower = (i: number) => {
           :key="towerData[i]?.name" 
           class="towerBox" 
         >
-          <!-- <img :src="towerData[i]?.img" alt="" class="towerImg"> -->
-          <div class="towerName">{{ towerData[i]?.name }}</div>
+          <img :src="towerData[i]?.img" alt="" class="towerImg">
+          <div class="towerName">{{ towerStaticData[towerData[i]?.name]?.name }}</div>
           <span class="closeIcon iconfont icon-close" @click="selectTower(i)"></span>
         </div>
       </div>
       <div class="mask mask-right"></div>
       <div class="selectNum">{{ userStore.towerSelectList.length }} / 8</div>
     </div>
-    <div v-if="false" class="selectTowerPop-content">
+    <div class="selectTowerPop-content">
       <ScrollCircle 
         :list="towerData" 
         @on-page-change="onPageChange"
@@ -91,12 +93,12 @@ const selectTower = (i: number) => {
           }"
         >
           <div class="card">
-            <!-- <img :src="item.img" class="towerImg" alt=""> -->
             <div class="towerImg"> 
               <TowerCanvas :index="cardIndex(i)" />
             </div>
-            <div class="name">{{ item.name }}</div>
+            <div class="name">{{ towerStaticData[item.name].name }}</div>
             <div class="explain">{{ towerStaticData[item.name].explain }}</div>
+            <div v-if="isSelect(cardIndex(i))" class="card-select">已选</div>
           </div>
         </ScrollCircleItem>
       </ScrollCircle>
@@ -107,7 +109,7 @@ const selectTower = (i: number) => {
 <style lang='less'>
 @import '@/style.less'; 
 .selectTowerPop {
-  background-color: #fff;
+  background-image: radial-gradient(circle 350px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
   .el-drawer__body {
     padding: 0;
   }
@@ -121,6 +123,7 @@ const selectTower = (i: number) => {
       height: 100%;
       overflow-x: scroll;
       padding: 0 @maskWidth;
+      border-bottom: 2px solid @red;
       &::-webkit-scrollbar {
         display: none!important;
         width: 0px;  
@@ -131,7 +134,8 @@ const selectTower = (i: number) => {
         box-sizing: border-box;
         width: @headerHeight;
         height: 100%;
-        border: 2px solid @theme3;
+        border: 2px solid @yellow;
+        border-bottom: none;
         margin-right: 12px;
         &:last-of-type {
           margin-right: 0;
@@ -147,8 +151,8 @@ const selectTower = (i: number) => {
           left: 0;
           right: 0;
           text-align: center;
-          height: 1.5rem;
-          line-height: 1.5rem;
+          height: 1.8rem;
+          line-height: 1.8rem;
           background-color: rgba(0, 0, 0, .4);
           color: #fff;
         }
@@ -178,40 +182,83 @@ const selectTower = (i: number) => {
     }
     .mask-left {
       left: 0;
-      background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+      background: linear-gradient(to right, #68baf5, rgba(255, 255, 255, 0));
     }
     .mask-right {
       right: 0;
-      background: linear-gradient(to left, #fff, rgba(255, 255, 255, 0));
+      background: linear-gradient(to left, #68baf5, rgba(255, 255, 255, 0));
     }
     .selectNum {
       position: absolute;
-      bottom: -24px;
-      right: 30px;
-      height: 24px;
-      width: 60px;
-      line-height: 24px;
-      font-size: 14px;
-      color: #666;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 36px;
+      line-height: 32px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
       text-align: center;
-      border-radius: 24px;
-      border-bottom: 1px solid #aaa;
+      border-radius: 18px;
+      border: 2px solid @theme3;
+      background-color: #1781c2;
+      box-shadow: 2px 2px 12px 1px #1781c2,
+      inset 2px 2px 6px #082a74;
     }
   }
   &-content {
     width: 100%;
-    height: calc(70vh - @headerHeight);
+    height: calc(80vh - @headerHeight);
+    @gridSize: 36px;
     .card {
-      width: 25rem;
-      height: 20rem;
-      border: 1px solid #ccc;
+      position: relative;
+      box-sizing: border-box;
+      width: calc(9 * @gridSize + 32px);
+      height: calc(7 * @gridSize + 140px);
+      border: 2px solid @yellow;
+      background-color: @black;
+      padding: 16px;
       cursor: pointer;
       user-select: none;
       -webkit-user-drag: none;
-      @gridSize: 36px;
+      overflow: hidden;
+      filter: drop-shadow(4px 4px 10px rgba(0, 0, 0, 0.6));
       .towerImg {
         width: calc(9 * @gridSize);
         height: calc(7 * @gridSize);
+        margin: auto;
+      }
+      .name {
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 16px;
+        color: #fff;
+        margin-top: 16px;
+        padding: 16px 0 12px;
+        border-top: 2px solid @yellow;
+      }
+      .explain {
+        color: #fff;
+        font-size: 14px;
+        line-height: 22px;
+      }
+      &-select {
+        position: absolute;
+        right: -32px;
+        top: 16px;
+        width: 120px;
+        height: 32px;
+        line-height: 32px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 8px;
+        color: #fff;
+        background: @red;
+        transform: rotate(45deg);
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
       }
     }
   }
