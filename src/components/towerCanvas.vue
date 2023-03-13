@@ -35,6 +35,7 @@ const state = reactive({
   animationFrame: 0,
   mapGridInfoItem: {x: 1, y: 5, x_y: 3, num: 20},
 })
+const makeEnemyTimer = ref<NodeJS.Timer>()
 
 // 监听敌人的移动
 watch(() => enemyList, (enemyList) => {
@@ -56,6 +57,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelAnimationFrame(state.animationFrame)
+  clearInterval(makeEnemyTimer.value)
 })
 
 function init() {
@@ -336,11 +338,9 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
   if(!target) return
   const size = state.size
   const {x:ex, y:ey, w:ew = size, h:eh = size} = target as TargetInfo
-  // 绘画子弹时的偏移
-  x -= w / 2, y -= h / 2
-  // 敌人中心
-  const _ex = ex + ew / 2, _ey = ey + eh / 2
-  return _ex > x && _ey > y && (_ex < x + w) && (_ey < y + h)
+  const checkIn = (v: number, scope: number, t: number) => (t > v - scope / 2) && (t < v + scope / 2)
+  // 子弹中心(当前的xy在绘画时已经是偏移过了) 和 敌人中心 
+  return checkIn(x, w, ex + ew / 2) && checkIn(y, h, ey + eh / 2)
 }   
 
 
@@ -366,11 +366,14 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 
 function makeEnemy() {
   setEnemy(props.eIndexList[0])
-  for(let i = 1; i < props.eIndexList.length; i++) {
-    setTimeout(() => {
-      setEnemy(props.eIndexList[i])
-    }, 900);
-  }
+  makeEnemyTimer.value = setInterval(() => {
+    const index = enemyList.length
+    if(index === props.eIndexList.length) {
+      clearInterval(makeEnemyTimer.value)
+    } else {
+      setEnemy(props.eIndexList[index])
+    }
+  }, 900);
 }
 
 /** 生成敌人 */
@@ -382,7 +385,7 @@ function setEnemy(i: number) {
   item.curSpeed *= size
   item.speed *= size
   item.hp.size *= size
-  const {audioKey, name, w, h} = item
+  const {audioKey, w, h} = item
   // 设置敌人的初始位置
   const id = Date.now()
   const enemyItem: EnemyStateType = {...item, id: audioKey + id}
@@ -459,7 +462,6 @@ function drawEnemy(index: number) {
     // ctx.fill()
     // ctx.strokeStyle = '#022ef1'
     // ctx.stroke()
-
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
@@ -537,6 +539,6 @@ function drawFloorTile() {
 .com-tower-canvas {
   width: 100%;
   height: 100%;
-  background-image: radial-gradient(circle 100px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+  // background-image: radial-gradient(circle 100px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
 }
 </style>

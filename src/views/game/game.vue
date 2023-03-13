@@ -822,11 +822,9 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
   if(!target) return
   const size = gameConfigState.size
   const {x:ex, y:ey, w:ew = size, h:eh = size} = target as TargetInfo
-  // 绘画子弹时的偏移
-  x -= w / 2, y -= h / 2
-  // 敌人中心
-  const _ex = ex + ew / 2, _ey = ey + eh / 2
-  return _ex > x && _ey > y && (_ex < x + w) && (_ey < y + h)
+  const checkIn = (v: number, scope: number, t: number) => (t > v - scope / 2) && (t < v + scope / 2)
+  // 子弹中心(当前的xy在绘画时已经是偏移过了) 和 敌人中心 
+  return checkIn(x, w, ex + ew / 2) && checkIn(y, h, ey + eh / 2)
 }   
 
 /** 开始游戏 */

@@ -22,14 +22,14 @@ export default towerArr
 
 export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'icestar': { name: '冰星', explain: '向最前方的一个敌人发射一颗会使敌人减速的冰星。' },
-  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。' },
+  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。', eIndexList: [1,2,3] },
   'ejiate': { name: '厄加特', explain: '向一个敌人发射一连串的子弹。' },
   'jin': { name: '烬', explain: '攻击范围更大，子弹伤害更高。' },
-  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。' },
-  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.' },
-  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。' },
-  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。' },
-  'delaiwen': { name: '德莱文', explain: '往前方最多两个敌人丢出可以回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。' },
+  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。', eIndexList: [2,3] },
+  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.', eIndexList: [1,2,3] },
+  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', eIndexList: [1,2,3,4,5] },
+  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', eIndexList: [1,2,3,4,5] },
+  'delaiwen': { name: '德莱文', explain: '往前方最多两个敌人丢出可以回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', eIndexList: [1,2,3,4,5] },
 }
 
 export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen'
@@ -74,4 +74,6 @@ export type TowerStaticItem = {
   name: string
   /** 说明文本 */
   explain: string
+  /** 展示的敌人数组 */
+  eIndexList?: number[]
 }

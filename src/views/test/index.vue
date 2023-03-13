@@ -22,7 +22,7 @@ onMounted(() => {
   <div class='test'>
     <UserBall />
     <div class="towerImg"> 
-      <!-- <TowerCanvas v-if="isOnload" :index="8" /> -->
+      <!-- <TowerCanvas v-if="isOnload" :index="8" :e-index-list="[1,2,3]" /> -->
     </div>
   </div>
 </template>

@@ -94,7 +94,7 @@ const selectTower = (i: number) => {
         >
           <div class="card">
             <div class="towerImg"> 
-              <TowerCanvas :index="cardIndex(i)" />
+              <TowerCanvas :index="cardIndex(i)" :e-index-list="towerStaticData[item.name].eIndexList" />
             </div>
             <div class="name">{{ towerStaticData[item.name].name }}</div>
             <div class="explain">{{ towerStaticData[item.name].explain }}</div>
