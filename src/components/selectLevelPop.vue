@@ -57,7 +57,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 <template>
   <ElDrawer 
-    v-model="visible"
+    :modelValue="visible"
     custom-class='selectLevelPop' 
     :with-header="false"
     size="50vh"

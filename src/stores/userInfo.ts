@@ -19,7 +19,7 @@ type StateType = {
 export const useUserInfoStore = defineStore('userInfo', {
   state: (): StateType => ({
     userInfo: void 0,
-    towerSelectList: [0,1,2,3,4,5,6,7],
+    towerSelectList: [9,8,7,6,5,4,3,2],
   }),
   actions: {
     async login({username, password}: LoginApiParams) {

@@ -76,7 +76,7 @@ const selectTower = (i: number) => {
 
 <template>
   <ElDrawer 
-    v-model="visible"
+    :modelValue="visible"
     custom-class='selectTowerPop' 
     :with-header="false"
     size="80vh"

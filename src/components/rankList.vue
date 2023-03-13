@@ -33,7 +33,7 @@ const getRankList = async () => {
 
 <template>
   <ElDialog 
-    v-model="visible" 
+    :modelValue="visible" 
     title="排行榜"
     width="60%"
     @open="getRankList"

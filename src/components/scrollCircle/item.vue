@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { inject, computed } from "vue-demi";
+import { inject, computed } from "vue";
 import { classPrefix, provideKey } from "./provide";
 import { ScrollCircleProvide } from "./type";
 

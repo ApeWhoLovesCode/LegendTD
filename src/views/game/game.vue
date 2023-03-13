@@ -27,6 +27,7 @@ import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
 import { updateScoreApi } from '@/service/rank';
 import { useUserInfoStore } from '@/stores/userInfo';
+import { TowerName } from '@/dataSource/towerData';
 
 // 全局资源
 const source = useSourceStore()
@@ -551,6 +552,9 @@ function buildTower(index: number) {
     const l = powAndSqrt(w / 2, h / 2)
     // 这里 speed + 1 是为了让子弹扩散的效果快于真实子弹
     tower.addScale = (r / l - 1) / ((r - l) / (speed + 1))
+  } else if(tower.name === 'huonan') {
+    tower.thickness = tower.bSize.w
+    tower.preDamage = tower.damage
   }
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
@@ -713,7 +717,7 @@ function handleBulletMove() {
         } else if(t.name === 'delaiwen') {
           bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
           drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if(t.name !== 'lanbo') {
+        } else if((['lanbo', 'huonan'] as TowerName[]).every(v => v !== t.name)) { // 绘画其余塔防的子弹
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
           } else {
@@ -743,6 +747,17 @@ function handleBulletMove() {
     if(t.isBulleting) {
       drawTowerBullet(t_i)
     }
+    // 处理火男子弹
+    if(t.name === 'huonan') {
+      if(t.bulletArr.length) {
+        drawFireBullet(t)
+      } else {
+        if(t.thickness !== t.bSize.w) {
+          t.thickness = t.bSize.w
+          t.damage = t.preDamage ?? 1
+        }
+      }
+    }
   }
   // 消灭敌人
   if(e_idList.length) {
@@ -771,6 +786,44 @@ function drawTowerBullet(t_i: number) {
     ctx.drawImage(t.onloadbulletImg, x, y, w, h)
     ctx.restore()
     t.scale = scale
+  }
+}
+
+/** 画火男的火焰柱 */
+function drawFireBullet(t: TowerStateType) {
+  const {thickness = 1, x, y} = t
+  const size = gameConfigState.size
+  // 目前是只攻击一个敌人
+  const enemy = enemyList.find(e => e.id === t.targetIdList[0])
+  if(!enemy) return
+  const {x: ex, y: ey, w, h} = enemy
+  const ctx = gameConfigState.ctx!
+  const _x = x + size / 2, _y = y + size / 2, _ex = ex + w / 2, _ey = ey + h / 2
+  const deg = getAngle({x: _x, y: _y}, {x: _ex, y: _ey})
+  // 敌人和塔防间的距离
+  const xy = powAndSqrt(_ex - _x, _ey - _y)
+  ctx.save()
+  ctx.translate(_x, _y)
+  ctx.rotate(deg * Math.PI / 180)
+  ctx.translate(-_x, -_y)
+  const newY = _y - (thickness - t.bSize.w) / 2
+  // 设置渐变色
+  const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
+  linearGradient.addColorStop(0, '#de5332');
+  linearGradient.addColorStop(0.4, '#f3c105');
+  linearGradient.addColorStop(0.5, '#ffc800');
+  linearGradient.addColorStop(0.6, '#f3c105');
+  linearGradient.addColorStop(1, '#de5332'); 
+  ctx.strokeStyle = linearGradient
+  ctx.fillStyle = linearGradient
+  ctx.beginPath()
+  ctx.roundRect(_x, newY, xy, thickness, size / 2)
+  ctx.fill()
+  ctx.stroke()
+  ctx.restore()
+  if(thickness < size / 3) {
+    t.thickness = thickness + 0.01
+    t.damage += (t.addDamage ?? 0)
   }
 }
 

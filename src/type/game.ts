@@ -114,8 +114,8 @@ export type TowerStateType = {
   isBulleting?: boolean
   /** 用于火男火焰喷柱的粗细变化 */
   thickness?: number
-  /** 当前的伤害 */
-  curDamage?: number
+  /** 之前的伤害 */
+  preDamage?: number
 } & TowerType
 /** 塔防的数据 */
 export type TowerState = {

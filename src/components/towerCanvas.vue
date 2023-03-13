@@ -1,5 +1,6 @@
 <script setup lang='ts'>
 import { DirectionType, GridInfo } from '@/dataSource/mapData';
+import { TowerName } from '@/dataSource/towerData';
 import { useSourceStore } from '@/stores/source';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
 import { getAngle } from '@/utils/handleCircle';
@@ -7,7 +8,7 @@ import { randomStr } from '@/utils/random';
 import useBaseData from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
 import useTower from '@/views/game/tools/tower';
-import _, { size } from 'lodash';
+import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 const { enemyList, slowEnemy} = useEnemy()
@@ -125,7 +126,8 @@ function buildTower() {
     // 这里 speed + 1 是为了让子弹扩散的效果快于真实子弹
     tower.addScale = (r / l - 1) / ((r - l) / (speed + 1))
   } else if(tower.name === 'huonan') {
-    tower.thickness = tower.bSize.w * size
+    tower.thickness = tower.bSize.w
+    tower.preDamage = tower.damage
   }
   towerList.push(tower)
 }
@@ -235,7 +237,7 @@ function handleBulletMove() {
         } else if(t.name === 'delaiwen') {
           bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
           drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if(t.name !== 'lanbo') {
+        } else if((['lanbo', 'huonan'] as TowerName[]).every(v => v !== t.name)) { // 绘画其余塔防的子弹
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
           } else {
@@ -264,9 +266,16 @@ function handleBulletMove() {
     if(t.isBulleting) {
       drawTowerBullet(t)
     }
-    // 处理火男
-    if(t.name === 'huonan' && t.bulletArr.length) {
-      drawFireBullet(t)
+    // 处理火男子弹
+    if(t.name === 'huonan') {
+      if(t.bulletArr.length) {
+        drawFireBullet(t)
+      } else {
+        if(t.thickness !== t.bSize.w) {
+          t.thickness = t.bSize.w
+          t.damage = t.preDamage ?? 1
+        }
+      }
     }
   }
 }
@@ -299,18 +308,21 @@ function drawFireBullet(t: TowerStateType) {
   const {thickness = 1, x, y} = t
   const size = state.size
   // 目前是只攻击一个敌人
-  const {x: ex, y: ey} = enemyList.find(e => e.id === t.targetIdList[0])!
+  const enemy = enemyList.find(e => e.id === t.targetIdList[0])
+  if(!enemy) return
+  const {x: ex, y: ey, w, h} = enemy
   const ctx = state.ctx!
-  const deg = getAngle({x,y}, {x: ex, y: ey})
+  const _x = x + size / 2, _y = y + size / 2, _ex = ex + w / 2, _ey = ey + h / 2
+  const deg = getAngle({x: _x, y: _y}, {x: _ex, y: _ey})
   // 敌人和塔防间的距离
-  const xy = powAndSqrt(ex - x, ey - y)
+  const xy = powAndSqrt(_ex - _x, _ey - _y)
   ctx.save()
-  ctx.translate(x, ey)
+  ctx.translate(_x, _y)
   ctx.rotate(deg * Math.PI / 180)
-  ctx.translate(-x, -ey)
-  const _y = y - (thickness - t.bSize.w * size) / 2
+  ctx.translate(-_x, -_y)
+  const newY = _y - (thickness - t.bSize.w) / 2
   // 设置渐变色
-  const linearGradient = ctx.createLinearGradient(x, _y, x, _y + thickness)
+  const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
   linearGradient.addColorStop(0, '#de5332');
   linearGradient.addColorStop(0.4, '#f3c105');
   linearGradient.addColorStop(0.5, '#ffc800');
@@ -319,10 +331,14 @@ function drawFireBullet(t: TowerStateType) {
   ctx.strokeStyle = linearGradient
   ctx.fillStyle = linearGradient
   ctx.beginPath()
-  ctx.roundRect(x, _y, xy, thickness, 10)
+  ctx.roundRect(_x, newY, xy, thickness, size / 2)
   ctx.fill()
   ctx.stroke()
   ctx.restore()
+  if(thickness < size / 3) {
+    t.thickness = thickness + 0.01
+    t.damage += (t.addDamage ?? 0)
+  }
 }
 
 /** 
