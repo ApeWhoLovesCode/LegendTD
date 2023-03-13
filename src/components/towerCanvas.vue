@@ -7,7 +7,7 @@ import { randomStr } from '@/utils/random';
 import useBaseData from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
 import useTower from '@/views/game/tools/tower';
-import _ from 'lodash';
+import _, { size } from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 const { enemyList, slowEnemy} = useEnemy()
@@ -29,7 +29,7 @@ const canvasRef = ref<HTMLCanvasElement>()
 const state = reactive({
   ctx: null as CanvasRenderingContext2D | null,
   canvasInfo: {w: 0, h: 0},
-  /** 地板大小 */
+  /** 一格的大小 */
   size: 10,
   movePath: [] as GridInfo[],
   animationFrame: 0,
@@ -112,7 +112,7 @@ function buildTower() {
   }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
@@ -124,6 +124,8 @@ function buildTower() {
     const l = powAndSqrt(w / 2, h / 2)
     // 这里 speed + 1 是为了让子弹扩散的效果快于真实子弹
     tower.addScale = (r / l - 1) / ((r - l) / (speed + 1))
+  } else if(tower.name === 'huonan') {
+    tower.thickness = tower.bSize.w * size
   }
   towerList.push(tower)
 }
@@ -131,7 +133,7 @@ function buildTower() {
 /** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
 function shootBullet(eIdList: string[], t_i: number) {
   // 添加攻击目标的索引
-  towerList[t_i].targetIndexList = eIdList
+  towerList[t_i].targetIdList = eIdList
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
@@ -260,14 +262,17 @@ function handleBulletMove() {
     }
     // 有需要额外的子弹才绘画
     if(t.isBulleting) {
-      drawTowerBullet(t_i)
+      drawTowerBullet(t)
+    }
+    // 处理火男
+    if(t.name === 'huonan' && t.bulletArr.length) {
+      drawFireBullet(t)
     }
   }
 }
 
 /** 画塔防的特殊子弹 */
-function drawTowerBullet(t_i: number) {
-  const t = towerList[t_i]
+function drawTowerBullet(t: TowerStateType) {
   const {w, h} = t.bSize
   // 当前塔防的当前子弹
   const ctx = state.ctx!
@@ -287,6 +292,37 @@ function drawTowerBullet(t_i: number) {
     ctx.restore()
     t.scale = scale
   }
+}
+
+/** 画火男的火焰柱 */
+function drawFireBullet(t: TowerStateType) {
+  const {thickness = 1, x, y} = t
+  const size = state.size
+  // 目前是只攻击一个敌人
+  const {x: ex, y: ey} = enemyList.find(e => e.id === t.targetIdList[0])!
+  const ctx = state.ctx!
+  const deg = getAngle({x,y}, {x: ex, y: ey})
+  // 敌人和塔防间的距离
+  const xy = powAndSqrt(ex - x, ey - y)
+  ctx.save()
+  ctx.translate(x, ey)
+  ctx.rotate(deg * Math.PI / 180)
+  ctx.translate(-x, -ey)
+  const _y = y - (thickness - t.bSize.w * size) / 2
+  // 设置渐变色
+  const linearGradient = ctx.createLinearGradient(x, _y, x, _y + thickness)
+  linearGradient.addColorStop(0, '#de5332');
+  linearGradient.addColorStop(0.4, '#f3c105');
+  linearGradient.addColorStop(0.5, '#ffc800');
+  linearGradient.addColorStop(0.6, '#f3c105');
+  linearGradient.addColorStop(1, '#de5332'); 
+  ctx.strokeStyle = linearGradient
+  ctx.fillStyle = linearGradient
+  ctx.beginPath()
+  ctx.roundRect(x, _y, xy, thickness, 10)
+  ctx.fill()
+  ctx.stroke()
+  ctx.restore()
 }
 
 /** 

@@ -16,7 +16,8 @@ const towerArr: TowerType[] = [
   // 这里的攻击间隔应要大于子弹扩散完毕的时间
   { name: 'lanbo',    money: 600, saleMoney: 300, r: 4, damage: 2, targetNum: 999, rate: 1600, speed: 0.1, bSize: {w:1,h:1}, audioKey: 'lanbo', img: requireImg('tower/lanbo.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/lanbo-cover.png")},
   { name: 'aixi',     money: 800, saleMoney: 400, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
-  { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")}
+  { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")},
+  { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 1, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.2,h:0.2}, audioKey: 'huonan', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
 ]
 export default towerArr
 
@@ -30,16 +31,22 @@ export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', eIndexList: [1,2,3,4,5] },
   'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', eIndexList: [1,2,3,4,5] },
   'delaiwen': { name: '德莱文', explain: '往前方最多两个敌人丢出可以回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', eIndexList: [1,2,3,4,5] },
+  'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', eIndexList: [4] },
 }
 
-export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen'
+export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan'
 
 export type TowerType = {
   name: TowerName
-  money: number,
-  saleMoney: number,
-  r: number,
-  damage: number,
+  money: number
+  saleMoney: number
+  /** 塔防半径 */
+  r: number
+  /** 伤害 */
+  damage: number
+  /** 增加的伤害 */
+  addDamage?: number
+  /** 最多攻击目标 */
   targetNum: number
   /** 攻击范围 */
   rate: number

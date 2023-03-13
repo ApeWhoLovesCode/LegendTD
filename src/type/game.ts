@@ -99,7 +99,7 @@ export type TowerStateType = {
   /** 防抖的射击函数 */
   shootFun: any
   /** 攻击的目标id数组 */
-  targetIndexList: string[]
+  targetIdList: string[]
   /** 子弹数组 */
   bulletArr: BulletType[]
   /** 塔防加载好的图片 */
@@ -112,6 +112,10 @@ export type TowerStateType = {
   addScale?: number
   /** 子弹发射中 */
   isBulleting?: boolean
+  /** 用于火男火焰喷柱的粗细变化 */
+  thickness?: number
+  /** 当前的伤害 */
+  curDamage?: number
 } & TowerType
 /** 塔防的数据 */
 export type TowerState = {

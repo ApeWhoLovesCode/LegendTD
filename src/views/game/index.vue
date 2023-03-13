@@ -35,6 +35,10 @@ function switchMapLevel(index: number) {
   if(source.mapLevel === index) return
   source.mapLevel = index
   router.push(`/game/${index + 1}`)
+  reStart()
+}
+/** 重新开始 */
+function reStart() {
   state.isProtectTheHorse = false
   nextTick(() => {state.isProtectTheHorse = true})
 }
@@ -53,7 +57,7 @@ onMounted(() => {
       v-if="state.isProtectTheHorse" 
     />
     <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" />
-    <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" />
+    <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @reStart="reStart" />
   </div>
 </template>
 

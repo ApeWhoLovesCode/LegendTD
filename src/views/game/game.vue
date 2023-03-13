@@ -112,6 +112,7 @@ watch(() => baseDataState.hp, (hp) => {
   baseDataState.isPause = true
   playAudio('ma-gameover', 'Skill')
   audioBgRef.value?.pause()
+  source.isGameing = false
   const {userInfo} = userInfoStore
   if(userInfo) {
     if(!baseDataState.level) {
@@ -475,7 +476,7 @@ function handleSkill(index: number) {
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
         for(const t of towerList) {
-          t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
+          t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
         }
       }
       if(name === "肉弹冲击") {
@@ -538,7 +539,7 @@ function buildTower(index: number) {
   }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIndexList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
@@ -582,7 +583,7 @@ function saleTower(index: number) {
 /** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
 function shootBullet(eIdList: string[], t_i: number) {
   // 添加攻击目标的索引
-  towerList[t_i].targetIndexList = eIdList
+  towerList[t_i].targetIdList = eIdList
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
@@ -681,7 +682,7 @@ function handleBulletMove() {
           enemy.hp.cur = hp
           if(enemy.hp.cur <= 0) {
             e_idList.push(e_id)
-            t.targetIndexList.splice(t.targetIndexList.findIndex(item => item === e_id), 1)
+            t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
             let reward = enemy.reward
             if(t.name === 'delaiwen') {
               if(Math.floor(Math.random()*10) === 9) { // 随机 0-9
@@ -834,6 +835,7 @@ function beginGame() {
   gameConfigState.isGameBeginMask = false
   baseDataState.isPause = false
   ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
+  source.isGameing = true
 }
 
 /** 移动端按比例缩放数据 */
@@ -1017,7 +1019,7 @@ function onKeyDown() {
         </div>
         <!-- 游戏结束遮罩层 -->
         <div v-if="baseDataState.isGameOver" class="gameover-wrap mask">
-          <div class="info">你为了保卫大司马抵御了{{baseDataState.level}}波僵尸</div>
+          <div class="info">你成功抵御了{{baseDataState.level}}波僵尸</div>
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<{itemsNum?: number}>(), {
 })
 const emit = defineEmits<{
   (event: 'switchMapLevel', index: number): void;
+  (event: 'reStart'): void;
 }>()
 
 const status = ref<-1 | 0 | 1>(window.innerHeight > window.innerWidth ? -1 : 1)
@@ -157,7 +158,7 @@ onBeforeUnmount(() => clearBallSleep())
   <UserInfo v-if="userInfoStore.userInfo" v-model:visible="userInfoVisible"/>
   <RankList v-model:visible="rankListVisible"/>
   <Login v-model:visible="loginVisible"/>
-  <SelectTowerPop v-model:visible="selectTowerVisible" />
+  <SelectTowerPop v-model:visible="selectTowerVisible" @re-start="emit('reStart')" />
   <SelectLevelPop 
     v-if="props.itemsNum === 4" 
     v-model:visible="selectLevelVisible"

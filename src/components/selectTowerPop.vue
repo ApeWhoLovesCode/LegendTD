@@ -1,13 +1,15 @@
 <script setup lang='ts'>
 import { reactive } from 'vue';
-import { ElDrawer, ElMessage } from 'element-plus';
+import { ElDrawer, ElMessage, ElMessageBox } from 'element-plus';
 import towerData, { TowerType, towerStaticData } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import { useUserInfoStore } from '@/stores/userInfo';
 import TowerCanvas from './towerCanvas.vue';
+import { useSourceStore } from '@/stores/source';
 
 const userStore = useUserInfoStore()
+const source = useSourceStore()
 const {visible} = defineProps({
   visible: {
     type: Boolean,
@@ -17,6 +19,7 @@ const {visible} = defineProps({
 })
 const emit = defineEmits<{
   (event: 'update:visible', v: boolean): void;
+  (event: 'reStart'): void;
 }>()
 
 const state = reactive({
@@ -38,6 +41,24 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 const isSelect = (i: number) => (userStore.towerSelectList.find(index => index === i) !== void 0)
 
+const handleSelectTower = (i: number) => {
+  if(source.isGameing) {
+    ElMessageBox.confirm(
+      '重新选择塔防后，游戏将重新开始，你确定要重选塔防吗？',
+      'Warning',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    ).then(() => {
+      selectTower(i)
+      emit('reStart')
+    })
+  } else {
+    selectTower(i)
+  }
+}
 const selectTower = (i: number) => {
   const index = userStore.towerSelectList.findIndex(ti => ti === i)
   if(index !== -1) {
@@ -72,7 +93,7 @@ const selectTower = (i: number) => {
         >
           <img :src="towerData[i]?.img" alt="" class="towerImg">
           <div class="towerName">{{ towerStaticData[towerData[i]?.name]?.name }}</div>
-          <span class="closeIcon iconfont icon-close" @click="selectTower(i)"></span>
+          <span class="closeIcon iconfont icon-close" @click="handleSelectTower(i)"></span>
         </div>
       </div>
       <div class="mask mask-right"></div>
@@ -89,7 +110,7 @@ const selectTower = (i: number) => {
           :key="cardIndex(i)" 
           :index="i"
           @on-click="() => {
-            selectTower(cardIndex(i))
+            handleSelectTower(cardIndex(i))
           }"
         >
           <div class="card">

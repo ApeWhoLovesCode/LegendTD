@@ -10,6 +10,8 @@ import {defineStore} from 'pinia'
 type StateType = {
   /** 游戏页面是否初始化完成 */
   isGameInit: boolean
+  /** 游戏在进行中 */
+  isGameing: boolean
   /** 敌人处理好的静态资源 */
   enemySource: EnemyStateType[]
   /** 塔防处理好的静态资源 */
@@ -34,6 +36,7 @@ type StateType = {
 export const useSourceStore = defineStore('source', {
   state: (): StateType => ({
     isGameInit: false,
+    isGameing: false,
     enemySource: [],
     towerSource: [],
     othOnloadImg: {},
