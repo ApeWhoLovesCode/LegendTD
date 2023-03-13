@@ -21,4 +21,6 @@ export default {
   'nanqiang-choose': new URL("../assets/audio/nanqiang-choose.wav", import.meta.url).href,
   'ez-choose': new URL("../assets/audio/ez-choose.wav", import.meta.url).href,
   'delaiwen-choose': new URL("../assets/audio/delaiwen-choose.wav", import.meta.url).href,
+  'huonan-choose': new URL("../assets/audio/huonan-choose.wav", import.meta.url).href,
+  'twitch-choose': new URL("../assets/audio/twitch-choose.wav", import.meta.url).href,
 } as {[key in string]: string}
