@@ -1,6 +1,6 @@
 class KeepInterval {
   private timerMap: Map<string, TimerMap> = new Map()
-  static _instance: any
+  static _instance: KeepIntervalInstance
   /** 
    * 储存所有的定时器集合 (可以暂停与继续)
    */
@@ -86,6 +86,15 @@ class KeepInterval {
 }
 
 export default KeepInterval.instance
+
+export type KeepIntervalInstance = {
+  set(key: string, fn?: () => void, intervalTime?: number): void
+  pause(key: string): number | undefined
+  allPause(isPause?: boolean): void
+  stopTime(key: string): void
+  delete(key: string): void
+  clear(): void
+}
 
 export type TimerMap = {
   // 第一层的setTimeout

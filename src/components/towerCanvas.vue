@@ -2,11 +2,12 @@
 import { DirectionType, GridInfo } from '@/dataSource/mapData';
 import { TowerName } from '@/dataSource/towerData';
 import { useSourceStore } from '@/stores/source';
-import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
+import { BulletType, EnemyStateType, TargetInfo, TowerStateType, SpecialBulletItem } from '@/type/game';
 import { getAngle } from '@/utils/handleCircle';
 import { randomStr } from '@/utils/random';
 import useBaseData from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
+import useSpecialBullets from '@/views/game/tools/specialBullets';
 import useTower from '@/views/game/tools/tower';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
@@ -14,6 +15,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 const { enemyList, slowEnemy} = useEnemy()
 const { towerList } = useTower()
 const { enterAttackScopeList, powAndSqrt } = useBaseData()
+const { specialBullets } = useSpecialBullets()
 
 const props = withDefaults(defineProps<{
   index: number;
@@ -55,11 +57,16 @@ watch(() => enemyList, (enemyList) => {
       }
     }
   }
+  for(const bItem of specialBullets.twitch) {
+    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
+    if(eIdList.length) {
+      bItem.poisonFun(eIdList)
+    }
+  }
 }, { deep: true })
 
 onMounted(() => {
   setTimeout(() => {
-    getCanvasWH()
     init()
   }, 10);
 })
@@ -67,9 +74,13 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(state.animationFrame)
   clearInterval(makeEnemyTimer.value)
+  specialBullets.twitch.forEach(b => {
+    clearInterval(b.timer)
+  })
 })
 
 function init() {
+  getCanvasWH()
   if(!canvasRef.value) return
   state.ctx = canvasRef.value.getContext("2d");
   drawInit()
@@ -107,6 +118,7 @@ function startDraw() {
     else enemyList[index].imgIndex++
   }
   handleBulletMove()
+  drawSpecialBullets()
 }
 
 /** 点击建造塔防 */
@@ -150,7 +162,7 @@ function shootBullet(eIdList: string[], t_i: number) {
     const {x, y, w, h} = enemy
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough, bulletInitDeg } = towerList[t_i]
+    const {x: t_x, y: t_y, speed, name, isThrough, bulletInitDeg } = towerList[t_i]
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
     // 两坐标间的差值
@@ -208,28 +220,19 @@ function handleBulletMove() {
       let isDelete = false
       // 子弹击中敌人
       if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
+        if(t.isSaveBullet) {
+          if(t.name === 'twitch') {
+            handleSpecialBullets(t, bItem, e_id)
+          }
+        }
         // 穿透性子弹击中敌人
-        if(t.isThrough) bItem.attactIdSet?.add(e_id)
-        if(!t.isThrough) { // 清除子弹
+        if(t.isThrough) {
+          bItem.attactIdSet?.add(e_id)
+        } else { // 清除子弹
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
-        const enemy = enemyList.find(e => e.id === e_id)
-        if(enemy) {
-          let hp = enemy.hp.cur - t.damage
-          if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
-            hp = 0
-          }
-          // 敌人扣血
-          enemy.hp.cur = Math.max(hp, 0) 
-          if(enemy.hp.cur <= 0) {
-            enemy.hp.cur = enemy.hp.sum
-          } else {
-            if(t.slow) { // 判断减速
-              slowEnemy(e_id, t.slow)
-            }
-          }
-        }
+        damageTheEnemy(e_id, t)
       } else {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
           t.bulletArr.splice(b_i, 1)
@@ -275,8 +278,25 @@ function handleBulletMove() {
     }
   }
 }
-
-/** 画塔防的特殊子弹 */
+/** 塔防伤害敌人 */
+function damageTheEnemy(e_id: string, t: TowerStateType) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  let hp = enemy.hp.cur - t.damage
+  if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
+    hp = 0
+  }
+  // 敌人扣血
+  enemy.hp.cur = Math.max(hp, 0) 
+  if(enemy.hp.cur <= 0) {
+    enemy.hp.cur = enemy.hp.sum
+  } else {
+    if(t.slow) { // 判断减速
+      slowEnemy(e_id, t.slow)
+    }
+  }
+}
+/** 画塔防的其他子弹 */
 function drawTowerBullet(t: TowerStateType) {
   const {w, h} = t.bSize
   // 当前塔防的当前子弹
@@ -351,6 +371,59 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.fill()
   ctx.stroke()
   ctx.restore()
+}
+
+/** 处理特殊子弹 */
+function handleSpecialBullets(t: TowerStateType, bItem: BulletType, e_id: string) {
+  const bw = t.bSize.w * 5, bh = t.bSize.h * 5
+  const bId = randomStr('twitch')
+  const poisonFun = _.throttle((eIdList) => {
+    poisonDamage(eIdList)
+  }, 300, { leading: true, trailing: false })
+  const bullet: SpecialBulletItem = {
+    id: bId, tId: t.id, poisonFun, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
+  }
+  // 清除毒液子弹
+  // keepInterval.set(bId, () => {}, t.poison?.time)
+  setTimeout(() => {
+    const index = specialBullets.twitch.findIndex(b => b.id === bId)
+    clearInterval(specialBullets.twitch[index].timer) 
+    specialBullets.twitch.splice(index, 1)
+  }, t.poison?.time)
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(enemy) {
+    if(!enemy.poison) {
+      enemy.poison = {level: 1, damage: t.damage}
+      // 清除敌人受到的毒液伤害
+      // keepInterval.set(`twitch-${enemy.id}`, () => {}, 300)
+      bullet.timer = setInterval(() => {
+        enemy.hp.cur = Math.max(enemy.hp.cur - enemy.poison!.level * enemy.poison!.damage, 0) 
+        if(enemy.hp.cur <= 0) {
+          enemy.hp.cur = enemy.hp.sum
+        } 
+      }, 300)
+    }
+  }
+  specialBullets.twitch.push(bullet)
+}
+/** 处理特殊子弹 */
+function drawSpecialBullets() {
+  if(!specialBullets.twitch.length) return
+  const ctx = state.ctx
+  const img = source.towerSource.find(t => t.name === 'twitch')!.onloadbulletImg!
+  specialBullets.twitch.forEach(b => {
+    ctx?.drawImage(img, b.x, b.y, b.w, b.h)
+  })
+}
+/** 中毒伤害 */
+function poisonDamage(eIdList: string[]) {
+  for(const e_id of eIdList) {
+    const enemy = enemyList.find(e => e.id === e_id)
+    if(!enemy) return
+    if(enemy.poison!.level < 5) {
+      enemy.poison!.level++
+    }
+  }
 }
 
 /** 

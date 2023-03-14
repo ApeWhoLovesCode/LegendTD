@@ -55,6 +55,7 @@ export type GameBaseData = {
 /** 敌人的类型 */
 export type EnemyStateType = {
   id: string
+  poison?: EnemyPoison
 } & EnemyType
 
 /** 敌人数据 */
@@ -65,6 +66,10 @@ export type EnemyState = {
   createdEnemyNum: number
   /** 敌人的移动轨迹 x坐标, y坐标, x_y方向 1:左 2:下 3:右 4:上 */
   movePath: GridInfo[]
+}
+export type EnemyPoison = {
+  damage: number
+  level: number
 }
 
 /** 子弹类型 */
@@ -164,4 +169,20 @@ export type TargetInfo = {
   h: number
   x: number
   y: number
+}
+
+/** 特殊子弹 */
+export type SpecialBullets = {
+  /** 毒液 */
+  twitch: SpecialBulletItem[]
+}
+
+export type SpecialBulletItem = TargetInfo & {
+  /** 子弹id */
+  id: string
+  /** 塔防的id */
+  tId: string
+  /** 中毒函数 */
+  poisonFun: any
+  timer?: NodeJS.Timer
 }

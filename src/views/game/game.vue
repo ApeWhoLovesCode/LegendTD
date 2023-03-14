@@ -22,12 +22,14 @@ import levelData from '@/dataSource/levelData'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
 import { useSourceStore } from '@/stores/source';
 import { EnemyType } from '@/dataSource/enemyData';
-import { BulletType, EnemyStateType, TargetInfo, TowerStateType } from '@/type/game';
+import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
 import { updateScoreApi } from '@/service/rank';
 import { useUserInfoStore } from '@/stores/userInfo';
 import { TowerName } from '@/dataSource/towerData';
+import { randomStr } from '@/utils/random';
+import useSpecialBullets from './tools/specialBullets';
 
 // 全局资源
 const source = useSourceStore()
@@ -41,6 +43,7 @@ const { gameSkillState } = useGameSkill()
 const { enemyList, enemyState, slowEnemy} = useEnemy()
 const { towerList, towerState, handlerTower, hiddenTowerOperation } = useTower()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
+const { specialBullets } = useSpecialBullets()
 
 /** ---计算属性--- */
 /** 终点位置 */
@@ -190,6 +193,12 @@ watch(() => enemyList, (enemyList) => {
       if(towerList[t_i].targetIdList) {
         towerList[t_i].targetIdList = []
       }
+    }
+  }
+  for(const bItem of specialBullets.twitch) {
+    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
+    if(eIdList.length) {
+      bItem.poisonFun(eIdList)
     }
   }
 }, { deep: true }) // 这里deep可能会无效
@@ -679,9 +688,15 @@ function handleBulletMove() {
       let isDelete = false
       // 子弹击中敌人
       if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
+        if(t.isSaveBullet) {
+          if(t.name === 'twitch') {
+            handleSpecialBullets(t, bItem, e_id)
+          }
+        }
         // 穿透性子弹击中敌人
-        if(t.isThrough) bItem.attactIdSet?.add(e_id)
-        if(!t.isThrough) { // 清除子弹
+        if(t.isThrough) {
+          bItem.attactIdSet?.add(e_id)
+        } else { // 清除子弹
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
@@ -844,6 +859,58 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.stroke()
   ctx.restore()
 }
+/** 处理特殊子弹 */
+function handleSpecialBullets(t: TowerStateType, bItem: BulletType, e_id: string) {
+  const bw = t.bSize.w * 5, bh = t.bSize.h * 5
+  const bId = randomStr('twitch')
+  const poisonFun = _.throttle((eIdList) => {
+    poisonDamage(eIdList)
+  }, 300, { leading: true, trailing: false })
+  const bullet: SpecialBulletItem = {
+    id: bId, tId: t.id, poisonFun, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
+  }
+  // 清除毒液子弹
+  keepInterval.set(bId, () => {
+    keepInterval.delete(bId)
+    const index = specialBullets.twitch.findIndex(b => b.id === bId)
+    specialBullets.twitch.splice(index, 1)
+  }, t.poison?.time)
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(enemy) {
+    if(!enemy.poison) {
+      enemy.poison = {level: 1, damage: t.damage}
+      // 开启毒液伤害计时器
+      keepInterval.set(`twitch-${enemy.id}`, () => {
+        enemy.hp.cur = Math.max(enemy.hp.cur - enemy.poison!.level * enemy.poison!.damage, 0) 
+        if(enemy.hp.cur <= 0) {
+          baseDataState.money += enemy.reward
+          keepInterval.delete(`twitch-${enemy.id}`)
+        }
+      }, 300)
+    }
+  }
+  specialBullets.twitch.push(bullet)
+}
+/** 处理特殊子弹 */
+function drawSpecialBullets() {
+  if(!specialBullets.twitch.length) return
+  const ctx = gameConfigState.ctx
+  const img = source.towerSource.find(t => t.name === 'twitch')!.onloadbulletImg!
+  specialBullets.twitch.forEach(b => {
+    ctx?.drawImage(img, b.x, b.y, b.w, b.h)
+  })
+}
+/** 中毒伤害 */
+function poisonDamage(eIdList: string[]) {
+  for(const e_id of eIdList) {
+    const enemy = enemyList.find(e => e.id === e_id)
+    if(!enemy) return
+    if(enemy.poison!.level < 5) {
+      enemy.poison!.level++
+    }
+  }
+}
+
 
 /** 
  * 计算子弹和敌人的距离

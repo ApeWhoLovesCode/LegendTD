@@ -18,6 +18,7 @@ const towerArr: TowerType[] = [
   { name: 'aixi',     money: 800, saleMoney: 400, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
   { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")},
   { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.2, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.2,h:0.2}, audioKey: 'huonan', img: requireImg('tower/huonan.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/huonan-cover.png")},
+  { name: 'twitch',   money: 900, saleMoney: 450, r: 4, damage: 1, addDamage: 1, targetNum: 1, rate: 1000, speed: 0.14, poison: {damage: 1, time: 6000}, bSize: {w:0.5,h:0.5}, audioKey: 'twitch', isSaveBullet: true, img: requireImg('tower/twitch.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/twitch-cover.png")},
 ]
 export default towerArr
 
@@ -32,9 +33,10 @@ export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', eIndexList: [1,2,3,4,5] },
   'delaiwen': { name: '德莱文', explain: '往前方最多两个敌人丢出可以回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', eIndexList: [1,2,3,4,5] },
   'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', eIndexList: [4] },
+  'twitch': { name: '老鼠', explain: '往敌人的地上喷射毒液，路过的敌人将受到持续的中毒效果，每隔0.5s将叠加一层毒液效果，最大5层', eIndexList: [4] },
 }
 
-export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan'
+export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan' | 'twitch'
 
 export type TowerType = {
   name: TowerName
@@ -67,6 +69,10 @@ export type TowerType = {
   slow?: TowerSlowType
   /** 子弹的初始角度 */
   bulletInitDeg?: number
+  /** 是否保存该子弹 */
+  isSaveBullet?: boolean
+  /** 持续伤害 */
+  poison?: TowerPoison
 }
 
 export type TowerSlowType = {
@@ -74,6 +80,14 @@ export type TowerSlowType = {
   num: number
   /** 减速持续时间 */
   time: number
+}
+
+/** 持续伤害比如中毒等 */
+export type TowerPoison = {
+  /** 持续时间 */
+  time: number
+  /** 伤害 */
+  damage: number
 }
 
 export type TowerStaticItem = {

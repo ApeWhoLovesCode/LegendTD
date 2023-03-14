@@ -41,7 +41,7 @@ export default function useBaseData() {
   }
   
   /** 返回进入攻击范围的值的数组 */
-  function enterAttackScopeList(eList: EnemyStateType[], tower: TowerStateType) {
+  function enterAttackScopeList(eList: EnemyStateType[], tower: TargetCircleInfo) {
     const list = eList.reduce((pre, enemy) => {
       if(checkValInCircle(enemy, tower)) {
         pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
@@ -53,20 +53,20 @@ export default function useBaseData() {
   }
   
   /** 判断值是否在圆内 */
-  function checkValInCircle(enemy: EnemyStateType, tower: TowerStateType) {
+  function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
     const {x, y, w, h} = enemy
     const angleList = [
-      calculateDistance(tower, x, y),
-      calculateDistance(tower, x + w, y),
-      calculateDistance(tower, x + w, y + h),
-      calculateDistance(tower, x , y + h),
+      calculateDistance(target, x, y),
+      calculateDistance(target, x + w, y),
+      calculateDistance(target, x + w, y + h),
+      calculateDistance(target, x , y + h),
     ]
-    return angleList.some(item => item <= tower.r)
+    return angleList.some(item => item <= target.r)
   }
   
   /** 计算点到圆心的距离之间的距离 */
-  function calculateDistance(tower: TowerStateType, x: number, y: number) {
-    const {x: _x, y: _y} = tower
+  function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
+    const {x: _x, y: _y} = target
     const size_2 = baseDataState.gridInfo.size / 2
     return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
   }
@@ -89,5 +89,10 @@ export default function useBaseData() {
     powAndSqrt,
     gamePause,
   }
+}
 
+export type TargetCircleInfo = {
+  x: number
+  y: number
+  r: number
 }
