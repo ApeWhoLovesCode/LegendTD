@@ -44,7 +44,15 @@ watch(() => enemyList, (enemyList) => {
     const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
     // 进入攻击范围，开始射击 
     if(eIdList.length) {
-      towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
+      if(towerList[t_i].name === 'huonan') {
+        towerList[t_i].targetIdList = eIdList
+      } else {
+        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
+      }
+    } else {
+      if(towerList[t_i].targetIdList) {
+        towerList[t_i].targetIdList = []
+      }
     }
   }
 }, { deep: true })
@@ -106,19 +114,19 @@ function buildTower() {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } =  _.cloneDeep(source.towerSource[props.index])
   const size = state.size
   const x = 4 * size, y = 3 * size
-  // 将该塔防数据放入场上塔防数组中
-  // 射击的防抖函数
-  const shootFun = _.throttle((eIdList, t_i) => {
-    shootBullet(eIdList, t_i)
-  }, rate, { leading: true, trailing: false })
-  // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
   tower.bSize.w *= size
   tower.bSize.h *= size
+  // 子弹射击的防抖函数
+  if(tower.name !== 'huonan') {
+    tower.shootFun = _.throttle((eIdList, t_i) => {
+      shootBullet(eIdList, t_i)
+    }, rate, { leading: true, trailing: false })
+  }
   if(tower.name === 'lanbo') {
     tower.scale = 1
     const {r, speed, bSize: {w, h}} = tower
@@ -134,8 +142,7 @@ function buildTower() {
 
 /** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
 function shootBullet(eIdList: string[], t_i: number) {
-  // 添加攻击目标的索引
-  towerList[t_i].targetIdList = eIdList
+  const t = towerList[t_i]
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
@@ -162,10 +169,12 @@ function shootBullet(eIdList: string[], t_i: number) {
       const deg = getAngle({x: begin.x, y: begin.y}, {x: _x, y: _y})
       bullet.deg = -bulletInitDeg + deg
     }
-    towerList[t_i].bulletArr.push(bullet)
+    t.bulletArr.push(bullet)
   }
-  if(towerList[t_i].name === 'lanbo') {
-    towerList[t_i].isBulleting = true
+  // 添加攻击目标的索引
+  t.targetIdList = eIdList
+  if(t.name === 'lanbo') {
+    t.isBulleting = true
   }
 }
 
@@ -201,29 +210,25 @@ function handleBulletMove() {
       if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
         // 穿透性子弹击中敌人
         if(t.isThrough) bItem.attactIdSet?.add(e_id)
-        // 清除子弹
-        if(!t.isThrough) {
+        if(!t.isThrough) { // 清除子弹
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
-        // 敌人扣血
         const enemy = enemyList.find(e => e.id === e_id)
         if(enemy) {
           let hp = enemy.hp.cur - t.damage
           if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
             hp = 0
           }
-          enemy.hp.cur = hp
+          // 敌人扣血
+          enemy.hp.cur = Math.max(hp, 0) 
           if(enemy.hp.cur <= 0) {
             enemy.hp.cur = enemy.hp.sum
           } else {
-            // 判断减速
-            if(t.slow) {
+            if(t.slow) { // 判断减速
               slowEnemy(e_id, t.slow)
             }
           }
-          const newHp = enemy.hp.cur - t.damage 
-          enemy.hp.cur = newHp > 0 ? newHp : 0
         }
       } else {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
@@ -237,7 +242,7 @@ function handleBulletMove() {
         } else if(t.name === 'delaiwen') {
           bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
           drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if((['lanbo', 'huonan'] as TowerName[]).every(v => v !== t.name)) { // 绘画其余塔防的子弹
+        } else if(!((['lanbo'] as TowerName[]).includes(t.name))) {  // 绘画其余塔防的子弹
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
           } else {
@@ -262,20 +267,11 @@ function handleBulletMove() {
         t.bulletArr.splice(b_i, 1)
       }
     }
-    // 有需要额外的子弹才绘画
-    if(t.isBulleting) {
+    if(t.isBulleting) { // 有需要额外的子弹才绘画
       drawTowerBullet(t)
     }
-    // 处理火男子弹
-    if(t.name === 'huonan') {
-      if(t.bulletArr.length) {
-        drawFireBullet(t)
-      } else {
-        if(t.thickness !== t.bSize.w) {
-          t.thickness = t.bSize.w
-          t.damage = t.preDamage ?? 1
-        }
-      }
+    if(t.name === 'huonan') { // 处理火男子弹
+      handleFireBullet(t)
     }
   }
 }
@@ -303,13 +299,33 @@ function drawTowerBullet(t: TowerStateType) {
   }
 }
 
-/** 画火男的火焰柱 */
-function drawFireBullet(t: TowerStateType) {
-  const {thickness = 1, x, y} = t
-  const size = state.size
-  // 目前是只攻击一个敌人
+/** 处理火男火焰 */
+function handleFireBullet(t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === t.targetIdList[0])
   if(!enemy) return
+  if(enemy.hp.cur <= 0) {
+    enemy.hp.cur = enemy.hp.sum
+  } 
+  enemy.hp.cur = Math.max(enemy.hp.cur - t.damage, 0)
+  if(t.damage < t.preDamage! * 3) {
+    t.thickness! = Math.min(t.thickness! + 0.02, state.size / 2)
+    t.damage += 0.005
+  }
+  if(t.targetIdList[0]) {
+    drawFireBullet(t, enemy)
+  } 
+  // 切换了目标或没目标了
+  if(t.curTargetId !== t.targetIdList[0]) {
+    t.thickness = t.bSize.w
+    t.damage = t.preDamage ?? 1
+    t.curTargetId = t.targetIdList[0]
+  }
+}
+
+/** 画火男的火焰柱 */
+function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
+  const {thickness = 1, x, y} = t
+  const size = state.size
   const {x: ex, y: ey, w, h} = enemy
   const ctx = state.ctx!
   const _x = x + size / 2, _y = y + size / 2, _ex = ex + w / 2, _ey = ey + h / 2
@@ -335,10 +351,6 @@ function drawFireBullet(t: TowerStateType) {
   ctx.fill()
   ctx.stroke()
   ctx.restore()
-  if(thickness < size / 3) {
-    t.thickness = thickness + 0.01
-    t.damage += (t.addDamage ?? 0)
-  }
 }
 
 /** 

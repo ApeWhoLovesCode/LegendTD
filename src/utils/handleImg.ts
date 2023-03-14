@@ -1,4 +1,3 @@
-// import SuperGif from './libgif.js'
 import SuperGif from 'libgif'
 
 // CanvasImageSource

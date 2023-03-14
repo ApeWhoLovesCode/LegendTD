@@ -17,7 +17,7 @@ const towerArr: TowerType[] = [
   { name: 'lanbo',    money: 600, saleMoney: 300, r: 4, damage: 2, targetNum: 999, rate: 1600, speed: 0.1, bSize: {w:1,h:1}, audioKey: 'lanbo', img: requireImg('tower/lanbo.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/lanbo-cover.png")},
   { name: 'aixi',     money: 800, saleMoney: 400, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
   { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")},
-  { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.5, addDamage: 0.005, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.2,h:0.2}, audioKey: 'huonan', img: requireImg('tower/huonan.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/huonan-cover.png")},
+  { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.2, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.2,h:0.2}, audioKey: 'huonan', img: requireImg('tower/huonan.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/huonan-cover.png")},
 ]
 export default towerArr
 

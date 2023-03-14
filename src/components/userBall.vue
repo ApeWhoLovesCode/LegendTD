@@ -155,13 +155,13 @@ onBeforeUnmount(() => clearBallSleep())
       />
     </div>
   </FloatingBall>
-  <UserInfo v-if="userInfoStore.userInfo" :modelValue:visible="userInfoVisible"/>
-  <RankList :modelValue:visible="rankListVisible"/>
-  <Login :modelValue:visible="loginVisible"/>
-  <SelectTowerPop :modelValue:visible="selectTowerVisible" @re-start="emit('reStart')" />
+  <UserInfo v-if="userInfoStore.userInfo" v-model:visible="userInfoVisible" />
+  <RankList v-model:visible="rankListVisible" />
+  <Login v-model:visible="loginVisible"/>
+  <SelectTowerPop v-model:visible="selectTowerVisible" @re-start="emit('reStart')" />
   <SelectLevelPop 
     v-if="props.itemsNum === 4" 
-    :modelValue:visible="selectLevelVisible"
+    v-model:visible="selectLevelVisible"
     @switch-map-level="i => emit('switchMapLevel', i)"
   />
 

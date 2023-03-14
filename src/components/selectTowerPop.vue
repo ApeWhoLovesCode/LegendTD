@@ -76,8 +76,8 @@ const selectTower = (i: number) => {
 
 <template>
   <ElDrawer 
-    :modelValue="visible"
-    custom-class='selectTowerPop' 
+    :model-value="visible"
+    class='selectTowerPop' 
     :with-header="false"
     size="80vh"
     direction="btt"

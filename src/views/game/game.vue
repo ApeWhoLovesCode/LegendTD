@@ -181,7 +181,15 @@ watch(() => enemyList, (enemyList) => {
     const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
     // 进入攻击范围，开始射击 
     if(eIdList.length) {
-      towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
+      if(towerList[t_i].name === 'huonan') {
+        towerList[t_i].targetIdList = eIdList
+      } else {
+        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
+      }
+    } else {
+      if(towerList[t_i].targetIdList) {
+        towerList[t_i].targetIdList = []
+      }
     }
   }
 }, { deep: true }) // 这里deep可能会无效
@@ -533,19 +541,20 @@ function buildTower(index: number) {
   baseDataState.money -= money
   const {left: x, top: y} = towerState.building
   const size = gameConfigState.size
-  // 将该塔防数据放入场上塔防数组中
-  // 射击的防抖函数
-  const shootFun = _.throttle((eIdList, t_i) => {
-    shootBullet(eIdList, t_i)
-  }, rate, { leading: true, trailing: false })
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), shootFun, targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
   tower.bSize.w *= size
   tower.bSize.h *= size
+  // 子弹射击的防抖函数
+  if(tower.name !== 'huonan') {
+    tower.shootFun = _.throttle((eIdList, t_i) => {
+      shootBullet(eIdList, t_i)
+    }, rate, { leading: true, trailing: false })
+  }
   if(tower.name === 'lanbo') {
     tower.scale = 1
     const {r, speed, bSize: {w, h}} = tower
@@ -586,8 +595,7 @@ function saleTower(index: number) {
 }
 /** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
 function shootBullet(eIdList: string[], t_i: number) {
-  // 添加攻击目标的索引
-  towerList[t_i].targetIdList = eIdList
+  const t = towerList[t_i]
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id)
     if(!enemy) break
@@ -614,14 +622,16 @@ function shootBullet(eIdList: string[], t_i: number) {
       const deg = getAngle({x: begin.x, y: begin.y}, {x: _x, y: _y})
       bullet.deg = -bulletInitDeg + deg
     }
-    towerList[t_i].bulletArr.push(bullet)
+    t.bulletArr.push(bullet)
     // 这里可以放发射子弹音频
     // if(name === 'PDD') {
     //   playDomAudio({id, volume: 0.4})
     // }
   }
-  if(towerList[t_i].name === 'lanbo') {
-    towerList[t_i].isBulleting = true
+  // 添加攻击目标的索引
+  t.targetIdList = eIdList
+  if(t.name === 'lanbo') {
+    t.isBulleting = true
   }
 }
 
@@ -640,7 +650,7 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 
 /** 处理子弹的移动 */
 function handleBulletMove() {
-  const e_idList = []
+  let e_idList: string[] = []
   for(let t_i = 0; t_i < towerList.length; t_i++) {
     const t = towerList[t_i]
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
@@ -671,39 +681,13 @@ function handleBulletMove() {
       if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
         // 穿透性子弹击中敌人
         if(t.isThrough) bItem.attactIdSet?.add(e_id)
-        // 清除子弹
-        if(!t.isThrough) {
+        if(!t.isThrough) { // 清除子弹
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
-        // 敌人扣血
-        const enemy = enemyList.find(e => e.id === e_id)
-        if(enemy) {
-          let hp = enemy.hp.cur - t.damage
-          if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
-            hp = 0
-          }
-          enemy.hp.cur = hp
-          if(enemy.hp.cur <= 0) {
-            e_idList.push(e_id)
-            t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
-            let reward = enemy.reward
-            if(t.name === 'delaiwen') {
-              if(Math.floor(Math.random()*10) === 9) { // 随机 0-9
-                reward = enemy.reward * 2
-              }
-            }
-            baseDataState.money += reward
-            // 这里可以放击杀音频
-            // if(t.name === '茄子') {
-            //   playDomAudio({id: t.id})
-            // }
-          } else {
-            // 判断减速
-            if(t.slow) {
-              slowEnemy(e_id, t.slow)
-            }
-          }
+        const arr = damageTheEnemy(e_id, t)
+        if(arr?.length) {
+          e_idList = e_idList.concat(arr)
         }
       } else {
         if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
@@ -717,7 +701,7 @@ function handleBulletMove() {
         } else if(t.name === 'delaiwen') {
           bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
           drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if((['lanbo', 'huonan'] as TowerName[]).every(v => v !== t.name)) { // 绘画其余塔防的子弹
+        } else if(!((['lanbo'] as TowerName[]).includes(t.name))) { // 绘画其余塔防的子弹
           if(bItem.deg) { // 需要旋转的子弹
             drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
           } else {
@@ -743,28 +727,49 @@ function handleBulletMove() {
         t.bulletArr.splice(b_i, 1)
       }
     }
-    // 有需要额外的子弹才绘画
-    if(t.isBulleting) {
+    if(t.isBulleting) { // 有需要额外的子弹才绘画
       drawTowerBullet(t_i)
     }
-    // 处理火男子弹
-    if(t.name === 'huonan') {
-      if(t.bulletArr.length) {
-        drawFireBullet(t)
-      } else {
-        if(t.thickness !== t.bSize.w) {
-          t.thickness = t.bSize.w
-          t.damage = t.preDamage ?? 1
-        }
-      }
+    if(t.name === 'huonan') { // 处理火男子弹
+      handleFireBullet(t)
     }
   }
-  // 消灭敌人
-  if(e_idList.length) {
+  if(e_idList?.length) { // 消灭敌人
     removeEnemy(e_idList)
   }
 }
-
+/** 伤害敌人 */
+function damageTheEnemy(e_id: string, t: TowerStateType) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  let hp = enemy.hp.cur - t.damage
+  if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
+    hp = 0
+  }
+  // 敌人扣血
+  enemy.hp.cur = Math.max(hp, 0)
+  const e_idList: string[] = []
+  if(enemy.hp.cur <= 0) {
+    e_idList.push(e_id)
+    t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
+    let reward = enemy.reward
+    if(t.name === 'delaiwen') {
+      if(Math.floor(Math.random()*10) === 9) { // 随机 0-9
+        reward = enemy.reward * 2
+      }
+    }
+    baseDataState.money += reward
+    // 这里可以放击杀音频
+    // if(t.name === '茄子') {
+    //   playDomAudio({id: t.id})
+    // }
+  } else {
+    if(t.slow) { // 判断减速
+      slowEnemy(e_id, t.slow)
+    }
+  }
+  return e_idList
+}
 /** 画塔防的特殊子弹 */
 function drawTowerBullet(t_i: number) {
   const t = towerList[t_i]
@@ -789,13 +794,30 @@ function drawTowerBullet(t_i: number) {
   }
 }
 
-/** 画火男的火焰柱 */
-function drawFireBullet(t: TowerStateType) {
-  const {thickness = 1, x, y} = t
-  const size = gameConfigState.size
-  // 目前是只攻击一个敌人
+/** 处理火男火焰 */
+function handleFireBullet(t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === t.targetIdList[0])
   if(!enemy) return
+  enemy.hp.cur = Math.max(enemy.hp.cur - t.damage, 0)
+  if(t.damage < t.preDamage! * 3) {
+    t.thickness! = Math.min(t.thickness! + 0.02, gameConfigState.size / 2)
+    t.damage += 0.005
+  }
+  if(t.targetIdList[0]) {
+    drawFireBullet(t, enemy)
+  } 
+  // 切换了目标或没目标了
+  if(t.curTargetId !== t.targetIdList[0]) {
+    t.thickness = t.bSize.w
+    t.damage = t.preDamage ?? 1
+    t.curTargetId = t.targetIdList[0]
+  }
+}
+
+/** 画火男的火焰柱 */
+function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
+  const {thickness = 1, x, y} = t
+  const size = gameConfigState.size
   const {x: ex, y: ey, w, h} = enemy
   const ctx = gameConfigState.ctx!
   const _x = x + size / 2, _y = y + size / 2, _ex = ex + w / 2, _ey = ey + h / 2
@@ -821,10 +843,6 @@ function drawFireBullet(t: TowerStateType) {
   ctx.fill()
   ctx.stroke()
   ctx.restore()
-  if(thickness < size / 3) {
-    t.thickness = thickness + 0.01
-    t.damage += (t.addDamage ?? 0)
-  }
 }
 
 /** 
@@ -1306,7 +1324,6 @@ function onKeyDown() {
     -moz-transform: rotate(90deg);
     -ms-transform: rotate(90deg);
     transform: rotate(90deg);
-    // transform-origin: 0% 0%;
   }
 }
 </style>

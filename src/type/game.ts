@@ -100,6 +100,8 @@ export type TowerStateType = {
   shootFun: any
   /** 攻击的目标id数组 */
   targetIdList: string[]
+  /** 当前攻击的目标，用于攻击单一目标切换目标后的判断 */
+  curTargetId: string
   /** 子弹数组 */
   bulletArr: BulletType[]
   /** 塔防加载好的图片 */
