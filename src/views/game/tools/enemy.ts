@@ -16,19 +16,19 @@ export default function useEnemy() {
   /** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
   function slowEnemy(e_id: string, t_slow: TowerSlow) {
     const e_i = enemyList.findIndex(e => e.id === e_id)
-    const { speed: e_speed, curSpeed } = enemyList[e_i]
+    const { speed, curSpeed } = enemyList[e_i]
     // 当前已经被眩晕了不能减速了
     if(curSpeed === 0) return
     // 新增或重置减速定时器
     keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
       const newE_i = enemyList.findIndex(e => e.id === e_id)
       if(enemyList[newE_i]) {
-        enemyList[newE_i].curSpeed = e_speed
+        enemyList[newE_i].curSpeed = enemyList[newE_i].speed
         enemyList[newE_i].slowType = void 0
       }
     }, t_slow.time, true)
     // 减速敌人
-    const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
+    const newSpeed = t_slow.num ? speed / t_slow.num : t_slow.num
     if(newSpeed < curSpeed) {
       enemyList[e_i].curSpeed = newSpeed
       enemyList[e_i].slowType = t_slow.type

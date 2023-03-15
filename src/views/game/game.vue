@@ -315,7 +315,7 @@ function drawEnemy(index: number) {
       ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
     } else {
       let arr = [3 * w / 8, w / 4, w / 8, 0]
-      let poisonX = x + arr[poison.level]
+      let poisonX = x + arr[poison.level - 1]
       for(let i = 0; i < poison.level; i++) {
         ctx.drawImage(source.othOnloadImg.snow!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
         poisonX += w / 4
@@ -553,7 +553,7 @@ function getMouse(e: MouseEvent) {
   const gridVal = baseDataState.gridInfo.arr[col][row]
   const left = row * size, top = col * size
   // 已经有地板或者有建筑了
-  if(gridVal >= 10) {
+  if(String(gridVal).includes('t')) {
     handlerTower(left, top)
   }
   if(gridVal) {
@@ -720,7 +720,7 @@ function handleBulletMove() {
           t.bulletArr.splice(b_i, 1)
           isDelete = true
         }
-        const arr = damageTheEnemy(e_id, t)
+        const arr = handelDamageEnemy(e_id, t)
         if(arr?.length) {
           e_idList = e_idList.concat(arr)
         }
@@ -773,8 +773,8 @@ function handleBulletMove() {
     removeEnemy(e_idList)
   }
 }
-/** 伤害敌人 */
-function damageTheEnemy(e_id: string, t: TowerStateType) {
+/** 处理子弹伤害敌人 */
+function handelDamageEnemy(e_id: string, t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === e_id)
   if(!enemy) return
   let hp = enemy.hp.cur - t.damage
@@ -805,6 +805,14 @@ function damageTheEnemy(e_id: string, t: TowerStateType) {
   }
   return e_idList
 }
+/** 伤害敌人 */
+function damageTheEnemy(enemy: EnemyStateType, damage: number) {
+  enemy.hp.cur = Math.max(enemy.hp.cur - damage, 0)
+  if(enemy.hp.cur <= 0) {
+    removeEnemy([enemy.id])
+    baseDataState.money += enemy.reward
+  }
+}
 /** 画塔防的特殊子弹 */
 function drawTowerBullet(t_i: number) {
   const t = towerList[t_i]
@@ -833,7 +841,7 @@ function drawTowerBullet(t_i: number) {
 function handleFireBullet(t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === t.targetIdList[0])
   if(!enemy) return
-  enemy.hp.cur = Math.max(enemy.hp.cur - t.damage, 0)
+  damageTheEnemy(enemy, t.damage)
   if(t.damage < t.preDamage! * 3) {
     t.thickness! = Math.min(t.thickness! + 0.025, gameConfigState.size / 3)
     t.damage += 0.001
@@ -907,14 +915,15 @@ function triggerPoisonFun(eIdList: string[], tName: TowerName) {
   const t = towerArr[tName]
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id) 
-    if(!enemy?.poison) {
+    if(!enemy) return
+    if(!enemy.poison) {
       const poisonFun = _.throttle((e_id: string, t: TowerType) => {
-        startPoisonInterval(e_id, t)
         slowEnemy(e_id, t.slow!)
+        startPoisonInterval(e_id, t)
       }, 1000, { leading: true, trailing: false })
-      enemy!.poison = {level: 1, damage: t.damage, poisonFun}
+      enemy.poison = {level: 0, damage: t.damage, poisonFun}
     } else {
-      enemy!.poison.poisonFun(e_id, t)
+      enemy.poison.poisonFun(e_id, t)
     }
   }
 }
@@ -924,17 +933,11 @@ function startPoisonInterval(e_id: string, t: TowerType) {
   if(enemy) {
     const ePoison = enemy.poison!
     if(ePoison.level < 5) ePoison.level++
+    damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     // console.log(enemy.poison.level, '-', Date.now());
-    enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
-    if(enemy.hp.cur <= 0) {
-      enemy.hp.cur = enemy.hp.sum
-    } 
     // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
     keepInterval.set(`${KeepIntervalKey.twitch}-${e_id}`, () => {
-      enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
-      if(enemy.hp.cur <= 0) {
-        enemy.hp.cur = enemy.hp.sum
-      } 
+      damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     }, 1000)
     // 清除敌人受到的毒液计时器
     keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
