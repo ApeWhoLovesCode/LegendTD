@@ -1,11 +1,13 @@
 import enemyData from '@/dataSource/enemyData'
 import otherImgData from '@/dataSource/otherImgData'
-import towerData from '@/dataSource/towerData'
+import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
 import { range } from '@/utils/format'
 import { gifToStaticImg, loadImage } from '@/utils/handleImg'
 import _ from 'lodash'
 import {defineStore} from 'pinia'
+
+type TowerSource = {[key in TowerName]: TowerStateType}
 
 type StateType = {
   /** 游戏页面是否初始化完成 */
@@ -15,7 +17,7 @@ type StateType = {
   /** 敌人处理好的静态资源 */
   enemySource: EnemyStateType[]
   /** 塔防处理好的静态资源 */
-  towerSource: TowerStateType[]
+  towerSource?: TowerSource
   /** 图片资源 */
   othOnloadImg: {
     /** 地板 */
@@ -38,7 +40,7 @@ export const useSourceStore = defineStore('source', {
     isGameInit: false,
     isGameing: false,
     enemySource: [],
-    towerSource: [],
+    towerSource: void 0,
     othOnloadImg: {},
     mapLevel: 0,
     isMobile: false,
@@ -67,11 +69,12 @@ export const useSourceStore = defineStore('source', {
       }))
     },
     async handleTowerImg() {
-      this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerStateType[]
-      const step = 20 / towerData.length
-      return Promise.all(towerData.map(async (t, index) => {
-        this.$state.towerSource[index].onloadImg = await loadImage(t.img)
-        this.$state.towerSource[index].onloadbulletImg = await loadImage(t.bulletImg)
+      const arr = Object.keys(towerData) as TowerName[]
+      this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
+      const step = 20 / arr.length
+      return Promise.all(arr.map(async (key, index) => {
+        this.$state.towerSource![key].onloadImg = await loadImage(towerData[key].img)
+        this.$state.towerSource![key].onloadbulletImg = await loadImage(towerData[key].bulletImg)
         this.$state.progress += step
         return
       }))

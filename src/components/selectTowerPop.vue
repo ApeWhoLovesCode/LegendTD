@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { reactive } from 'vue';
 import { ElDrawer, ElMessage, ElMessageBox } from 'element-plus';
-import towerData, { TowerType, towerStaticData } from '@/dataSource/towerData';
+import towerData, { TowerType, towerStaticData, TowerName } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import { useUserInfoStore } from '@/stores/userInfo';
@@ -31,7 +31,7 @@ const state = reactive({
 
 const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) => {
   const preIndex = (pageNum - 1) * pageSize
-  const arr = towerData.slice(preIndex, preIndex + pageSize)
+  const arr = Object.values(towerData).slice(preIndex, preIndex + pageSize)
   state.items = arr
   state.pageNum = pageNum
   state.pageSize = pageSize
@@ -39,9 +39,9 @@ const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) 
 
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
-const isSelect = (i: number) => (userStore.towerSelectList.find(index => index === i) !== void 0)
+const isSelect = (name: TowerName) => (userStore.towerSelectList.find(tname => tname === name) !== void 0)
 
-const handleSelectTower = (i: number) => {
+const handleSelectTower = (name: TowerName) => {
   if(source.isGameing) {
     ElMessageBox.confirm(
       '重新选择塔防后，游戏将重新开始，你确定要重选塔防吗？',
@@ -52,20 +52,20 @@ const handleSelectTower = (i: number) => {
         type: 'warning',
       }
     ).then(() => {
-      selectTower(i)
+      selectTower(name)
       emit('reStart')
     })
   } else {
-    selectTower(i)
+    selectTower(name)
   }
 }
-const selectTower = (i: number) => {
-  const index = userStore.towerSelectList.findIndex(ti => ti === i)
+const selectTower = (name: TowerName) => {
+  const index = userStore.towerSelectList.findIndex(tname => tname === name)
   if(index !== -1) {
     userStore.towerSelectList.splice(index, 1)
   } else {
     if(userStore.towerSelectList.length < 8) {
-      userStore.towerSelectList.push(i)
+      userStore.towerSelectList.push(name)
     } else {
       ElMessage.info('最多只能选8个英雄~')
     }
@@ -87,13 +87,13 @@ const selectTower = (i: number) => {
       <div class="mask mask-left"></div>
       <div class="selectTowerPop-header-content">
         <div 
-          v-for="i in userStore.towerSelectList" 
-          :key="towerData[i]?.name" 
+          v-for="key in userStore.towerSelectList" 
+          :key="towerData[key]?.name" 
           class="towerBox" 
         >
-          <img :src="towerData[i]?.img" alt="" class="towerImg">
-          <div class="towerName">{{ towerStaticData[towerData[i]?.name]?.name }}</div>
-          <span class="closeIcon iconfont icon-close" @click="handleSelectTower(i)"></span>
+          <img :src="towerData[key]?.img" alt="" class="towerImg">
+          <div class="towerName">{{ towerStaticData[towerData[key]?.name]?.name }}</div>
+          <span class="closeIcon iconfont icon-close" @click="handleSelectTower(key)"></span>
         </div>
       </div>
       <div class="mask mask-right"></div>
@@ -101,7 +101,7 @@ const selectTower = (i: number) => {
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
-        :list="towerData" 
+        :list="Object.values(towerData)" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >
@@ -110,16 +110,16 @@ const selectTower = (i: number) => {
           :key="cardIndex(i)" 
           :index="i"
           @on-click="() => {
-            handleSelectTower(cardIndex(i))
+            handleSelectTower(item.name)
           }"
         >
           <div class="card">
             <div class="towerImg"> 
-              <TowerCanvas :index="cardIndex(i)" :e-index-list="towerStaticData[item.name].eIndexList" />
+              <TowerCanvas :tname="item.name" :e-index-list="towerStaticData[item.name].eIndexList" />
             </div>
             <div class="name">{{ towerStaticData[item.name].name }}</div>
             <div class="explain">{{ towerStaticData[item.name].explain }}</div>
-            <div v-if="isSelect(cardIndex(i))" class="card-select">已选</div>
+            <div v-if="isSelect(item.name)" class="card-select">已选</div>
           </div>
         </ScrollCircleItem>
       </ScrollCircle>

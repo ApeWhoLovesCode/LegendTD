@@ -3,13 +3,11 @@
 import { EnemyType } from "@/dataSource/enemyData"
 import { GridInfo, MapGridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
-import { TowerType } from "@/dataSource/towerData"
+import { TowerName, TowerType } from "@/dataSource/towerData"
 import { ImgLoadType } from "."
 
 /** 游戏配置信息 */
 export type GameConfigType = {
-  /** 浏览器大小变化 */
-  resizeTimer: NodeJS.Timer | null,
   /** canvas 默认大小 */
   defaultCanvas: {w: number, h: number},
   /** 一格的大小 */
@@ -32,8 +30,8 @@ export type GameBaseData = {
   terminal?: GridInfo,
   /** 地板：大小 数量 */
   floorTile: {size: number, num: number},
-  /** 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]] */
-  gridInfo: { x_num: number, y_num: number, size: number, arr: number[][] },
+  /** 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，t(有塔防：10塔防一，11塔防二...) ]] */
+  gridInfo: { x_num: number, y_num: number, size: number, arr: (number | string)[][] },
   /** 游戏结束 */
   isGameOver: boolean
   /** 设置游戏的暂停 */
@@ -55,7 +53,10 @@ export type GameBaseData = {
 /** 敌人的类型 */
 export type EnemyStateType = {
   id: string
+  /** 中毒 */
   poison?: EnemyPoison
+  /** 受到中毒伤害计时器 用于towerCanvas */
+  slowTimer?: NodeJS.Timeout
 } & EnemyType
 
 /** 敌人数据 */
@@ -67,9 +68,16 @@ export type EnemyState = {
   /** 敌人的移动轨迹 x坐标, y坐标, x_y方向 1:左 2:下 3:右 4:上 */
   movePath: GridInfo[]
 }
+/** 敌人中毒 */
 export type EnemyPoison = {
+  /** 中毒伤害 最终会乘等级来计算伤害 */
   damage: number
+  /** 伤害等级 */
   level: number
+  /** 受到中毒伤害计时器 用于towerCanvas */
+  timer?: NodeJS.Timer
+  /** 中毒清除计时器 */
+  timeout?: NodeJS.Timeout
 }
 
 /** 子弹类型 */
@@ -182,7 +190,8 @@ export type SpecialBulletItem = TargetInfo & {
   id: string
   /** 塔防的id */
   tId: string
-  /** 中毒函数 */
+  /** 中毒触发函数 */
   poisonFun: any
+  /** 子弹清除计时器 用于towerCanvas */
   timer?: NodeJS.Timer
 }

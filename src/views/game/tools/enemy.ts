@@ -1,6 +1,6 @@
 import { TowerSlowType } from "@/dataSource/towerData"
 import { EnemyState, EnemyStateType } from "@/type/game"
-import keepInterval from "@/utils/keepInterval"
+import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
 import { reactive } from "vue"
 
@@ -20,13 +20,12 @@ export default function useEnemy() {
     // 当前已经被眩晕了不能减速了
     if(curSpeed === 0) return
     // 新增或重置减速定时器
-    keepInterval.set(`slow-${e_id}`, () => {
+    keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
       const newE_i = enemyList.findIndex(e => e.id === e_id)
       if(enemyList[newE_i]) {
         enemyList[newE_i].curSpeed = e_speed
       }
-      keepInterval.delete(`slow-${e_id}`)
-    }, t_slow.time)
+    }, t_slow.time, true)
     // 减速敌人
     const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
     if(newSpeed < curSpeed) {

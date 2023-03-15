@@ -1,3 +1,4 @@
+import { TowerName } from '@/dataSource/towerData';
 import { loginApi, LoginApiParams, logoutApi } from '@/service/login';
 import {defineStore} from 'pinia';
 
@@ -13,13 +14,13 @@ export type UserInfo = {
 type StateType = {
   userInfo?: UserInfo
   /** 选择的塔防索引 */
-  towerSelectList: number[]
+  towerSelectList: TowerName[]
 }
 
 export const useUserInfoStore = defineStore('userInfo', {
   state: (): StateType => ({
     userInfo: void 0,
-    towerSelectList: [9,8,7,6,5,4,3,2],
+    towerSelectList: ['aixi','delaiwen','ez','huonan','jin','lanbo','twitch','ejiate'],
   }),
   actions: {
     async login({username, password}: LoginApiParams) {

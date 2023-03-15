@@ -3,8 +3,6 @@ import { reactive } from "vue"
 
 export default function useGameConfig() {
   const gameConfigState = reactive<GameConfigType>({
-    // 浏览器大小变化
-    resizeTimer: null,
     // canvas 默认大小
     defaultCanvas: {w: 1050, h: 600},
     /** 一格的大小 */

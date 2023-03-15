@@ -1,3 +1,18 @@
+export const KeepIntervalKey = {
+  /** 创建敌人 */
+  makeEnemy: 'makeEnemy',
+  /** 开始创建金币 */
+  startMoneyTimer: 'startMoneyTimer',
+  /** 减速 */
+  slow: 'slow',
+  /** 技能 */
+  skill: 'skill',
+  /** 老鼠中毒 */
+  twitch: 'twitch',
+  /** 清除老鼠中毒 */
+  twitchDelete: 'twitchDelete',
+}
+
 class KeepInterval {
   private timerMap: Map<string, TimerMap> = new Map()
   static _instance: KeepIntervalInstance
@@ -11,7 +26,7 @@ class KeepInterval {
     return this._instance
   }
   /** 设置/开启计时器 */
-  set(key: string, fn?: () => void, intervalTime = 1000) {
+  set(key: string, fn?: () => void, intervalTime = 1000, isTimeOut?: boolean) {
     if(!this.timerMap.has(key) && fn) {
       this.timerMap.set(key, {
         timeout: null,
@@ -31,14 +46,16 @@ class KeepInterval {
     timeItem.end = Date.now()
     timeItem.timeout = setTimeout(() => { 
       timeItem.cur = Date.now()
-      timeItem.interval = setInterval(() => { 
-        timeItem.cur = Date.now()
-        timeItem.fn() 
-      }, timeItem.intervalTime)
+      if(!isTimeOut) {
+        timeItem.interval = setInterval(() => { 
+          timeItem.cur = Date.now()
+          timeItem.fn() 
+        }, timeItem.intervalTime)
+      }
       timeItem.fn()
     }, timeItem.remainTime)
   }
-  /** 关闭计时器 */
+  /** 暂停计时器 */
   pause(key: string) {
     const timeItem = this.timerMap.get(key)
     if(timeItem) {
@@ -49,9 +66,9 @@ class KeepInterval {
   }
   /** 全部暂停或开始 */
   allPause(isPause = true) {
-    this.timerMap.forEach((val, key) => 
+    this.timerMap.forEach((val, key) => (
       isPause ? this.pause(key) : this.set(key)
-    )
+    ))
   }
   /** 删除其中一个 */
   delete(key: string) {
@@ -72,15 +89,13 @@ class KeepInterval {
   /** 停止定时器 */
   stopTime(key: string) {
     const timeItem = this.timerMap.get(key)
-    if(timeItem) {
-      if(timeItem.timeout) {
-        clearTimeout(timeItem.timeout)
-        timeItem.timeout = null
-      }
-      if(timeItem.interval) {
-        clearInterval(timeItem.interval)
-        timeItem.interval = null
-      }
+    if(timeItem?.timeout) {
+      clearTimeout(timeItem.timeout)
+      timeItem.timeout = null
+    }
+    if(timeItem?.interval) {
+      clearInterval(timeItem.interval)
+      timeItem.interval = null
     }
   }
 }
@@ -88,7 +103,7 @@ class KeepInterval {
 export default KeepInterval.instance
 
 export type KeepIntervalInstance = {
-  set(key: string, fn?: () => void, intervalTime?: number): void
+  set(key: string, fn?: () => void, intervalTime?: number, isTimeOut?: boolean): void
   pause(key: string): number | undefined
   allPause(isPause?: boolean): void
   stopTime(key: string): void

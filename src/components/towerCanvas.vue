@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { DirectionType, GridInfo } from '@/dataSource/mapData';
-import { TowerName } from '@/dataSource/towerData';
+import towerArr, { TowerName, TowerSlowType } from '@/dataSource/towerData';
 import { useSourceStore } from '@/stores/source';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType, SpecialBulletItem } from '@/type/game';
 import { getAngle } from '@/utils/handleCircle';
@@ -12,16 +12,15 @@ import useTower from '@/views/game/tools/tower';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
-const { enemyList, slowEnemy} = useEnemy()
+const { enemyList } = useEnemy()
 const { towerList } = useTower()
 const { enterAttackScopeList, powAndSqrt } = useBaseData()
 const { specialBullets } = useSpecialBullets()
 
 const props = withDefaults(defineProps<{
-  index: number;
+  tname: TowerName;
   eIndexList?: number[];
 }>(), {
-  index: 1,
   eIndexList: () => [1]
 })
 const source = useSourceStore()
@@ -60,7 +59,7 @@ watch(() => enemyList, (enemyList) => {
   for(const bItem of specialBullets.twitch) {
     const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
     if(eIdList.length) {
-      bItem.poisonFun(eIdList)
+      bItem.poisonFun(eIdList, 'twitch')
     }
   }
 }, { deep: true })
@@ -76,6 +75,11 @@ onUnmounted(() => {
   clearInterval(makeEnemyTimer.value)
   specialBullets.twitch.forEach(b => {
     clearInterval(b.timer)
+  })
+  enemyList.forEach(e => {
+    if(e.slowTimer) clearTimeout(e.slowTimer)
+    if(e.poison?.timer) clearInterval(e.poison?.timer)
+    if(e.poison?.timeout) clearTimeout(e.poison?.timeout)
   })
 })
 
@@ -123,7 +127,7 @@ function startDraw() {
 
 /** 点击建造塔防 */
 function buildTower() {
-  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } =  _.cloneDeep(source.towerSource[props.index])
+  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } =  _.cloneDeep(source.towerSource![props.tname])
   const size = state.size
   const x = 4 * size, y = 3 * size
   const tower: TowerStateType = {
@@ -327,9 +331,9 @@ function handleFireBullet(t: TowerStateType) {
     enemy.hp.cur = enemy.hp.sum
   } 
   enemy.hp.cur = Math.max(enemy.hp.cur - t.damage, 0)
-  if(t.damage < t.preDamage! * 3) {
-    t.thickness! = Math.min(t.thickness! + 0.02, state.size / 2)
-    t.damage += 0.005
+  if(t.damage < t.preDamage! * 4) {
+    t.thickness! = Math.min(t.thickness! + 0.025, state.size / 3)
+    t.damage += 0.001
   }
   if(t.targetIdList[0]) {
     drawFireBullet(t, enemy)
@@ -373,56 +377,63 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.restore()
 }
 
-/** 处理特殊子弹 */
+/** 特殊子弹击中目标 */
 function handleSpecialBullets(t: TowerStateType, bItem: BulletType, e_id: string) {
   const bw = t.bSize.w * 5, bh = t.bSize.h * 5
   const bId = randomStr('twitch')
-  const poisonFun = _.throttle((eIdList) => {
-    poisonDamage(eIdList)
-  }, 300, { leading: true, trailing: false })
+  const poisonFun = _.throttle((eIdList, tName) => {
+    poisonDamage(eIdList, tName)
+  }, 1000, { leading: true, trailing: false })
   const bullet: SpecialBulletItem = {
     id: bId, tId: t.id, poisonFun, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
   // 清除毒液子弹
-  // keepInterval.set(bId, () => {}, t.poison?.time)
-  setTimeout(() => {
+  bullet.timer = setTimeout(() => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     clearInterval(specialBullets.twitch[index].timer) 
     specialBullets.twitch.splice(index, 1)
-  }, t.poison?.time)
-  const enemy = enemyList.find(e => e.id === e_id)
-  if(enemy) {
-    if(!enemy.poison) {
-      enemy.poison = {level: 1, damage: t.damage}
-      // 清除敌人受到的毒液伤害
-      // keepInterval.set(`twitch-${enemy.id}`, () => {}, 300)
-      bullet.timer = setInterval(() => {
-        enemy.hp.cur = Math.max(enemy.hp.cur - enemy.poison!.level * enemy.poison!.damage, 0) 
-        if(enemy.hp.cur <= 0) {
-          enemy.hp.cur = enemy.hp.sum
-        } 
-      }, 300)
-    }
-  }
+  }, t.poison?.bulletTime)
   specialBullets.twitch.push(bullet)
+  startPoisonInterval(e_id, t.damage, t.poison!.time, true)
 }
-/** 处理特殊子弹 */
+/** 画特殊子弹 */
 function drawSpecialBullets() {
   if(!specialBullets.twitch.length) return
   const ctx = state.ctx
-  const img = source.towerSource.find(t => t.name === 'twitch')!.onloadbulletImg!
+  const img = source.towerSource!['twitch'].onloadbulletImg
   specialBullets.twitch.forEach(b => {
     ctx?.drawImage(img, b.x, b.y, b.w, b.h)
   })
 }
 /** 中毒伤害 */
-function poisonDamage(eIdList: string[]) {
+function poisonDamage(eIdList: string[], tName: TowerName) {
   for(const e_id of eIdList) {
-    const enemy = enemyList.find(e => e.id === e_id)
-    if(!enemy) return
-    if(enemy.poison!.level < 5) {
-      enemy.poison!.level++
+    startPoisonInterval(e_id, towerArr[tName].damage, towerArr[tName].poison!.time)
+  }
+}
+/** 开启中毒计时器 */
+function startPoisonInterval(e_id: string, damage: number, time: number, isNotAdd?: boolean) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(enemy) {
+    if(!enemy.poison) {
+      enemy.poison = {level: 1, damage}
+      // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
+      enemy.poison.timer = setInterval(() => {
+        enemy.hp.cur = Math.max(enemy.hp.cur - enemy.poison!.level * enemy.poison!.damage, 0) 
+        if(enemy.hp.cur <= 0) {
+          enemy.hp.cur = enemy.hp.sum
+        } 
+      }, 1000)
+    } else {
+      if(!isNotAdd && enemy.poison.level < 5) enemy.poison.level++
+      // console.log(enemy.poison.level, '-', Date.now());
     }
+    // 清除敌人受到的毒液计时器
+    if(enemy.poison.timeout) clearTimeout(enemy.poison.timeout)
+    enemy.poison.timeout = setTimeout(() => {
+      clearInterval(enemy.poison?.timer)
+      enemy.poison = void 0
+    }, time)
   }
 }
 
@@ -577,7 +588,7 @@ function moveEnemy(index: number) {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed } = enemyList[index]
+  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed, poison } = enemyList[index]
   const ctx = state.ctx!
   ctx.save() // 保存画布
   // 翻转图片
@@ -593,12 +604,22 @@ function drawEnemy(index: number) {
     ctx.globalAlpha = 0.9
     ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
     ctx.restore()
-    // ctx.beginPath();
-    // ctx.arc(x + w / 2, y + h / 2, w / 5, 0, 2 * Math.PI, false)
-    // ctx.fillStyle = 'rgba(2, 38, 241, 0.3)'
-    // ctx.fill()
-    // ctx.strokeStyle = '#022ef1'
-    // ctx.stroke()
+  }
+  // 画中毒效果
+  if(poison) {
+    ctx.save()
+    ctx.globalAlpha = 0.9
+    if(poison.level === 5) {
+      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
+    } else {
+      let arr = [3 * w / 8, w / 4, w / 8, 0]
+      let poisonX = x + arr[poison.level]
+      for(let i = 0; i < poison.level; i++) {
+        ctx.drawImage(source.othOnloadImg.snow!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
+        poisonX += w / 4
+      }
+    }
+    ctx.restore()
   }
   if(hp.cur === hp.sum) return
   // 绘画生命值
@@ -613,6 +634,27 @@ function drawEnemy(index: number) {
   ctx.strokeStyle = "#cff1d3"; //边框颜色
   ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
   ctx.stroke();
+}
+
+/** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
+function slowEnemy(e_id: string, t_slow: TowerSlowType) {
+  const e_i = enemyList.findIndex(e => e.id === e_id)
+  const { speed: e_speed, curSpeed } = enemyList[e_i]
+  // 当前已经被眩晕了不能减速了
+  if(curSpeed === 0) return
+  // 新增或重置减速定时器
+  if(enemyList[e_i].slowTimer) clearTimeout(enemyList[e_i].slowTimer)
+  enemyList[e_i].slowTimer = setTimeout(() => {
+    const newE_i = enemyList.findIndex(e => e.id === e_id)
+    if(enemyList[newE_i]) {
+      enemyList[newE_i].curSpeed = e_speed
+    }
+  }, t_slow.time);
+  // 减速敌人
+  const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
+  if(newSpeed < curSpeed) {
+    enemyList[e_i].curSpeed = newSpeed
+  }
 }
 
 function getCanvasWH() {

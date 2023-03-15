@@ -6,21 +6,21 @@ import { requireImg } from "@/utils/handleDom"
  * 塔防数据
  * name:名称, money:花费, r:攻击半径, damage:伤害, targetNum:攻击目标数量, rate:攻击速率(n毫秒/次, import.meta.url).href, speed:子弹速度, slow:{num:减速倍数,time:减速时间}  bSize: 子弹大小, img:塔防图片, bulletImg:子弹图片
  */
-const towerArr: TowerType[] = [
-  { name: 'icestar',  money: 200, saleMoney: 100, r: 3, damage: 1, targetNum: 1, rate: 900, speed: 0.12, slow: {num: 2, time: 5000}, bSize: {w:0.6,h:0.6},   audioKey: 'slow-star', img: requireImg('tower/tower_slow.png'), bulletImg: requireImg('tower/bullet-star.png')},
-  { name: 'fengche',  money: 500, saleMoney: 250, r: 3.6, damage: 2, targetNum: 1, rate: 1000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, audioKey: 'fengche', img: requireImg('tower/fengche.png'), bulletImg: requireImg('tower/bullet-fengche.png')},
-  { name: 'nanqiang', money: 400, saleMoney: 200, r: 4, damage: 3, targetNum: 3, rate: 1000, speed: 0.14, bSize: {w:0.4,h:0.4},   audioKey: 'nanqiang', img: requireImg('tower/nanqiang.png'), bulletImg: requireImg('tower/bullet1.png'), cover: requireImg("tower/nanqiang-cover.png")},
-  { name: 'ejiate',   money: 450, saleMoney: 225, r: 5, damage: 1, targetNum: 1, rate: 200, speed: 0.16, bSize: {w:0.4,h:0.4},   audioKey: 'ejiate',  img: requireImg('tower/ejiate.png'), bulletImg: requireImg('tower/bullet3.png'), cover: requireImg("tower/ejiate-cover.png")},
-  { name: 'jin',      money: 800, saleMoney: 400, r: 6, damage: 8, targetNum: 1, rate: 1200, speed: 0.2, bSize: {w:0.4,h:0.4}, audioKey: 'jin', img: requireImg('tower/jin.png'), bulletImg: requireImg('tower/bullet3.png'), cover: requireImg("tower/jin-cover.png")},
-  { name: 'ez',       money: 600, saleMoney: 300, r: 4.5, damage: 2, targetNum: 1, rate: 1200, speed: 0.14, bSize: {w:2,h:2}, isThrough: true, bulletInitDeg: 170, audioKey: 'ez', img: requireImg('tower/ez.png'), bulletImg: requireImg('tower/bullet-ez.png'), cover: requireImg("tower/ez-cover.png")},
-  // 这里的攻击间隔应要大于子弹扩散完毕的时间
-  { name: 'lanbo',    money: 600, saleMoney: 300, r: 4, damage: 2, targetNum: 999, rate: 1600, speed: 0.1, bSize: {w:1,h:1}, audioKey: 'lanbo', img: requireImg('tower/lanbo.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/lanbo-cover.png")},
-  { name: 'aixi',     money: 800, saleMoney: 400, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
-  { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")},
-  { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.2, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.2,h:0.2}, audioKey: 'huonan', img: requireImg('tower/huonan.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/huonan-cover.png")},
-  { name: 'twitch',   money: 900, saleMoney: 450, r: 4, damage: 1, addDamage: 1, targetNum: 1, rate: 1000, speed: 0.14, poison: {damage: 1, time: 6000}, bSize: {w:0.5,h:0.5}, audioKey: 'twitch', isSaveBullet: true, img: requireImg('tower/twitch.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/twitch-cover.png")},
-]
-export default towerArr
+const towerObj: TowerDataObj = {
+  'icestar': { name: 'icestar',  money: 200, saleMoney: 100, r: 3, damage: 1, targetNum: 1, rate: 900, speed: 0.12, slow: {num: 2, time: 5000, type: 'slow'}, bSize: {w:0.6,h:0.6},   audioKey: 'slow-star', img: requireImg('tower/tower_slow.png'), bulletImg: requireImg('tower/bullet-star.png')},
+  'fengche': { name: 'fengche',  money: 500, saleMoney: 250, r: 3.6, damage: 2, targetNum: 1, rate: 1000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, audioKey: 'fengche', img: requireImg('tower/fengche.png'), bulletImg: requireImg('tower/bullet-fengche.png')},
+  'nanqiang': { name: 'nanqiang', money: 400, saleMoney: 200, r: 4, damage: 3, targetNum: 3, rate: 1000, speed: 0.14, bSize: {w:0.4,h:0.4},   audioKey: 'nanqiang', img: requireImg('tower/nanqiang.png'), bulletImg: requireImg('tower/bullet1.png'), cover: requireImg("tower/nanqiang-cover.png")},
+  'ejiate': { name: 'ejiate',   money: 450, saleMoney: 225, r: 5, damage: 1, targetNum: 1, rate: 200, speed: 0.16, bSize: {w:0.4,h:0.4},   audioKey: 'ejiate',  img: requireImg('tower/ejiate.png'), bulletImg: requireImg('tower/bullet3.png'), cover: requireImg("tower/ejiate-cover.png")},
+  'jin': { name: 'jin',      money: 800, saleMoney: 400, r: 6, damage: 8, targetNum: 1, rate: 1200, speed: 0.2, bSize: {w:0.4,h:0.4}, audioKey: 'jin', img: requireImg('tower/jin.png'), bulletImg: requireImg('tower/bullet3.png'), cover: requireImg("tower/jin-cover.png")},
+  'ez': { name: 'ez',       money: 600, saleMoney: 300, r: 4.5, damage: 2, targetNum: 1, rate: 1200, speed: 0.14, bSize: {w:2,h:2}, isThrough: true, bulletInitDeg: 170, audioKey: 'ez', img: requireImg('tower/ez.png'), bulletImg: requireImg('tower/bullet-ez.png'), cover: requireImg("tower/ez-cover.png")},
+  'lanbo': { name: 'lanbo',    money: 600, saleMoney: 300, r: 4, damage: 2, targetNum: 999, rate: 1600, speed: 0.1, bSize: {w:1,h:1}, audioKey: 'lanbo', img: requireImg('tower/lanbo.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/lanbo-cover.png")},
+  'aixi': { name: 'aixi',     money: 800, saleMoney: 400, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000, type: 'slow'}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: requireImg('tower/aixi.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/aixi-cover.png")},
+  'delaiwen': { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 5, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: requireImg('tower/delaiwen.png'), bulletImg: requireImg('tower/bullet-delaiwen.png'), cover: requireImg("tower/delaiwen-cover.png")},
+  'huonan': { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.1, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.1,h:0.1}, audioKey: 'huonan', img: requireImg('tower/huonan.png'), bulletImg: requireImg('tower/bullet2.png'), cover: requireImg("tower/huonan-cover.png")},
+  'twitch': { name: 'twitch',   money: 900, saleMoney: 450, r: 4, damage: 1, addDamage: 1, targetNum: 1, rate: 2000, speed: 0.14, poison: {damage: 0.5, time: 5000, bulletTime: 6000}, bSize: {w:0.5,h:0.5}, audioKey: 'twitch', isSaveBullet: true, img: requireImg('tower/twitch.png'), bulletImg: requireImg('tower/bullet-blisters.png'), cover: requireImg("tower/twitch-cover.png")},
+}
+
+export default towerObj
 
 export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'icestar': { name: '冰星', explain: '向最前方的一个敌人发射一颗会使敌人减速的冰星。' },
@@ -37,6 +37,8 @@ export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
 }
 
 export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan' | 'twitch'
+
+export type TowerDataObj = {[key in TowerName]: TowerType}
 
 export type TowerType = {
   name: TowerName
@@ -80,10 +82,14 @@ export type TowerSlowType = {
   num: number
   /** 减速持续时间 */
   time: number
+  /** 减速类型 */
+  type: 'slow' | 'twitch' | 'vertigo'
 }
 
 /** 持续伤害比如中毒等 */
 export type TowerPoison = {
+  /** 毒液在地上持续时间 */
+  bulletTime: number
   /** 持续时间 */
   time: number
   /** 伤害 */
