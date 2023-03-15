@@ -27,7 +27,7 @@ import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
 import { updateScoreApi } from '@/service/rank';
 import { useUserInfoStore } from '@/stores/userInfo';
-import towerArr, { TowerName } from '@/dataSource/towerData';
+import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
 
@@ -187,7 +187,7 @@ watch(() => enemyList, (enemyList) => {
       if(towerList[t_i].name === 'huonan') {
         towerList[t_i].targetIdList = eIdList
       } else {
-        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), t_i)
+        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
       }
     } else {
       if(towerList[t_i].targetIdList) {
@@ -198,7 +198,7 @@ watch(() => enemyList, (enemyList) => {
   for(const bItem of specialBullets.twitch) {
     const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
     if(eIdList.length) {
-      bItem.poisonFun(eIdList, 'twitch')
+      triggerPoisonFun(eIdList, 'twitch')
     }
   }
 }, { deep: true }) // 这里deep可能会无效
@@ -283,7 +283,7 @@ function makeEnemy() {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed, poison } = enemyList[index]
+  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = gameConfigState.ctx
   ctx.save() // 保存画布
   // 翻转图片
@@ -295,10 +295,17 @@ function drawEnemy(index: number) {
   ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {
-    ctx.save()
-    ctx.globalAlpha = 0.9
-    ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 2, w / 3, w / 3)
-    ctx.restore()
+    if(slowType === 'twitch') {
+      ctx.save()
+      ctx.globalAlpha = 0.3
+      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
+      ctx.restore()
+    } else {
+      ctx.save()
+      ctx.globalAlpha = 0.9
+      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
+      ctx.restore()
+    }
   }
   // 画中毒效果
   if(poison) {
@@ -703,7 +710,7 @@ function handleBulletMove() {
       if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
         if(t.isSaveBullet) {
           if(t.name === 'twitch') {
-            handleSpecialBullets(t, bItem, e_id)
+            handleSpecialBullets(t, bItem)
           }
         }
         // 穿透性子弹击中敌人
@@ -873,14 +880,11 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.restore()
 }
 /** 特殊子弹击中目标 */
-function handleSpecialBullets(t: TowerStateType, bItem: BulletType, e_id: string) {
+function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   const bw = t.bSize.w * 5, bh = t.bSize.h * 5
   const bId = randomStr('twitch')
-  const poisonFun = _.throttle((eIdList, tName) => {
-    poisonDamage(eIdList, tName)
-  }, 1000, { leading: true, trailing: false })
   const bullet: SpecialBulletItem = {
-    id: bId, tId: t.id, poisonFun, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
+    id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
   // 清除毒液子弹
   keepInterval.set(bId, () => {
@@ -888,7 +892,6 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType, e_id: string
     specialBullets.twitch.splice(index, 1)
   }, t.poison?.bulletTime, true)
   specialBullets.twitch.push(bullet)
-  startPoisonInterval(e_id, t.damage, t.poison!.time, true)
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -899,35 +902,45 @@ function drawSpecialBullets() {
     ctx?.drawImage(img, b.x, b.y, b.w, b.h)
   })
 }
-/** 中毒伤害 */
-function poisonDamage(eIdList: string[], tName: TowerName) {
+/** 中毒触发函数 */
+function triggerPoisonFun(eIdList: string[], tName: TowerName) {
+  const t = towerArr[tName]
   for(const e_id of eIdList) {
-    startPoisonInterval(e_id, towerArr[tName].damage, towerArr[tName].poison!.time)
+    const enemy = enemyList.find(e => e.id === e_id) 
+    if(!enemy?.poison) {
+      const poisonFun = _.throttle((e_id: string, t: TowerType) => {
+        startPoisonInterval(e_id, t)
+        slowEnemy(e_id, t.slow!)
+      }, 1000, { leading: true, trailing: false })
+      enemy!.poison = {level: 1, damage: t.damage, poisonFun}
+    } else {
+      enemy!.poison.poisonFun(e_id, t)
+    }
   }
 }
 /** 开启中毒计时器 */
-function startPoisonInterval(e_id: string, damage: number, time: number, isNotAdd?: boolean) {
+function startPoisonInterval(e_id: string, t: TowerType) {
   const enemy = enemyList.find(e => e.id === e_id)
   if(enemy) {
-    if(!enemy.poison) {
-      enemy.poison = {level: 1, damage}
-      // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
-      enemy.poison.timer = setInterval(() => {
-        enemy.hp.cur = Math.max(enemy.hp.cur - enemy.poison!.level * enemy.poison!.damage, 0) 
-        if(enemy.hp.cur <= 0) {
-          enemy.hp.cur = enemy.hp.sum
-        } 
-      }, 1000)
-    } else {
-      if(!isNotAdd && enemy.poison.level < 5) enemy.poison.level++
-      // console.log(enemy.poison.level, '-', Date.now());
-    }
+    const ePoison = enemy.poison!
+    if(ePoison.level < 5) ePoison.level++
+    // console.log(enemy.poison.level, '-', Date.now());
+    enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
+    if(enemy.hp.cur <= 0) {
+      enemy.hp.cur = enemy.hp.sum
+    } 
+    // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
+    keepInterval.set(`${KeepIntervalKey.twitch}-${e_id}`, () => {
+      enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
+      if(enemy.hp.cur <= 0) {
+        enemy.hp.cur = enemy.hp.sum
+      } 
+    }, 1000)
     // 清除敌人受到的毒液计时器
-    if(enemy.poison.timeout) clearTimeout(enemy.poison.timeout)
-    enemy.poison.timeout = setTimeout(() => {
-      clearInterval(enemy.poison?.timer)
+    keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
+      keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, time)
+    }, t.poison!.time)
   }
 }
 

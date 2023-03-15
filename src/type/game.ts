@@ -3,7 +3,8 @@
 import { EnemyType } from "@/dataSource/enemyData"
 import { GridInfo, MapGridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
-import { TowerName, TowerType } from "@/dataSource/towerData"
+import { TowerName, TowerSlowType, TowerType } from "@/dataSource/towerData"
+import { DebouncedFunc } from "lodash"
 import { ImgLoadType } from "."
 
 /** 游戏配置信息 */
@@ -57,6 +58,8 @@ export type EnemyStateType = {
   poison?: EnemyPoison
   /** 受到中毒伤害计时器 用于towerCanvas */
   slowTimer?: NodeJS.Timeout
+  /** 减速类型 */
+  slowType?: TowerSlowType
 } & EnemyType
 
 /** 敌人数据 */
@@ -78,6 +81,8 @@ export type EnemyPoison = {
   timer?: NodeJS.Timer
   /** 中毒清除计时器 */
   timeout?: NodeJS.Timeout
+  /** 中毒触发函数 */
+  poisonFun: DebouncedFunc<(e_id: string, t: TowerType) => void>
 }
 
 /** 子弹类型 */
@@ -110,7 +115,7 @@ export type TowerStateType = {
   x: number
   y: number
   /** 防抖的射击函数 */
-  shootFun: any
+  shootFun: DebouncedFunc<(eIdList: string[], t_i: number) => void>
   /** 攻击的目标id数组 */
   targetIdList: string[]
   /** 当前攻击的目标，用于攻击单一目标切换目标后的判断 */
@@ -190,8 +195,6 @@ export type SpecialBulletItem = TargetInfo & {
   id: string
   /** 塔防的id */
   tId: string
-  /** 中毒触发函数 */
-  poisonFun: any
   /** 子弹清除计时器 用于towerCanvas */
   timer?: NodeJS.Timer
 }
