@@ -8,7 +8,7 @@ import useBaseData from './tools/baseData';
 import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
-import { BuildingImg, HorseImg, SunImg } from './tools/imgSource';
+import { BuildingImg, TerminalImg, SunImg } from './tools/imgSource';
 import useTower from './tools/tower';
 
 import Loading from '@/components/loading.vue'
@@ -27,7 +27,7 @@ import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
 import { updateScoreApi } from '@/service/rank';
 import { useUserInfoStore } from '@/stores/userInfo';
-import towerArr, { BulletSize, TowerName, TowerType } from '@/dataSource/towerData';
+import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
 
@@ -48,7 +48,11 @@ const { specialBullets } = useSpecialBullets()
 /** ---计算属性--- */
 /** 终点位置 */
 const terminalStyle = computed(() => {
-  return {left: baseDataState.terminal?.x + 'px', top: baseDataState.terminal?.y + 'px'}
+  const size = gameConfigState.size
+  if(baseDataState.terminal) {
+    const {x, y} = baseDataState.terminal
+    return {left: x + size / 2 + 'px', top: y - size / 2 + 'px'}
+  }
 })
 /** 塔防容器的样式 */
 const buildingStyle = computed(() => {
@@ -1098,7 +1102,7 @@ function playAudio(audioKey: string, key: 'End' | 'Skill') {
   }
   nextTick(()=>{
     // 调节音量
-    audioRefObj[audio_key + 'Ref'].value!.volume = 0.9
+    audioRefObj[audio_key + 'Ref'].value!.volume = 0.6
     audioRefObj[audio_key + 'Ref'].value!.play()
   })
 }
@@ -1171,8 +1175,8 @@ function onKeyDown() {
         <Skill :skillList="gameSkillState.skillList" :money="baseDataState.money" :isPause="baseDataState.isPause" @handleSkill="handleSkill" />
         <!-- 终点 -->
         <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
-          <div class="hp">{{baseDataState.hp}}</div>
-          <img class="terminal-icon" :src="HorseImg" alt="">
+          <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
+          <img class="terminal-icon" :src="TerminalImg" alt="">
           <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="SunImg" alt="" @click="proMoneyClick">
         </div>
         <!-- 游戏开始遮罩层 -->
@@ -1326,23 +1330,29 @@ function onKeyDown() {
         position: absolute;
         user-select: none;
         cursor: pointer;
-        // box-shadow: 0 0 2px 2px rgba(255, 255, 255, .3);
         .hp {
+          position: absolute;
+          top: calc(@size * 0.15);
+          left: calc(@size * 0.35);
           color: #f24410;
-          font-size: 18px;
+          font-size: calc(@size * 0.3);
           font-weight: bold;
           text-align: center;
+          &-mobile {
+            top: 0;
+            left: calc(@size * 0.2);
+          }
         }
         .terminal-icon {
           display: block;
-          width: calc(@size * 2.5);
+          width: calc(@size * 1.8);
         }
         .money-icon {
           position: absolute;
           top: 0;
           left: 0;
-          width: calc(@size * 1.6);
-          height: calc(@size * 1.6);
+          width: calc(@size * 1.2);
+          height: calc(@size * 1.2);
         }
       }
       .gameover-wrap {
