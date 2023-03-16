@@ -55,7 +55,7 @@ export type TowerType = {
   /** 攻击范围 */
   rate: number
   speed: number
-  bSize: {w:number,h:number}
+  bSize: BulletSize
   audioKey: string
   /** 游戏图片 */
   img: string
@@ -76,6 +76,7 @@ export type TowerType = {
   /** 持续伤害 */
   poison?: TowerPoison
 }
+export type BulletSize = { w: number; h: number}
 
 export type TowerSlow = {
   /** 减少速度 */

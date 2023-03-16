@@ -202,7 +202,7 @@ function handleBulletMove() {
       const {w, h} = t.bSize
       // 当前塔防的当前子弹
       const bItem = t.bulletArr[b_i]
-      let {x, y, addX, addY, e_id, attactIdSet} = bItem
+      let {x, y, addX, addY, e_id} = bItem
       // 重新计算子弹离敌人的距离
       const b_e_distance = bulletEnemyDistance(e_id, +t_i, bItem.x, bItem.y)
       if(b_e_distance) {
@@ -217,46 +217,10 @@ function handleBulletMove() {
       bItem.xy += t.speed
       // 穿透性塔防
       if(t.isThrough) {
-        const newEid = handleThroughBulletEid({x, y, w, h, attactIdSet: attactIdSet!})
+        const newEid = handleThroughBulletEid({x, y, w, h, attactIdSet: bItem.attactIdSet!})
         if(newEid) bItem.e_id = newEid
       }
-      let isAttact = t.isThrough && attactIdSet?.has(e_id)
-      let isDelete = false
-      // 子弹击中敌人
-      if(checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id) && !isAttact) {
-        if(t.isSaveBullet) {
-          if(t.name === 'twitch') {
-            handleSpecialBullets(t, bItem)
-          }
-        }
-        // 穿透性子弹击中敌人
-        if(t.isThrough) {
-          bItem.attactIdSet?.add(e_id)
-        } else { // 清除子弹
-          t.bulletArr.splice(b_i, 1)
-          isDelete = true
-        }
-        damageTheEnemy(e_id, t)
-      } else {
-        if(!isDelete && !t.isThrough && bItem.xy >= bItem.x_y) {
-          t.bulletArr.splice(b_i, 1)
-        }
-        const ctx = state.ctx!
-        const imgX = x - w / 2, imgY = y - h / 2
-        if(t.name === 'fengche') {
-          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 3
-          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if(t.name === 'delaiwen') {
-          bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
-          drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-        } else if(!((['lanbo'] as TowerName[]).includes(t.name))) {  // 绘画其余塔防的子弹
-          if(bItem.deg) { // 需要旋转的子弹
-            drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
-          } else {
-            ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
-          }
-        } 
-      }
+      handleBulletAndEnemy(t, b_i, e_id)
       // 清除穿透性子弹
       if(t.isThrough && checkThroughBullet({x,y,w,h})) {
         if(t.name === 'delaiwen') {
@@ -282,8 +246,61 @@ function handleBulletMove() {
     }
   }
 }
+/** 处理子弹和敌人的关系 */
+function handleBulletAndEnemy(t: TowerStateType, b_i: number, e_id: string) {
+  const bItem = t.bulletArr[b_i]
+  const {w, h} = t.bSize
+  // 子弹击中敌人
+  const isInTarget = (
+    t.name !== 'twitch' 
+    && checkBulletInEnemyOrTower({x: bItem.x, y: bItem.y, w, h}, e_id)
+    && !(t.isThrough && bItem.attactIdSet?.has(e_id))
+  )
+  // 子弹击中敌人
+  if(isInTarget) {
+    if(t.isSaveBullet) {
+      if(t.name === 'twitch') {
+        handleSpecialBullets(t, bItem)
+      }
+    }
+    // 穿透性子弹击中敌人
+    if(t.isThrough) {
+      bItem.attactIdSet?.add(e_id)
+    } else { // 清除子弹
+      t.bulletArr.splice(b_i, 1)
+    }
+    handelDamageEnemy(e_id, t)
+  } else {
+    if(t.isSaveBullet) {
+      // 老鼠子弹到达目标 
+      if(t.name === 'twitch' && bItem.xy >= bItem.x_y) {
+        handleSpecialBullets(t, bItem)
+        t.bulletArr.splice(b_i, 1)
+      }
+    }
+    // 清除子弹
+    if(!t.isThrough && !t.isSaveBullet && bItem.xy >= bItem.x_y) {
+      t.bulletArr.splice(b_i, 1)
+    }
+    const ctx = state.ctx!
+    const imgX = bItem.x - w / 2, imgY = bItem.y - h / 2
+    if(t.name === 'fengche') {
+      bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 3
+      drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+    } else if(t.name === 'delaiwen') {
+      bItem.rotateDeg = (bItem.rotateDeg ?? 0) + 20
+      drawRotateBullet({deg: bItem.rotateDeg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+    } else if(!((['lanbo'] as TowerName[]).includes(t.name))) {  // 绘画其余塔防的子弹
+      if(bItem.deg) { // 需要旋转的子弹
+        drawRotateBullet({deg: bItem.deg, x: imgX, y: imgY, w, h, img: t.onloadbulletImg})
+      } else {
+        ctx.drawImage(t.onloadbulletImg, imgX, imgY, w, h)
+      }
+    } 
+  }
+}
 /** 塔防伤害敌人 */
-function damageTheEnemy(e_id: string, t: TowerStateType) {
+function handelDamageEnemy(e_id: string, t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === e_id)
   if(!enemy) return
   let hp = enemy.hp.cur - t.damage
@@ -298,6 +315,13 @@ function damageTheEnemy(e_id: string, t: TowerStateType) {
     if(t.slow) { // 判断减速
       slowEnemy(e_id, t.slow)
     }
+  }
+}
+/** 伤害敌人 */
+function damageTheEnemy(enemy: EnemyStateType, damage: number) {
+  enemy.hp.cur = Math.max(enemy.hp.cur - damage, 0)
+  if(enemy.hp.cur <= 0) {
+    enemy.hp.cur = enemy.hp.sum
   }
 }
 /** 画塔防的其他子弹 */
@@ -327,10 +351,7 @@ function drawTowerBullet(t: TowerStateType) {
 function handleFireBullet(t: TowerStateType) {
   const enemy = enemyList.find(e => e.id === t.targetIdList[0])
   if(!enemy) return
-  if(enemy.hp.cur <= 0) {
-    enemy.hp.cur = enemy.hp.sum
-  } 
-  enemy.hp.cur = Math.max(enemy.hp.cur - t.damage, 0)
+  damageTheEnemy(enemy, t.damage)
   if(t.damage < t.preDamage! * 4) {
     t.thickness! = Math.min(t.thickness! + 0.025, state.size / 3)
     t.damage += 0.001
@@ -426,18 +447,11 @@ function startPoisonInterval(e_id: string, t: TowerType) {
   if(enemy) {
     const ePoison = enemy.poison!
     if(ePoison.level < 5) ePoison.level++
-    // console.log(enemy.poison.level, '-', Date.now());
-    enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
-    if(enemy.hp.cur <= 0) {
-      enemy.hp.cur = enemy.hp.sum
-    } 
+    damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
     if(ePoison.timer) clearInterval(ePoison.timer)
     ePoison.timer = setInterval(() => {
-      enemy.hp.cur = Math.max(enemy.hp.cur - ePoison.level * ePoison.damage, 0) 
-      if(enemy.hp.cur <= 0) {
-        enemy.hp.cur = enemy.hp.sum
-      } 
+      damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     }, 1000)
     // 清除敌人受到的毒液计时器
     if(ePoison.timeout) clearTimeout(ePoison.timeout)
@@ -455,9 +469,10 @@ function startPoisonInterval(e_id: string, t: TowerType) {
  function bulletEnemyDistance(
   e_id: string, t_i: number, bx: number, by: number
 ) {
+  // 敌人已经死了 | 能穿透的子弹 | 老鼠 ,不用覆盖之前的值了 
+  if(towerList[t_i].isThrough || towerList[t_i].name === 'twitch') return
   const enemy = enemyList.find(e => e.id === e_id)
-  // 敌人已经死了 或者 是能穿透的子弹，不用覆盖之前的值了 
-  if(!enemy || towerList[t_i].isThrough) return
+  if(!enemy) return
   const size_2 = state.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
