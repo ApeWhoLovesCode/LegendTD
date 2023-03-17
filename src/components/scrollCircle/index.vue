@@ -156,7 +156,6 @@ const init = (isInit = true) => {
   // 是否采用均分卡片的方式
   if(props.isAverage && props.list) {
     const cardNum = Math.floor(360 / _cardDeg)
-    console.log('cardNum: ', cardNum);
     // 判断总卡片数是否超过一个圆
     const _cardNum = Math.min(cardNum, props.list.length)
     pageState.pageSize = _cardNum

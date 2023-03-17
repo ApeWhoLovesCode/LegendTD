@@ -3,4 +3,4 @@ import { ScrollCircleProvide } from "./type";
 
 export const provideKey = Symbol('scroll-circle') as InjectionKey<ScrollCircleProvide>
 
-export const classPrefix = 'protect-scroll-circle';
+export const classPrefix = 'td-scroll-circle';

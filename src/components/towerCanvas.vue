@@ -753,6 +753,6 @@ function drawFloorTile() {
 .com-tower-canvas {
   width: 100%;
   height: 100%;
-  // background-image: radial-gradient(circle 100px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+  background-image: radial-gradient(circle 100px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
 }
 </style>
