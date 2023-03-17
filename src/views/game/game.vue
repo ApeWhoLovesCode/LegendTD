@@ -200,7 +200,8 @@ watch(() => enemyList, (enemyList) => {
     }
   }
   for(const bItem of specialBullets.twitch) {
-    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
+    // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
+    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
     if(eIdList.length) {
       triggerPoisonFun(eIdList, 'twitch')
     }
@@ -1069,10 +1070,9 @@ function drawFloorTile() {
 
 /** 开启创建金钱定时器 */
 function startMoneyTimer() {
-  return
   keepInterval.set(KeepIntervalKey.startMoneyTimer, () => {
     gameSkillState.proMoney.isShow = true
-    playAudio('ma-qifei', 'End')
+    // playAudio('ma-qifei', 'End')
   }, gameSkillState.proMoney.interval, true)
 }
 /** 点击了生产出来的金钱 */
@@ -1084,7 +1084,6 @@ function proMoneyClick() {
 
 /** 播放背景音乐 */
 function playBgAudio() {
-  return
   baseDataState.isPlayBgAudio = !baseDataState.isPlayBgAudio
   if(baseDataState.isPlayBgAudio) {
     audioBgRef.value!.volume = 0.65
@@ -1197,6 +1196,7 @@ function onKeyDown() {
         </div>
       </div>
     </div>
+    <!-- <div class="screenMask"></div> -->
   </div>
 </template>
 
@@ -1329,7 +1329,6 @@ function onKeyDown() {
       .terminal {
         position: absolute;
         user-select: none;
-        cursor: pointer;
         .hp {
           position: absolute;
           top: calc(@size * 0.15);
@@ -1353,6 +1352,7 @@ function onKeyDown() {
           left: 0;
           width: calc(@size * 1.2);
           height: calc(@size * 1.2);
+          cursor: pointer;
         }
       }
       .gameover-wrap {
@@ -1425,6 +1425,14 @@ function onKeyDown() {
         align-items: center;
       }
     }
+  }
+  .screenMask {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    box-shadow: 0 0 500px 1000px rgba(0, 0, 0, .4);
   }
 }
 @media screen and (orientation: portrait) {

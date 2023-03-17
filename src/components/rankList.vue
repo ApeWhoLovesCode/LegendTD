@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { ElAvatar, ElDialog, ElPagination, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import { getRankListApi, RankItem } from '@/service/rank';
+import { useSourceStore } from '@/stores/source';
 
 const {visible} = defineProps({
   visible: {
@@ -14,6 +15,8 @@ const emit = defineEmits<{
   (event: 'update:visible', v: boolean): void
 }>()
 
+const source = useSourceStore()
+
 const state = reactive({
   rankList: [] as RankItem[],
   total: 0
@@ -22,7 +25,6 @@ const state = reactive({
 const getRankList = async () => {
   try {
     const res = await getRankListApi()
-    console.log('res: ', res);
     state.rankList = res
   } catch (error) {
     console.log('error: ', error);
@@ -35,7 +37,7 @@ const getRankList = async () => {
   <ElDialog 
     :modelValue="visible" 
     title="排行榜"
-    width="60%"
+    :width="source.isMobile ? '100%' : '60%'"
     @open="getRankList"
     @close="emit('update:visible', false)"
   >

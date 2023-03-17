@@ -112,20 +112,20 @@ const clearData = () => {
       label-width="100px"
     >
       <ElFormItem label="用户名" prop="name">
-        <ElInput :modelValue="userInfo.name" show-word-limit maxlength="10" @keyup.enter.native="loginOrRegister" />
+        <ElInput v-model="userInfo.name" show-word-limit maxlength="10" @keyup.enter.native="loginOrRegister" />
       </ElFormItem>
       <ElFormItem label="密码" prop="pass">
-        <ElInput :modelValue="userInfo.pass" type="password" show-password maxlength="10" @keyup.enter.native="loginOrRegister" />
+        <ElInput v-model="userInfo.pass" type="password" show-password maxlength="10" @keyup.enter.native="loginOrRegister" />
       </ElFormItem>
       <ElFormItem v-if="isRegister" label="确认密码" prop="passAgain">
-        <ElInput :modelValue="userInfo.passAgain" type="password" show-password maxlength="10" @keyup.enter.native="loginOrRegister" />
+        <ElInput v-model="userInfo.passAgain" type="password" show-password maxlength="10" @keyup.enter.native="loginOrRegister" />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
         <div class="tipsWrap">
           <div class="tips">没有账号？点这里</div>
-          <ElSwitch size="small" :modelValue="isRegister" active-text="注册" inactive-text="登录" />
+          <ElSwitch size="small" v-model="isRegister" active-text="注册" inactive-text="登录" />
         </div>
         <div>
           <ElButton @click="emit('update:visible', false)">取消</ElButton>

@@ -41,9 +41,9 @@ export default function useBaseData() {
   }
   
   /** 返回进入攻击范围的值的数组 */
-  function enterAttackScopeList(eList: EnemyStateType[], tower: TargetCircleInfo) {
+  function enterAttackScopeList(eList: EnemyStateType[], target: TargetCircleInfo) {
     const list = eList.reduce((pre, enemy) => {
-      if(checkValInCircle(enemy, tower)) {
+      if(checkValInCircle(enemy, target)) {
         pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
       }
       return pre
@@ -66,8 +66,8 @@ export default function useBaseData() {
   
   /** 计算点到圆心的距离之间的距离 */
   function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
-    const {x: _x, y: _y} = target
-    const size_2 = baseDataState.gridInfo.size / 2
+    const {x: _x, y: _y, size} = target
+    const size_2 = (size ?? baseDataState.gridInfo.size) / 2
     return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
   }
   /** 两值平方相加并开方 求斜边 */
@@ -94,5 +94,8 @@ export default function useBaseData() {
 export type TargetCircleInfo = {
   x: number
   y: number
+  /** 半径 */
   r: number
+  /** 目标的大小 */
+  size?: number
 }

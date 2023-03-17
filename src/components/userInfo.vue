@@ -118,7 +118,7 @@ const initData = () => {
         <ElFormItem label="用户名" prop="name">
           <div class="row">
             <ElInput 
-              :modelValue="userInfo.name" 
+              v-model="userInfo.name" 
               maxlength="10" 
               show-word-limit 
             ></ElInput>
@@ -143,7 +143,7 @@ const initData = () => {
         <ElFormItem label="手机号" prop="phone">
           <div class="row">
             <ElInput 
-              :modelValue="userInfo.phone" 
+              v-model="userInfo.phone" 
               maxlength="11" 
               show-word-limit 
             ></ElInput>
@@ -168,7 +168,7 @@ const initData = () => {
         <ElFormItem label="原密码" prop="pass">
           <div class="row">
             <ElInput 
-              :modelValue="userInfo.pass" 
+              v-model="userInfo.pass" 
               type="password"
               show-password
               maxlength="10" 
@@ -179,7 +179,7 @@ const initData = () => {
         <ElFormItem label="新密码" prop="passNew">
           <div class="row">
             <ElInput 
-              :modelValue="userInfo.passNew" 
+              v-model="userInfo.passNew" 
               type="password"
               show-password
               maxlength="10" 

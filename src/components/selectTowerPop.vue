@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 import { ElDrawer, ElMessage, ElMessageBox } from 'element-plus';
 import towerData, { TowerType, towerStaticData, TowerName } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
@@ -26,7 +26,7 @@ const state = reactive({
   // 遍历的数据列表
   items: [] as TowerType[],
   pageNum: 1,
-  pageSize: 20,
+  pageSize: 10,
 })
 
 const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) => {
@@ -71,6 +71,14 @@ const selectTower = (name: TowerName) => {
     }
   }
 }
+
+const init = () => {
+  const preIndex = (state.pageNum - 1) * state.pageSize
+  state.items = Object.values(towerData).slice(preIndex, preIndex + state.pageSize)
+}
+onMounted(() => {
+  init()
+})
 
 </script>
 
@@ -151,6 +159,7 @@ const selectTower = (name: TowerName) => {
         height: 0px;  
       }
       .towerBox {
+        flex-shrink: 0;
         position: relative;
         box-sizing: border-box;
         width: @headerHeight;

@@ -46,7 +46,7 @@ onMounted(() => {
 })
 
 const onCardClick = (i: number) => {
-  if(mapData[i]) {
+  if(mapData[i] && source.progress === 100) {
     router.push(`/game/${i + 1}`)
   }
 }
