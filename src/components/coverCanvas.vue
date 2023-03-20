@@ -10,8 +10,6 @@ const props = defineProps<{
 const source = useSourceStore()
 const idRef = ref(randomStr('com-cover-canvas'))
 const canvasRef = ref<HTMLCanvasElement>()
-/** canvas 提高清晰度 */
-const ratio = ref(window.devicePixelRatio ?? 1)
 const state = reactive({
   ctx: null as CanvasRenderingContext2D | null,
   canvasInfo: {w: 0, h: 0},
@@ -47,8 +45,8 @@ function init() {
 
 function getCanvasWH() {
   const dom = document.querySelector(`.${idRef.value}`)
-  const width = (dom?.clientWidth ?? 0) * ratio.value
-  const height = (dom?.clientHeight ?? 0) * ratio.value
+  const width = (dom?.clientWidth ?? 0) * source.ratio
+  const height = (dom?.clientHeight ?? 0) * source.ratio
   state.canvasInfo.w = width
   state.canvasInfo.h = height
   state.size = width / 21
@@ -100,8 +98,8 @@ function drawFloorTile() {
       :width="state.canvasInfo.w"
       :height="state.canvasInfo.h"
       :style="{
-        width: state.canvasInfo.w / ratio + 'px',
-        height: state.canvasInfo.h / ratio + 'px',
+        width: state.canvasInfo.w / source.ratio + 'px',
+        height: state.canvasInfo.h / source.ratio + 'px',
       }"
     ></canvas>
   </div>

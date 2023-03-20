@@ -4,7 +4,7 @@ import { isObj } from '@/utils/validate';
 import { defineComponent, ExtractPropTypes, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { makeNumberProp, makeStringProp, truthProp } from '@/utils/props';
 
-const classPrefix = `retaroct-circle`;
+const classPrefix = `legendTD-circle`;
 /** 圆的一周 2π */
 const PERIMETER = 2 * Math.PI;
 /** 一开始的角度，由于是顶部所以是 -90° */

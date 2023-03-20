@@ -8,6 +8,7 @@ const source = useSourceStore()
 
 const init = () => {
   source.isMobile = !!isMobile()
+  source.ratio = window.devicePixelRatio ?? 1
 }
 
 onBeforeMount(() => {

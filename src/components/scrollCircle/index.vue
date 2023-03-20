@@ -293,7 +293,7 @@ const onPageChange = (isAdd?: boolean) => {
 </template>
 
 <style lang='less' scoped>
-@class-prefix: ~'protect-scroll-circle';
+@class-prefix: ~'legendTD-scroll-circle';
 .@{class-prefix} {
   position: relative;
   overflow: hidden;

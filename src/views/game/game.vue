@@ -48,22 +48,23 @@ const { specialBullets } = useSpecialBullets()
 /** ---计算属性--- */
 /** 终点位置 */
 const terminalStyle = computed(() => {
-  const size = gameConfigState.size
+  const size = transRatio(gameConfigState.size)
   if(baseDataState.terminal) {
     const {x, y} = baseDataState.terminal
-    return {left: x + size / 2 + 'px', top: y - size / 2 + 'px'}
+    return {left: transRatio(x) + size / 2 + 'px', top: transRatio(y) - size / 2 + 'px'}
   }
 })
 /** 塔防容器的样式 */
 const buildingStyle = computed(() => {
   const {left, top} = towerState.building
-  const size = gameConfigState.size
-  return {left: left + size + 'px', top: top + size + 'px'}
+  const size = transRatio(gameConfigState.size)
+  return {left: transRatio(left) + size + 'px', top: transRatio(top) + size + 'px'}
 })
-/** 塔防容器的类目 */
+/** 塔防容器的类名 */
 const buildingClass = computed(() => {
   const {left, top} = towerState.building
-  const {x_num, y_num, size} = baseDataState.gridInfo
+  const {x_num, y_num} = baseDataState.gridInfo
+  const size = gameConfigState.size
   const _x_num = Math.round(left / size), _y_num = Math.round(top / size)
   let className = ''
   if(_y_num >= y_num - 3) {
@@ -80,14 +81,19 @@ const buildingClass = computed(() => {
 })
 /** 攻击范围的样式 */
 const buildingScopeStyle = computed(() => {
-  const padding = gameConfigState.size
-  const size = gameConfigState.size / 2
+  const size = transRatio(gameConfigState.size)
   const {left, top, r} = towerState.buildingScope
-  return {left: left + padding + size + 'px', top: top + padding + size + 'px', width: r * 2 + 'px', height: r * 2 + 'px'}
+  return {
+    left: transRatio(left) + size + size / 2 + 'px',
+    top: transRatio(top) + size + size / 2 + 'px',
+    width: transRatio(r) * 2 + 'px',
+    height: transRatio(r) * 2 + 'px'
+  }
 })
 /** 售卖防御塔按钮的样式 */
 const saleTowerStyle = computed(() => {
-  const {y_num, size} = baseDataState.gridInfo
+  const {y_num} = baseDataState.gridInfo
+  const size = gameConfigState.size
   const _y_num = Math.round(towerState.buildingScope.top / size)
   return _y_num >= y_num / 2 ? { top: 0 } : { bottom: 0 }
 })
@@ -221,7 +227,7 @@ onBeforeUnmount(() => {
 })
 
 async function init() {
-  initMobileData()
+  initZoomData()
   if(isInfinite.value) {
     baseDataState.money = 999999
   }
@@ -552,7 +558,7 @@ function handleSkill(index: number) {
 function getMouse(e: MouseEvent) {
   e.stopPropagation()
   const size = gameConfigState.size
-  const _x = e.offsetX, _y = e.offsetY
+  const _x = e.offsetX * source.ratio, _y = e.offsetY * source.ratio
   // 当前点击的格子的索引值
   const col = Math.floor(_y / size), row = Math.floor(_x / size)
   const gridVal = baseDataState.gridInfo.arr[col][row]
@@ -567,6 +573,7 @@ function getMouse(e: MouseEvent) {
   towerState.building.isShow = true
   towerState.building.left = left
   towerState.building.top = top
+  console.log('towerState.building: ', towerState.building);
 }
 /** 点击建造塔防 */
 function buildTower(tname: TowerName) {
@@ -1023,13 +1030,15 @@ function beginGame() {
   source.isGameing = true
 }
 
-/** 移动端按比例缩放数据 */
-function initMobileData() {
-  if(!source.isMobile) return
-  const {w, h} = gameConfigState.defaultCanvas
-  const wp = document.documentElement.clientWidth / (h + 80)
-  const hp = document.documentElement.clientHeight / (w + 80)
-  const p = Math.floor(Math.min(wp, hp) * 10) / 10
+/** 按比例缩放数据 */
+function initZoomData() {
+  let p = source.ratio
+  if(source.isMobile) {
+    const {w, h} = gameConfigState.defaultCanvas
+    const wp = document.documentElement.clientWidth / (h + 80)
+    const hp = document.documentElement.clientHeight / (w + 80)
+    p *= Math.floor(Math.min(wp, hp) * 10) / 10
+  }
   gameConfigState.size *= p
   gameConfigState.defaultCanvas.w *= p
   gameConfigState.defaultCanvas.h *= p
@@ -1084,6 +1093,7 @@ function proMoneyClick() {
 
 /** 播放背景音乐 */
 function playBgAudio() {
+  return
   baseDataState.isPlayBgAudio = !baseDataState.isPlayBgAudio
   if(baseDataState.isPlayBgAudio) {
     audioBgRef.value!.volume = 0.65
@@ -1118,7 +1128,10 @@ function onKeyDown() {
     }
   };
 }
-
+/** 清晰度转化 */
+function transRatio(v: number) {
+  return v / source.ratio
+}
 
 </script>
 
@@ -1130,7 +1143,7 @@ function onKeyDown() {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <div class="game-wrap" :style="{'--size': gameConfigState.size + 'px'}">
+    <div class="game-wrap" :style="{'--size': gameConfigState.size / source.ratio + 'px'}">
       <div class="canvas-wrap" @click="hiddenTowerOperation">
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
@@ -1143,7 +1156,16 @@ function onKeyDown() {
           @playBgAudio="playBgAudio"
         />
         <!-- 游戏区域 -->
-        <canvas ref="canvasRef" id="mycanvas" :width="gameConfigState.defaultCanvas.w" :height="gameConfigState.defaultCanvas.h" @click="getMouse($event)"></canvas>
+        <canvas 
+          ref="canvasRef" 
+          :width="gameConfigState.defaultCanvas.w" 
+          :height="gameConfigState.defaultCanvas.h" 
+          :style="{
+            width: gameConfigState.defaultCanvas.w / source.ratio + 'px',
+            height: gameConfigState.defaultCanvas.h / source.ratio + 'px',
+          }"
+          @click="getMouse($event)"
+        ></canvas>
         <!-- 塔防的容器 -->
         <div v-show="towerState.building.isShow" class="building-wrap" :style="buildingStyle">
           <img :src="BuildingImg" alt="" class="add-icon">
@@ -1196,7 +1218,7 @@ function onKeyDown() {
         </div>
       </div>
     </div>
-    <!-- <div class="screenMask"></div> -->
+    <div class="screenMask"></div>
   </div>
 </template>
 

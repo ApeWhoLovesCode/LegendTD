@@ -45,7 +45,7 @@ const cardStyle = computed(() => {
 </template>
 
 <style lang='less' scoped>
-.protect-scroll-circle-cardWrap {
+.legendTD-scroll-circle-cardWrap {
   position: absolute;
   transform-origin: center center;
 }

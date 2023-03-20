@@ -31,6 +31,8 @@ type StateType = {
   mapLevel: number
   /** 是否是手机 */
   isMobile: boolean
+  /** 清晰度倍数，用于 canvas 提高清晰度 */
+  ratio: number
   /** 进度 */
   progress: number
 }
@@ -44,6 +46,7 @@ export const useSourceStore = defineStore('source', {
     othOnloadImg: {},
     mapLevel: 0,
     isMobile: false,
+    ratio: 1,
     progress: 0,
   }),
   actions: {

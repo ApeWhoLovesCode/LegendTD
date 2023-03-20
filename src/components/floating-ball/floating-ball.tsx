@@ -6,7 +6,7 @@ import { defineComponent, ExtractPropTypes, onMounted, reactive, ref } from 'vue
 import type { PropType } from 'vue';
 import { StyleType } from '@/utils/native-props';
 
-const classPrefix = `retaroct-floating-ball`;
+const classPrefix = `legendTD-floating-ball`;
 
 type StyleItem = 
 | '--initial-position-left'
