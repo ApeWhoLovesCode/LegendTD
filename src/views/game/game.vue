@@ -573,7 +573,6 @@ function getMouse(e: MouseEvent) {
   towerState.building.isShow = true
   towerState.building.left = left
   towerState.building.top = top
-  console.log('towerState.building: ', towerState.building);
 }
 /** 点击建造塔防 */
 function buildTower(tname: TowerName) {

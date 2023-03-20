@@ -1,4 +1,4 @@
-import { EnemyStateType, GameBaseData, TowerStateType } from "@/type/game";
+import { EnemyStateType, GameBaseData } from "@/type/game";
 import { reactive } from "vue";
 
 export default function useBaseData() {
@@ -20,7 +20,7 @@ export default function useBaseData() {
     // 生命值
     hp: 10,
     // 金钱
-    money: 6000,
+    money: 1500,
     // 敌人生成间隔时间
     intervalTime: 900,
     // 当前关卡地图信息

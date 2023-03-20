@@ -66,9 +66,9 @@ class KeepInterval {
   }
   /** 全部暂停或开始 */
   allPause(isPause = true) {
-    this.timerMap.forEach((val, key) => (
+    this.timerMap.forEach((_, key) => {
       isPause ? this.pause(key) : this.set(key)
-    ))
+    })
   }
   /** 删除其中一个 */
   delete(key: string) {
