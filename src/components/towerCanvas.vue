@@ -417,7 +417,7 @@ function drawSpecialBullets() {
   const ctx = state.ctx!
   const img = source.towerSource!['twitch'].onloadbulletImg
   ctx.save()
-  ctx.globalAlpha = 0.5
+  ctx.globalAlpha = 0.3
   specialBullets.twitch.forEach(b => {
     ctx.drawImage(img, b.x, b.y, b.w, b.h)
   })
@@ -626,8 +626,8 @@ function drawEnemy(index: number) {
   if(curSpeed !== speed) {
     if(slowType === 'twitch') {
       ctx.save()
-      ctx.globalAlpha = 0.3
-      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
+      ctx.globalAlpha = 0.5
+      ctx.drawImage(source.othOnloadImg.snowPoison!, x + w / 4, y + h / 3, w / 2, w / 2)
       ctx.restore()
     } else {
       ctx.save()
@@ -641,12 +641,12 @@ function drawEnemy(index: number) {
     ctx.save()
     ctx.globalAlpha = 0.9
     if(poison.level === 5) {
-      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
+      ctx.drawImage(source.othOnloadImg.poison!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
     } else {
       let arr = [3 * w / 8, w / 4, w / 8, 0]
       let poisonX = x + arr[poison.level - 1]
       for(let i = 0; i < poison.level; i++) {
-        ctx.drawImage(source.othOnloadImg.snow!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
+        ctx.drawImage(source.othOnloadImg.poison!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
         poisonX += w / 4
       }
     }

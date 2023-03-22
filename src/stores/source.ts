@@ -9,6 +9,9 @@ import {defineStore} from 'pinia'
 
 type TowerSource = {[key in TowerName]: TowerStateType}
 
+type OnloadImgKey = keyof typeof otherImgData
+type OthOnloadImg = {[key in OnloadImgKey]?: HTMLImageElement}
+
 type StateType = {
   /** 游戏页面是否初始化完成 */
   isGameInit: boolean
@@ -19,14 +22,7 @@ type StateType = {
   /** 塔防处理好的静态资源 */
   towerSource?: TowerSource
   /** 图片资源 */
-  othOnloadImg: {
-    /** 地板 */
-    floor?: HTMLImageElement
-    /** 金币 */
-    goldCoin?: HTMLImageElement
-    /** 减速雪花 */
-    snow?: HTMLImageElement
-  }
+  othOnloadImg: OthOnloadImg
   /** 当前选择的地图 */
   mapLevel: number
   /** 是否是手机 */
@@ -83,21 +79,16 @@ export const useSourceStore = defineStore('source', {
       }))
     },
     async handleOtherImg() {
-      const step = 10 / Object.keys(otherImgData).length
-      return Promise.all([
-        loadImage(otherImgData.floor[0]).then(res => {
-          this.$state.othOnloadImg.floor = res
-          this.$state.progress += step
-        }),
-        loadImage(otherImgData.goldCoin).then(res => {
-          this.$state.othOnloadImg.goldCoin = res
-          this.$state.progress += step
-        }),
-        loadImage(otherImgData.snow).then(res => {
-          this.$state.othOnloadImg.snow = res
-          this.$state.progress += step
-        }),
-      ])
+      const arr = Object.keys(otherImgData) as OnloadImgKey[]
+      const step = 10 / arr.length
+      return Promise.all(
+        arr.map(key => (
+          loadImage(otherImgData[key]).then((img) => {
+            this.$state.othOnloadImg[key] = img
+            this.$state.progress += step
+          })
+        ))
+      )
     }
   }
 })
