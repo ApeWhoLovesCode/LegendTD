@@ -1,19 +1,15 @@
-import floorTitleIcon from "@/assets/img/floor-tile.png"
-import goldCoinIcon from "@/assets/img/gold-coin.png"
-import snowIcon from "@/assets/img/snow.png"
-import snowPoisonIcon from "@/assets/img/snow-poison.png"
-import poisonIcon from "@/assets/img/poison.png"
+import { requireCDN } from "@/utils/handleDom"
 
 /** 地板的图片数据 */
 export default {
   /** 地板 */
-  floor: floorTitleIcon,
+  floor: requireCDN('floor-tile.png'),
   /** 金币 */
-  goldCoin: goldCoinIcon,
+  goldCoin: requireCDN('gold-coin.png'),
   /** 减速雪花 */
-  snow: snowIcon,
+  snow: requireCDN('snow.png'),
   /** 中毒减速 */
-  snowPoison: snowPoisonIcon,
+  snowPoison: requireCDN('snow-poison.png'),
   /** 中毒 */
-  poison: poisonIcon,
+  poison: requireCDN('poison.png'),
 }

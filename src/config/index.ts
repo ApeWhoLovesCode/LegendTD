@@ -1,0 +1,1 @@
+export const CDN_URL = 'http://lhh.codeape.site' 

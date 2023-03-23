@@ -47,7 +47,7 @@ export const useSourceStore = defineStore('source', {
   }),
   actions: {
     async loadingAllImg() {
-      if(this.$state.progress === 100) {
+      if(this.$state.progress >= 100) {
         return
       }
       return Promise.all([
@@ -59,22 +59,35 @@ export const useSourceStore = defineStore('source', {
       })
     },
     async handleEnemyImg() {
-      this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
+      if(!this.$state.enemySource.length) {
+        this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
+      }
       const step = 70 / enemyData.length
-      return Promise.all(enemyData.map(async (item, index) => {
-        this.$state.enemySource[index].imgList = await gifToStaticImg({type: item.type, imgSource: item.imgSource})
-        this.$state.progress += step
+      return Promise.all(enemyData.map(async (enemy, index) => {
+        const item = this.$state.enemySource[index]
+        if(!item.imgList.length) {
+          item.imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
+          this.$state.progress += step
+        }
         return 
       }))
     },
     async handleTowerImg() {
       const arr = Object.keys(towerData) as TowerName[]
-      this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
-      const step = 20 / arr.length
-      return Promise.all(arr.map(async (key, index) => {
-        this.$state.towerSource![key].onloadImg = await loadImage(towerData[key].img)
-        this.$state.towerSource![key].onloadbulletImg = await loadImage(towerData[key].bulletImg)
-        this.$state.progress += step
+      if(!this.$state.towerSource) {
+        this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
+      }
+      const step = 20 / arr.length / 2
+      return Promise.all(arr.map(async (key) => {
+        const item = this.$state.towerSource![key]
+        if(!item.onloadImg) {
+          item.onloadImg = await loadImage(towerData[key].img)
+          this.$state.progress += step
+        }
+        if(!item.onloadbulletImg) {
+          item.onloadbulletImg = await loadImage(towerData[key].bulletImg)
+          this.$state.progress += step
+        }
         return
       }))
     },
@@ -83,10 +96,10 @@ export const useSourceStore = defineStore('source', {
       const step = 10 / arr.length
       return Promise.all(
         arr.map(key => (
-          loadImage(otherImgData[key]).then((img) => {
+          !this.$state.othOnloadImg[key] ? loadImage(otherImgData[key]).then((img) => {
             this.$state.othOnloadImg[key] = img
             this.$state.progress += step
-          })
+          }) : ''
         ))
       )
     }

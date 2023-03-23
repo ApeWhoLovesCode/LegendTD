@@ -8,7 +8,7 @@ import useBaseData from './tools/baseData';
 import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
-import { BuildingImg, TerminalImg, SunImg } from './tools/imgSource';
+import imgSource from '@/dataSource/imgSource';
 import useTower from './tools/tower';
 
 import Loading from '@/components/loading.vue'
@@ -1170,7 +1170,7 @@ function transRatio(v: number) {
         ></canvas>
         <!-- 塔防的容器 -->
         <div v-show="towerState.building.isShow" class="building-wrap" :style="buildingStyle">
-          <img :src="BuildingImg" alt="" class="add-icon">
+          <img :src="imgSource.BuildingImg" alt="" class="add-icon">
           <div v-if="source.towerSource" class="tower-wrap" :class="buildingClass">
             <div 
               v-for="(tname, index) in userInfoStore.towerSelectList" 
@@ -1199,8 +1199,8 @@ function transRatio(v: number) {
         <!-- 终点 -->
         <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
           <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
-          <img class="terminal-icon" :src="TerminalImg" alt="">
-          <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="SunImg" alt="" @click="proMoneyClick">
+          <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
+          <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="imgSource.SunImg" alt="" @click="proMoneyClick">
         </div>
         <!-- 游戏开始遮罩层 -->
         <div v-if="gameConfigState.isGameBeginMask" class="game-begin mask">

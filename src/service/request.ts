@@ -1,4 +1,3 @@
-/****   request.js   ****/
 // 导入axios
 import axios from 'axios'
 // 使用element-ui Message做消息提醒
@@ -12,7 +11,7 @@ const service = axios.create({
 service.interceptors.request.use(config => {
   //发请求前做的一些处理，数据转化，配置请求头，设置token,设置loading等，根据需求去添加
   config.data = JSON.stringify(config.data);
-  // config.headers.set('Content-Type', 'application/json; charset=utf-8')
+  config.headers.set('Content-Type', 'application/json; charset=utf-8')
   return config
 }, error => {
   Promise.reject(error)

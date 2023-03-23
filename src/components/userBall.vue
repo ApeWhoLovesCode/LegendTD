@@ -4,13 +4,13 @@ import FloatingBall from '@/components/floating-ball';
 import { ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import Login from '@/components/login.vue';
 import { useUserInfoStore } from '@/stores/userInfo';
-import UserIcon from '@/assets/img/user.png'
 import RankList from './rankList.vue';
 import UserInfo from './userInfo.vue'
 import SelectLevelPop from './selectLevelPop.vue'
 import { useSourceStore } from '@/stores/source';
 import SelectTowerPop from './selectTowerPop.vue';
 import Circle from './circle';
+import { requireCDN } from '@/utils/handleDom';
 
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3
@@ -124,7 +124,7 @@ onBeforeUnmount(() => clearBallSleep())
     @on-magnetic="onMagnetic"
   >
     <div class="ball-wrap" :class="{'ball-mobile': source.isMobile}">
-      <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? UserIcon" alt="">
+      <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? requireCDN('user.png')" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
         <div class="ball-item-content" @click="selectTowerVisible = true">塔防选择</div>
       </div>

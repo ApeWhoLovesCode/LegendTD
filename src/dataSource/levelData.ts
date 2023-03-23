@@ -2,7 +2,7 @@ import levelEnemyArr from '@/dataSource/levelEnemyArr';
 
 const levelData: LevelDataItem[] = [
   {
-    cover: 'https://cdn.lightwork.com.cn/img/20220921141442-h4AHAn.png',
+    cover: 'http://lhh.codeape.site/img/dog4.jpeg',
     enemyArr: []
   },
 ]
@@ -19,7 +19,7 @@ for(let i = 0; i < levelData.length; i++) {
 export default levelData
 
 export const levelNullItem: LevelDataItem = {
-  cover: 'https://cdn.lightwork.com.cn/img/20230215105015-t8tzrp.png',
+  cover: 'http://lhh.codeape.site/img/dog4.jpeg',
   enemyArr: [],
   disable: true
 }
