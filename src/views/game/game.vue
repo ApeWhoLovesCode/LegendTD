@@ -8,12 +8,13 @@ import useBaseData from './tools/baseData';
 import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
-import imgSource from '@/dataSource/imgSource';
 import useTower from './tools/tower';
+import imgSource from '@/dataSource/imgSource';
 
-import Loading from '@/components/loading.vue'
-import GameNavBar from '@/components/gameNavBar.vue'
-import Skill from '@/components/skill.vue'
+import GameNavBar from './components/gameNavBar.vue'
+import StartAndEnd from './components/startAndEnd.vue';
+import TowerBuild from './components/towerBuild.vue';
+import Skill from './components/skill.vue'
 
 import { limitRange, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
@@ -30,6 +31,10 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
+
+const emit = defineEmits<{
+  (event: 'reStart'): void
+}>()
 
 // 全局资源
 const source = useSourceStore()
@@ -53,49 +58,6 @@ const terminalStyle = computed(() => {
     const {x, y} = baseDataState.terminal
     return {left: transRatio(x) + size / 2 + 'px', top: transRatio(y) - size / 2 + 'px'}
   }
-})
-/** 塔防容器的样式 */
-const buildingStyle = computed(() => {
-  const {left, top} = towerState.building
-  const size = transRatio(gameConfigState.size)
-  return {left: transRatio(left) + size + 'px', top: transRatio(top) + size + 'px'}
-})
-/** 塔防容器的类名 */
-const buildingClass = computed(() => {
-  const {left, top} = towerState.building
-  const {x_num, y_num} = baseDataState.gridInfo
-  const size = gameConfigState.size
-  const _x_num = Math.round(left / size), _y_num = Math.round(top / size)
-  let className = ''
-  if(_y_num >= y_num - 3) {
-    className += 'tower-wrap-bottom '
-  }
-  // 点击在左右两边的情况
-  if(_x_num <= 1 || _x_num >= x_num - 2) {
-    className += 'tower-wrap-row '
-    if(_y_num >= 2) className += 'tower-wrap-row-top '
-    if(_x_num <= 1) className += 'tower-wrap-left'
-    else className += 'tower-wrap-right'
-  }
-  return className
-})
-/** 攻击范围的样式 */
-const buildingScopeStyle = computed(() => {
-  const size = transRatio(gameConfigState.size)
-  const {left, top, r} = towerState.buildingScope
-  return {
-    left: transRatio(left) + size + size / 2 + 'px',
-    top: transRatio(top) + size + size / 2 + 'px',
-    width: transRatio(r) * 2 + 'px',
-    height: transRatio(r) * 2 + 'px'
-  }
-})
-/** 售卖防御塔按钮的样式 */
-const saleTowerStyle = computed(() => {
-  const {y_num} = baseDataState.gridInfo
-  const size = gameConfigState.size
-  const _y_num = Math.round(towerState.buildingScope.top / size)
-  return _y_num >= y_num / 2 ? { top: 0 } : { bottom: 0 }
 })
 /** 是否是无限火力模式 */
 const isInfinite = computed(() => {
@@ -359,8 +321,8 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   // 设置敌人的初始位置
-  const id = Date.now()
-  const enemyItem: EnemyStateType = {...item, id: item.audioKey + id}
+  const id = item.audioKey + Date.now()
+  const enemyItem: EnemyStateType = {...item, id}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   enemyItem.x = x - w / 4
@@ -911,7 +873,6 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   const bullet: SpecialBulletItem = {
     id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
-  // 清除毒液子弹
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
@@ -1024,7 +985,7 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
 
 /** 开始游戏 */
 function beginGame() {
-  // audioLevelRef.value?.play()
+  audioLevelRef.value?.play()
   playBgAudio()
   gameConfigState.isGameBeginMask = false
   baseDataState.isPause = false
@@ -1083,7 +1044,7 @@ function drawFloorTile() {
 function startMoneyTimer() {
   keepInterval.set(KeepIntervalKey.startMoneyTimer, () => {
     gameSkillState.proMoney.isShow = true
-    // playAudio('ma-qifei', 'End')
+    playAudio('create-money', 'End')
   }, gameSkillState.proMoney.interval, true)
 }
 /** 点击了生产出来的金钱 */
@@ -1095,7 +1056,6 @@ function proMoneyClick() {
 
 /** 播放背景音乐 */
 function playBgAudio() {
-  return
   baseDataState.isPlayBgAudio = !baseDataState.isPlayBgAudio
   if(baseDataState.isPlayBgAudio) {
     audioBgRef.value!.volume = 0.65
@@ -1139,12 +1099,6 @@ function transRatio(v: number) {
 
 <template>
   <div id="protect-horse">
-    <div id="audio-wrap">
-      <audio ref="audioBgRef" :src="audioState.audioList['pvz-morning']" loop></audio>
-      <audio ref="audioLevelRef" :src="audioState.audioList['pvz-comein']"></audio>
-      <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
-      <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
-    </div>
     <div class="game-wrap" :style="{'--size': gameConfigState.size / source.ratio + 'px'}">
       <div class="canvas-wrap" @click="hiddenTowerOperation">
         <!-- 游戏顶部信息展示区域 -->
@@ -1168,32 +1122,14 @@ function transRatio(v: number) {
           }"
           @click="getMouse($event)"
         ></canvas>
-        <!-- 塔防的容器 -->
-        <div v-show="towerState.building.isShow" class="building-wrap" :style="buildingStyle">
-          <img :src="imgSource.BuildingImg" alt="" class="add-icon">
-          <div v-if="source.towerSource" class="tower-wrap" :class="buildingClass">
-            <div 
-              v-for="(tname, index) in userInfoStore.towerSelectList" 
-              class="tower" 
-              :class="{
-                'tower-no-money': baseDataState.money < source.towerSource[tname].money,
-                'tower-mobile': source.isMobile
-              }" 
-              :key="index"
-              @click="buildTower(tname)"
-            >
-              <img :src="source.towerSource[tname].cover || source.towerSource[tname].img" alt="" class="tower-icon">
-              <div class="tower-info">￥{{source.towerSource[tname].money}}</div>
-            </div>
-          </div>
-        </div>
-        <!-- 塔防的攻击范围 -->
-        <div v-show="towerState.buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
-          <span class="sale-wrap" @click="saleTower(towerState.buildingScope.towerIndex)" :style="saleTowerStyle">
-            <span class="iconfont icon-ashbin"></span>
-            <span class="sale-num">{{ towerList[towerState.buildingScope.towerIndex]?.saleMoney }}</span>
-          </span>
-        </div>
+        <TowerBuild 
+          :tower-state="towerState"
+          :tower-list="towerList"
+          :base-data-state="baseDataState"
+          :size="gameConfigState.size"
+          @build-tower="buildTower"
+          @sale-tower="saleTower"
+        />
         <!-- 游戏底部技能区 -->
         <Skill :skillList="gameSkillState.skillList" :money="baseDataState.money" :isPause="baseDataState.isPause" @handleSkill="handleSkill" />
         <!-- 终点 -->
@@ -1202,23 +1138,20 @@ function transRatio(v: number) {
           <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
           <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="imgSource.SunImg" alt="" @click="proMoneyClick">
         </div>
-        <!-- 游戏开始遮罩层 -->
-        <div v-if="gameConfigState.isGameBeginMask" class="game-begin mask">
-          <div class="info">
-            <Loading v-if="!gameConfigState.loadingDone" />
-            <div v-else class="begin-wrap">
-              <span class="icon-wrap" @click="beginGame">
-                <span class="iconfont" :class="baseDataState.isPause ? 'icon-kaishi1' : 'icon-24gf-pause2'"></span>
-              </span>
-              <span class="begin-text">开始游戏</span>
-            </div>
-          </div>
-        </div>
-        <!-- 游戏结束遮罩层 -->
-        <div v-if="baseDataState.isGameOver" class="gameover-wrap mask">
-          <div class="info">你成功抵御了{{baseDataState.level}}波僵尸</div>
-        </div>
+        <!-- 游戏开始和结束遮罩层 -->
+        <StartAndEnd 
+          :base-data-state="baseDataState" 
+          :game-config-state="gameConfigState" 
+          @begin-game="beginGame"
+          @re-start="emit('reStart')"
+        />
       </div>
+    </div>
+    <div id="audio-wrap">
+      <audio ref="audioBgRef" :src="audioState.audioList['pvz-morning']" loop></audio>
+      <audio ref="audioLevelRef" :src="audioState.audioList['pvz-comein']"></audio>
+      <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
+      <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
     <div class="screenMask"></div>
   </div>
@@ -1240,116 +1173,6 @@ function transRatio(v: number) {
       background-image: radial-gradient(circle 500px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
       border-radius: 4px;
       overflow: hidden;
-      .building-wrap {
-        position: absolute;
-        user-select: none;
-        .add-icon {
-          width: @size;
-          height: @size;
-        }
-        .tower-wrap {
-          position: absolute;
-          top: calc(@size + 8px);
-          left: calc(50% - (@size * 2 + @size / 2));
-          display: grid;
-          gap: 10px;
-          grid-template-columns: repeat(4, @size);
-          grid-template-rows: repeat(2, @size);
-          background: rgba(255, 255, 255, .4);
-          border-radius: 16px;
-          padding: 10px;
-          z-index: 99;
-          @towerInfoSize: calc(@size * 0.26);
-          .tower {
-            position: relative;
-            width: @size;
-            height: @size;
-            border-radius: 8px;
-            border: 2px solid #fff;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-            .tower-icon {
-              width: 100%;
-              height: 100%;
-            }
-            .tower-info {
-              position: absolute;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              text-align: center;
-              font-size: @towerInfoSize;
-              color: #fff;
-              background: rgba(0, 0, 0, .4);
-            }
-          }
-          .tower-mobile {
-            border-radius: 2px;
-            .tower-info {
-              bottom: calc(-1 * @towerInfoSize);
-            }
-          }
-          .tower-no-money {
-            opacity: .3;
-          }
-        }
-        .tower-wrap-row {
-          grid-template-rows: repeat(4, @size);
-          grid-template-columns: repeat(2, @size);
-          grid-auto-flow: column;
-          width: auto;
-          .tower {
-            margin-bottom: 0;
-            margin-right: 10px;
-          }
-        }
-        .tower-wrap-row-top {
-          top: calc(50% - (@size * 2 + @size / 2));
-        }
-        .tower-wrap-left {
-          left: calc(@size + 8px);
-        }
-        .tower-wrap-right {
-          right: calc(@size + 8px);
-          left: auto;
-        }
-        .tower-wrap-bottom {
-          bottom: calc(@size + 8px);
-          top: auto;
-        }
-      }
-      .building-scope {
-        position: absolute;
-        z-index: 1;
-        transform: translate(-50%, -50%);
-        box-sizing: border-box;
-        border: 2px solid #3b9bdf;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, .25);
-        .sale-wrap {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          // background: rgba(255, 255, 255, 0.4);
-          background: #3b9bdf;
-          color: #fff;
-          border-radius: 8px;
-          padding: 0 5px;
-          cursor: pointer;
-          &:hover {
-            opacity: .75;
-          }
-          .iconfont {
-            font-size: 20px;
-          }
-          .sale-num {
-            font-size: 14px;
-          }
-        }
-      }
       .terminal {
         position: absolute;
         user-select: none;
@@ -1378,75 +1201,6 @@ function transRatio(v: number) {
           height: calc(@size * 1.2);
           cursor: pointer;
         }
-      }
-      .gameover-wrap {
-        .info {
-          font-size: 36px;
-          font-weight: bold;
-          color: #fff;
-        }
-      }
-      .game-begin {
-        .info {
-          color: #fff;
-          .begin-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            .icon-wrap {
-              display: inline-block;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              width: calc(@size * 3);
-              height: calc(@size * 3);
-              border-radius: 50%;
-              background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
-              cursor: pointer;
-              user-select: none;
-              &:hover {
-                opacity: .95;
-                box-shadow: 0 0 16px 4px #3393e7;
-              }
-              .iconfont {
-                color: #fff;
-                font-size: calc(@size * 1.6);
-                animation: pulse 2s linear infinite;
-              }
-              @keyframes pulse {
-                70% {
-                  transform: scale(1.2);
-                  opacity: 0.4;
-                }
-                100% {
-                  transform: scale(1.2);
-                  opacity: 0;
-                }
-              }
-            }
-            .begin-text {
-              font-size: 36px;
-              color: #fff;
-              font-weight: bold;
-              margin-top: 16px;
-              letter-spacing: 8px;
-              margin-left: 8px;
-              user-select: none;
-            }
-          }
-        }
-      }
-      .mask {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, .4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
       }
     }
   }

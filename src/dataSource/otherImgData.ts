@@ -1,6 +1,6 @@
 import { requireCDN } from "@/utils/handleDom"
 
-/** 地板的图片数据 */
+/** 用于canvas的图片数据 */
 export default {
   /** 地板 */
   floor: requireCDN('floor-tile.png'),

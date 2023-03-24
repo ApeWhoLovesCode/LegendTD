@@ -25,4 +25,6 @@ export default {
   'delaiwen-choose': requireCDN('delaiwen-choose.mp3', prefix),
   'huonan-choose': requireCDN('huonan-choose.mp3', prefix),
   'twitch-choose': requireCDN('twitch-choose.mp3', prefix),
+  'create-money': requireCDN('coin-2s.mp3', prefix),
+  'skill-coin': requireCDN('coin-4s.mp3', prefix),
 } as {[key in string]: string}

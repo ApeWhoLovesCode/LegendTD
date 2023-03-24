@@ -559,8 +559,8 @@ function setEnemy(i: number) {
   item.hp.size *= size
   const {audioKey, w, h} = item
   // 设置敌人的初始位置
-  const id = Date.now()
-  const enemyItem: EnemyStateType = {...item, id: audioKey + id}
+  const id = item.audioKey + Date.now()
+  const enemyItem: EnemyStateType = {...item, id}
   const {x, y} = state.mapGridInfoItem
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
