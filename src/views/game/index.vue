@@ -85,6 +85,13 @@ onMounted(() => {
     text-align: center;
     user-select: none;
     animation: fall-animation .8s ease forwards;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: 8px;
+    &:hover {
+      background-color: rgba(255, 255, 255, .2);
+
+    }
   }
   @keyframes fall-animation {
     0% {

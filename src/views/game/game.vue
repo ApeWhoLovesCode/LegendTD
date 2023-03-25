@@ -328,7 +328,7 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   // 设置敌人的初始位置
-  const id = item.audioKey + Date.now()
+  const id = item.audioKey + randomStr('enemy')
   const enemyItem: EnemyStateType = {...item, id}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
@@ -393,7 +393,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 function callEnemy(newEnemy: EnemyType, i: number) {
   const { curFloorI, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
-  const id = Date.now() + i
+  const id = randomStr(`callenemy-${i}`)
   const size = gameConfigState.size
   newEnemy.w *= size
   newEnemy.h *= size
@@ -420,7 +420,6 @@ function removeEnemy(e_idList: string[]) {
   // 这里会有执行时机的问题
   try {
     for(const e_i of eiList) {
-      if(!enemyList[e_i]) return
       const e_id = enemyList[e_i].id
       keepInterval.delete(`${KeepIntervalKey.slow}-${e_id}`) // 清除减速持续时间定时器
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`) // 清除中毒持续时间定时器
@@ -877,15 +876,16 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
 /** 特殊子弹击中目标 */
 function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   const bw = t.bSize.w * 5, bh = t.bSize.h * 5
-  const bId = randomStr('twitch')
+  const bId = randomStr('twitch-bid')
   const bullet: SpecialBulletItem = {
     id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
+  specialBullets.twitch.push(bullet)
+  console.log('t.poison!.bulletTime: ', t.poison!.bulletTime);
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
-  }, t.poison?.bulletTime, true)
-  specialBullets.twitch.push(bullet)
+  }, t.poison!.bulletTime, true)
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -931,7 +931,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
     keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, t.poison!.time)
+    }, t.poison!.time, true)
   }
 }
 

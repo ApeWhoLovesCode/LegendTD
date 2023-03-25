@@ -43,6 +43,7 @@ const getRankList = async () => {
   >
     <ElTable 
       :data="state.rankList"
+      class="rankListTable"
       stripe
       :style="{width: '100%'}"
     >
@@ -71,6 +72,9 @@ const getRankList = async () => {
 </template>
 
 <style lang='less' scoped>
+.rankListTable {
+  height: 60vh;
+}
 .paginationWrap {
   margin-top: 10px;
   display: flex;

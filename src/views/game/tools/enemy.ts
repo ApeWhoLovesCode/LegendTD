@@ -26,7 +26,6 @@ export default function useEnemy() {
       keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
         const newE_i = enemyList.findIndex(e => e.id === e_id)
         if(enemyList[newE_i]) {
-          console.log('--恢复--');
           enemyList[newE_i].curSpeed = enemyList[newE_i].speed
           enemyList[newE_i].slowType = void 0
         }
