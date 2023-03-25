@@ -55,9 +55,10 @@ onMounted(() => {
     <div class="title" @click="$router.push('/')">{{state.title}}</div>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
+      @re-start="reStart"
     />
     <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" />
-    <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @reStart="reStart" />
+    <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @re-start="reStart" />
   </div>
 </template>
 

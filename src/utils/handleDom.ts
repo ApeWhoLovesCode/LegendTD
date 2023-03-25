@@ -1,5 +1,3 @@
-import { CDN_URL } from "@/config";
-
 /** 处理style的px */
 export const handleStylePx = (v: number | string) => {
   return typeof v === 'number' ? v + 'px' : v;
@@ -24,10 +22,3 @@ export const changeEvent = (event: MouseEvent | TouchEvent) => {
     (event as MouseEvent)
   );
 };
-
-export const requireCDN = (url: string, prefix: string = 'legendTD') => {
-  return `${CDN_URL}/${prefix ? prefix + '/' : ''}${url}`
-}
-
-/** 加载图片 */
-export const requireImg = (url: string) => new URL(`../assets/img/${url}`, import.meta.url).href

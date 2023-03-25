@@ -1,4 +1,4 @@
-import { requireCDN } from "@/utils/handleDom";
+import { requireCDN } from "@/utils/handleImg";
 
 export default {
   BuildingImg: requireCDN('add.png'),

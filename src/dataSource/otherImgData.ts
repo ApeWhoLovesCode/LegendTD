@@ -1,4 +1,4 @@
-import { requireCDN } from "@/utils/handleDom"
+import { requireCDN } from "@/utils/handleImg"
 
 /** 用于canvas的图片数据 */
 export default {
@@ -10,6 +10,8 @@ export default {
   snow: requireCDN('snow.png'),
   /** 中毒减速 */
   snowPoison: requireCDN('snow-poison.png'),
+  /** 眩晕 */
+  snowVertigo: requireCDN('snow-vertigo1.png'),
   /** 中毒 */
   poison: requireCDN('poison.png'),
 }

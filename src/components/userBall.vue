@@ -10,7 +10,7 @@ import SelectLevelPop from './selectLevelPop.vue'
 import { useSourceStore } from '@/stores/source';
 import SelectTowerPop from './selectTowerPop.vue';
 import Circle from './circle';
-import { requireCDN } from '@/utils/handleDom';
+import { requireCDN } from '@/utils/handleImg';
 
 const props = withDefaults(defineProps<{itemsNum?: number}>(), {
   itemsNum: 3

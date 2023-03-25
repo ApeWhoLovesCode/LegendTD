@@ -15,8 +15,8 @@ export default defineConfig({
     port: 16666,
     proxy: {
       '/api':{
-        // target: 'http://codeape.site:3030',
-        target: 'http://localhost:3030',
+        target: 'http://codeape.site:3030',
+        // target: 'http://localhost:3030',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

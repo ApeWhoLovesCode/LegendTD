@@ -19,16 +19,20 @@ export default function useEnemy() {
     const { speed, curSpeed } = enemyList[e_i]
     // 当前已经被眩晕了不能减速了
     if(curSpeed === 0) return
-    // 新增或重置减速定时器
-    keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
-      const newE_i = enemyList.findIndex(e => e.id === e_id)
-      if(enemyList[newE_i]) {
-        enemyList[newE_i].curSpeed = enemyList[newE_i].speed
-        enemyList[newE_i].slowType = void 0
-      }
-    }, t_slow.time, true)
-    // 减速敌人
     const newSpeed = t_slow.num ? speed / t_slow.num : t_slow.num
+    // 防止艾希覆盖老鼠
+    if(newSpeed <= curSpeed) {
+      // 重新设置恢复速度定时器
+      keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
+        const newE_i = enemyList.findIndex(e => e.id === e_id)
+        if(enemyList[newE_i]) {
+          console.log('--恢复--');
+          enemyList[newE_i].curSpeed = enemyList[newE_i].speed
+          enemyList[newE_i].slowType = void 0
+        }
+      }, t_slow.time, true)
+    }
+    // 减速敌人
     if(newSpeed < curSpeed) {
       enemyList[e_i].curSpeed = newSpeed
       enemyList[e_i].slowType = t_slow.type

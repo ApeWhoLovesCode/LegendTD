@@ -140,7 +140,7 @@ watch(() => baseDataState.level, (val) => {
       if((val / 10) % 1 === 0) {
         playAudio('ma-pvz', 'End')
       }
-      baseDataState.money += (baseDataState.level + 1) * gameSkillState.proMoney.money
+      baseDataState.money += (baseDataState.level + 1) * Math.round(gameSkillState.proMoney.money / 2)
       makeEnemy()
       audioLevelRef.value?.play()
     }
@@ -274,10 +274,17 @@ function drawEnemy(index: number) {
       ctx.drawImage(source.othOnloadImg.snowPoison!, x + w / 4, y + h / 3, w / 2, w / 2)
       ctx.restore()
     } else {
-      ctx.save()
-      ctx.globalAlpha = 0.9
-      ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
-      ctx.restore()
+      if(curSpeed === 0) {
+        ctx.save()
+        ctx.globalAlpha = 0.9
+        ctx.drawImage(source.othOnloadImg.snowVertigo!, x + w / 4, y + h / 3, w / 2, w / 2)
+        ctx.restore()
+      } else {
+        ctx.save()
+        ctx.globalAlpha = 0.9
+        ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
+        ctx.restore()
+      }
     }
   }
   // 画中毒效果
@@ -361,11 +368,12 @@ function setEnemySkill(enemyName: string, e_id: string) {
         case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
       }
       enemyList.push(callEnemy(newEnemy, i))
+      volume = 0.7
     }
   } else if(enemyName === '坤坤') {
     const newHp = hp.cur + 200
     enemyList[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
-    volume = 0.7
+    volume = 0.5
   }
   playDomAudio({id, volume})
 }
@@ -998,9 +1006,9 @@ function initZoomData() {
   let p = source.ratio
   if(source.isMobile) {
     const {w, h} = gameConfigState.defaultCanvas
-    const wp = document.documentElement.clientWidth / (h + 80)
-    const hp = document.documentElement.clientHeight / (w + 80)
-    p *= Math.floor(Math.min(wp, hp) * 10) / 10
+    const wp = document.documentElement.clientWidth / (h + 150)
+    const hp = document.documentElement.clientHeight / (w + 100)
+    p *= Math.floor(Math.min(wp, hp) * 100) / 100
   }
   gameConfigState.size *= p
   gameConfigState.defaultCanvas.w *= p
@@ -1058,7 +1066,7 @@ function proMoneyClick() {
 function playBgAudio() {
   baseDataState.isPlayBgAudio = !baseDataState.isPlayBgAudio
   if(baseDataState.isPlayBgAudio) {
-    audioBgRef.value!.volume = 0.65
+    audioBgRef.value!.volume = 0.4
     audioBgRef.value?.play()
   }
   else audioBgRef.value?.pause()
@@ -1108,8 +1116,9 @@ function transRatio(v: number) {
           :level="baseDataState.level"
           :isPause="baseDataState.isPause"
           :isPlayBgAudio="baseDataState.isPlayBgAudio"
-          @gamePause="gamePause"
-          @playBgAudio="playBgAudio"
+          @game-pause="gamePause"
+          @play-bg-audio="playBgAudio"
+          @re-start="emit('reStart')"
         />
         <!-- 游戏区域 -->
         <canvas 
@@ -1153,7 +1162,7 @@ function transRatio(v: number) {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <div class="screenMask"></div>
+    <!-- <div class="screenMask"></div> -->
   </div>
 </template>
 
@@ -1170,7 +1179,7 @@ function transRatio(v: number) {
     .canvas-wrap {
       position: relative;
       padding: @size;
-      background-image: radial-gradient(circle 500px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+      background-image: radial-gradient(circle calc(@size * 10) at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
       border-radius: 4px;
       overflow: hidden;
       .terminal {
@@ -1185,8 +1194,9 @@ function transRatio(v: number) {
           font-weight: bold;
           text-align: center;
           &-mobile {
-            top: 0;
-            left: calc(@size * 0.2);
+            font-size: calc(@size * 0.4);
+            top: calc(@size * 0.1);
+            left: calc(@size * 0.25);
           }
         }
         .terminal-icon {
@@ -1196,7 +1206,7 @@ function transRatio(v: number) {
         .money-icon {
           position: absolute;
           top: 0;
-          left: 0;
+          right: 0;
           width: calc(@size * 1.2);
           height: calc(@size * 1.2);
           cursor: pointer;

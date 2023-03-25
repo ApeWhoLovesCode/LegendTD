@@ -3,7 +3,7 @@
     <!-- 游戏底部技能区 -->
     <div class="skill-wrap">
       <span v-for="(item, index) in skillList" :key="index">
-        <ElTooltip effect="dark" placement="top">
+        <ElTooltip effect="dark" :placement="source.isMobile ? 'right' : 'top'">
           <template #content>
             <div class="com-skill-tooltip">
               <div class="skill-name">{{item.name}}</div>
@@ -22,13 +22,15 @@
     <!-- 技能: 肉弹冲击 -->
     <div v-if="skillList[0].isShow" class="skill-boom"></div>
     <!-- 技能: 肉弹冲击 -->
-    <img v-if="skillList[1].isShow" class="skill-rush" src="../assets/img/meat-rush.png" alt="">
+    <img v-if="skillList[1].isShow" class="skill-rush" :src="requireCDN('meat-rush.png')" alt="">
   </div>
 </template>
 
 <script setup lang="ts">
 import { SkillType } from "@/dataSource/skillData"
 import { ElTooltip } from "element-plus";
+import { requireCDN } from '@/utils/handleImg'
+import { useSourceStore } from "@/stores/source";
 
 const props = defineProps<{
   skillList: SkillType[]
@@ -39,6 +41,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'handleSkill', index: number): void
 }>()
+
+const source = useSourceStore()
 
 const isDisable = (money: number) => {
   return props.money < money || props.isPause
@@ -111,7 +115,7 @@ const isDisable = (money: number) => {
     transform: translate(-50%, -50%);
     width: calc(@size * 8);
     height: calc(@size * 8);
-    background: url(../assets/img/boom.png) no-repeat;
+    background: url(http://lhh.codeape.site/legendTD/boom.png) no-repeat;
     background-size: @boomSize 100%;
     background-position: 0 0;
     animation: skill-boom 1.5s steps(10) forwards;

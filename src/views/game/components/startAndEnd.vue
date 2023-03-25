@@ -10,6 +10,7 @@ const {gameConfigState, baseDataState} = defineProps<{
 const emit = defineEmits<{
   (event: 'beginGame'): void
   (event: 'reStart'): void
+  (event: 'reUploadScore'): void
 }>()
 
 </script>
@@ -31,6 +32,7 @@ const emit = defineEmits<{
     <!-- 游戏结束遮罩层 -->
     <div class="info">你成功抵御了{{baseDataState.level}}波僵尸</div>
     <div class="restart-btn" @click="emit('reStart')">重新开始</div>
+    <!-- <div class="restart-btn restart-btn-2" @click="emit('reUploadScore')">重新上传成绩</div> -->
   </div>
 </template>
 
@@ -97,14 +99,20 @@ const emit = defineEmits<{
   }
   .restart-btn {
     margin-top: calc(@size * 0.5);
-    font-size: calc(@size * 0.8);
     background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
     color: #fff;
     border-radius: calc(@size * 0.4);
+    font-size: calc(@size * 0.8);
     padding: calc(@size * 0.2) calc(@size * 0.6);
     &:hover {
       cursor: pointer;
       opacity: .9;
+    }
+    &-2 {
+      margin-left: 12px;
+      font-size: calc(@size * 0.4);
+      padding: calc(@size * 0.1) calc(@size * 0.3);
+      border-radius: calc(@size * 0.2);
     }
   }
 }

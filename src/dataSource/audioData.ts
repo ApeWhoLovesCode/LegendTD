@@ -1,4 +1,4 @@
-import { requireCDN } from "@/utils/handleDom";
+import { requireCDN } from "@/utils/handleImg";
 const prefix = 'audio';
 /**
  * 音频资源

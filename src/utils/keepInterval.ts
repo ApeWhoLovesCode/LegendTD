@@ -46,13 +46,15 @@ class KeepInterval {
     timeItem.end = Date.now()
     timeItem.timeout = setTimeout(() => { 
       timeItem.cur = Date.now()
+      timeItem.fn()
       if(!isTimeOut) {
         timeItem.interval = setInterval(() => { 
           timeItem.cur = Date.now()
           timeItem.fn() 
         }, timeItem.intervalTime)
+      } else {
+        this.delete(key)
       }
-      timeItem.fn()
     }, timeItem.remainTime)
   }
   /** 暂停计时器 */

@@ -1,11 +1,13 @@
 <template>
   <div class="com-game-navbar">
     <div class="left">
-      <span class="icon-wrap">
-        <span class="iconfont icon-jinbi1"></span>
-      </span>
-      <span class="money">{{money}}</span>
-      <span v-if="addMoney.num" class="add-money">{{addMoney.num}}</span>
+      <div class="left-area">
+        <span class="icon-wrap">
+          <span class="iconfont icon-jinbi1"></span>
+        </span>
+        <span class="money">{{money}}</span>
+        <span v-if="addMoney.num" class="add-money">{{addMoney.num}}</span>
+      </div>
     </div>
     <div class="center">
       <span class="level fff-color">{{level + 1}}</span> 
@@ -14,17 +16,22 @@
       波僵尸
     </div>
     <div class="right">
-      <el-tooltip effect="dark" content="开始 / 暂停游戏" placement="bottom">
+      <el-tooltip effect="dark" content="开始 / 暂停游戏" :placement="source.isMobile ? 'left' : 'bottom'">
         <span class="icon-wrap icon-hover" @click="emit('gamePause')">
           <span class="iconfont" :class="isPause ? 'icon-kaishi1' : 'icon-24gf-pause2'"></span>
         </span>
       </el-tooltip>
-      <el-tooltip effect="dark" content="播放 / 关闭音乐" placement="bottom">
+      <el-tooltip effect="dark" content="播放 / 关闭音乐" :placement="source.isMobile ? 'left' : 'bottom'">
         <span class="icon-wrap icon-hover" @click="emit('playBgAudio')">
           <span class="iconfont" :class="isPlayBgAudio ? 'icon-mn_shengyin_fill' : 'icon-mn_shengyinwu_fill'"></span>
         </span>
       </el-tooltip>
-      <el-tooltip effect="dark" content="其他工具（待开发）" placement="bottom">
+      <el-tooltip effect="dark" content="重新开始" :placement="source.isMobile ? 'left' : 'bottom'">
+        <span class="icon-wrap icon-hover" @click="reStart">
+          <span class="iconfont icon-jurassic_restart" ></span>
+        </span>
+      </el-tooltip>
+      <el-tooltip effect="dark" content="其他工具（待开发）" :placement="source.isMobile ? 'left' : 'bottom'">
         <span class="icon-wrap icon-hover">
           <span class="iconfont icon-xuanxiangka_fuzhi"></span>
         </span>
@@ -34,6 +41,9 @@
 </template>
 
 <script setup lang="ts">
+import { useSourceStore } from '@/stores/source';
+import { ElTooltip, ElMessageBox } from 'element-plus';
+
 defineProps({
   money: {
     type: Number,
@@ -59,7 +69,24 @@ defineProps({
 const emit = defineEmits<{
   (event: 'gamePause'): void
   (event: 'playBgAudio'): void
+  (event: 'reStart'): void
 }>()
+
+const source = useSourceStore()
+
+const reStart = () => {
+  ElMessageBox.confirm(
+    '当前的游戏数据将清空，您确定要重新开始游戏吗？',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    emit('reStart')
+  })
+}
+
 </script>
 
 <style lang='less' scoped>
@@ -83,54 +110,57 @@ const emit = defineEmits<{
   box-shadow: -7px 4px 14px #1781c2;
   user-select: none;
   .left {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    .icon-wrap {
-      width: @smallSize;
-      height: @smallSize;
+    flex: 1;
+    &-area {
+      position: relative;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: linear-gradient(to left top, #fffc00, #fefdee);
-      border-radius: @size;
-      border: 1px solid #d8b356;
-      .iconfont {
+      width: fit-content;
+      .icon-wrap {
+        width: @smallSize;
+        height: @smallSize;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(to left top, #fffc00, #fefdee);
+        border-radius: @size;
+        border: 1px solid #d8b356;
+        .iconfont {
+          font-size: @fontSize;
+          line-height: @fontSize;
+          color: #c87a1a;
+        }
+      }
+      .money {
+        margin-left: 10px;
         font-size: @fontSize;
-        line-height: @fontSize;
-        color: #c87a1a;
+        font-weight: bold;
+        color: @theme3;
       }
-    }
-    .money {
-      margin-left: 10px;
-      font-size: @fontSize;
-      font-weight: bold;
-      color: @theme3;
-    }
-    .add-money {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: calc(@fontSize * 0.9);
-      color: @theme3;
-      font-weight: bold;
-      margin-left: 6px;
-      opacity: 0;
-      animation: add-money 0.6s ease;
-    }
-    @keyframes add-money {
-      0% {
-        right: calc(@size * -0.6);
+      .add-money {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: calc(@fontSize * 0.9);
+        color: @theme3;
+        font-weight: bold;
+        margin-left: 6px;
         opacity: 0;
+        animation: add-money 0.6s ease;
       }
-      50% {
-        right: calc(@size * -0.7);
-        opacity: 1;
-      }
-      100% {
-        right: calc(@size * -0.8);
-        opacity: 0;
+      @keyframes add-money {
+        0% {
+          right: calc(@size * -0.6);
+          opacity: 0;
+        }
+        50% {
+          right: calc(@size * -0.7);
+          opacity: 1;
+        }
+        100% {
+          right: calc(@size * -0.8);
+          opacity: 0;
+        }
       }
     }
   }
@@ -162,9 +192,10 @@ const emit = defineEmits<{
     }
   } 
   .right {
+    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     .icon-wrap {
       width: @smallSize;
       height: @smallSize;

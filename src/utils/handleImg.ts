@@ -1,3 +1,4 @@
+import { CDN_URL } from '@/config';
 import SuperGif from 'libgif'
 
 // CanvasImageSource
@@ -48,3 +49,11 @@ export function gifToStaticImg(target: {type: string, imgSource: string}) {
     }
   })
 }
+
+/** CDN加载图片 */
+export const requireCDN = (url: string, prefix: string = 'legendTD') => {
+  return `${CDN_URL}/${prefix ? prefix + '/' : ''}${url}`
+}
+
+/** 加载图片 */
+export const requireImg = (url: string) => new URL(`../assets/img/${url}`, import.meta.url).href
