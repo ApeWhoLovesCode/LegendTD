@@ -20,17 +20,17 @@ const emit = defineEmits<{
   (event: 'reStart'): void;
 }>()
 
+const source = useSourceStore()
+const userInfoStore = useUserInfoStore()
+
 const status = ref<-1 | 0 | 1>(window.innerHeight > window.innerWidth ? -1 : 1)
 const userInfoVisible = ref(false)
 const rankListVisible = ref(false)
 const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
 const selectTowerVisible = ref(false)
-const isCircleProgress = ref(true)
+const isCircleProgress = ref(source.progress < 100)
 const ballTimer = ref<NodeJS.Timer>()
-
-const source = useSourceStore()
-const userInfoStore = useUserInfoStore()
 
 const floatingBallStyle = computed(() => {
   let distance = source.isMobile ? '1rem' : '50px'

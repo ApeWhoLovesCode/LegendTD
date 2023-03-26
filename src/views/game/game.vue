@@ -152,29 +152,7 @@ watch(() => enemyList, (enemyList) => {
   if(!enemyList.length && allEnemyIn.value && baseDataState.hp) {
     nextTick(() => { baseDataState.level++ })
   }
-  for(let t_i in towerList) {
-    const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
-    // 进入攻击范围，开始射击 
-    if(eIdList.length) {
-      if(towerList[t_i].name === 'huonan') {
-        towerList[t_i].targetIdList = eIdList
-      } else {
-        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
-      }
-    } else {
-      if(towerList[t_i].targetIdList) {
-        towerList[t_i].targetIdList = []
-      }
-    }
-  }
-  for(const bItem of specialBullets.twitch) {
-    // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
-    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
-    if(eIdList.length) {
-      triggerPoisonFun(eIdList, 'twitch')
-    }
-  }
-}, { deep: true }) // 这里deep可能会无效
+}, { deep: true })
 
 /** ----- 入口 ----- */
 onMounted(() => {
@@ -206,6 +184,7 @@ async function init() {
   await waitTime(800)
   gameConfigState.loadingDone = true
   startAnimation()
+  // testBuildTowers()
 }
 
 /** 开启动画绘画 */
@@ -234,8 +213,36 @@ function startDraw() {
     if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
     else enemyList[index].imgIndex++
   }
+  checkEnemyAndTower()
   handleBulletMove()
   drawSpecialBullets()
+}
+
+// 处理敌人的移动和塔防的碰撞
+function checkEnemyAndTower() {
+  if(!enemyList.length) return
+  for(let t_i in towerList) {
+    const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
+    // 进入攻击范围，开始射击 
+    if(eIdList.length) {
+      if(towerList[t_i].name === 'huonan') {
+        towerList[t_i].targetIdList = eIdList
+      } else {
+        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
+      }
+    } else {
+      if(towerList[t_i].targetIdList) {
+        towerList[t_i].targetIdList = []
+      }
+    }
+  }
+  for(const bItem of specialBullets.twitch) {
+    // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
+    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
+    if(eIdList.length) {
+      triggerPoisonFun(eIdList, 'twitch')
+    }
+  }
 }
 
 /** 按间隔时间生成敌人 */
@@ -543,12 +550,21 @@ function getMouse(e: MouseEvent) {
   towerState.building.left = left
   towerState.building.top = top
 }
+// 测试建造塔防
+// function testBuildTowers() {
+//   testBuildData.forEach(item => {
+//     buildTower(item.tname, item)
+//   })
+// }
 /** 点击建造塔防 */
-function buildTower(tname: TowerName) {
+function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(baseDataState.money < money) return
   baseDataState.money -= money
-  const {left: x, top: y} = towerState.building
+  let {left: x, top: y} = towerState.building
+  if(p) {
+    x = p.x, y = p.y
+  }
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
@@ -579,6 +595,7 @@ function buildTower(tname: TowerName) {
   baseDataState.gridInfo.arr[y / size][x / size] = 't' + tname
   drawTower(tower)
   createAudio(`${audioKey}-choose`, tower.id)
+  if(p) return
   playDomAudio({id: tower.id})
 }
 /** 画塔防 */
@@ -881,7 +898,6 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
     id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
   specialBullets.twitch.push(bullet)
-  console.log('t.poison!.bulletTime: ', t.poison!.bulletTime);
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)

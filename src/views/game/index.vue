@@ -10,16 +10,18 @@ import _ from 'lodash'
 import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
 import UserBall from '@/components/userBall.vue'
+import { requireCDN } from '@/utils/handleImg';
 
-const state = reactive<IndexType>({
-  title: '塔防联盟',
-  isProgressBar: true,
-  // 控制游戏区域的显示与隐藏
-  isProtectTheHorse: false,
-})
 const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
+
+const state = reactive<IndexType>({
+  title: '塔防联盟',
+  isProgressBar: source.progress < 100,
+  // 控制游戏区域的显示与隐藏
+  isProtectTheHorse: false,
+})
 
 /** 初始化加载图片等内容 */
 async function init() {
@@ -52,7 +54,10 @@ onMounted(() => {
 
 <template>
   <div id='protect-horse-index'>
-    <div class="title" @click="$router.push('/')">{{state.title}}</div>
+    <div class="title" @click="$router.push('/')">
+      <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
+      <span>{{state.title}}</span>
+    </div>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
       @re-start="reStart"
@@ -79,18 +84,24 @@ onMounted(() => {
     left: 50%;
     top: 1rem;
     transform: translateX(-50%);
-    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
     font-weight: bold;
     color: #eee;
-    text-align: center;
-    user-select: none;
-    animation: fall-animation .8s ease forwards;
-    cursor: pointer;
     padding: 5px 12px;
     border-radius: 8px;
+    animation: fall-animation .8s ease forwards;
+    user-select: none;
+    cursor: pointer;
     &:hover {
       background-color: rgba(255, 255, 255, .2);
-
+    }
+    &-icon {
+      width: 3rem;
+      height: 3rem;
+      margin-right: 12px;
     }
   }
   @keyframes fall-animation {
