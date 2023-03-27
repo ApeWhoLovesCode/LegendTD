@@ -7,10 +7,14 @@ export const KeepIntervalKey = {
   slow: 'slow',
   /** 技能 */
   skill: 'skill',
+  /** 塔防射击间隔函数 */
+  towerShoot: 'towerShoot',
   /** 老鼠中毒 */
   twitch: 'twitch',
   /** 清除老鼠中毒 */
   twitchDelete: 'twitchDelete',
+  /** 老鼠中毒间隔函数 */
+  poisonFun: 'poisonFun',
 }
 
 class KeepInterval {
@@ -26,7 +30,7 @@ class KeepInterval {
     return this._instance
   }
   /** 设置/开启计时器 */
-  set(key: string, fn?: () => void, intervalTime = 1000, isTimeOut?: boolean) {
+  set(key: string, fn?: () => void, intervalTime = 1000, isTimeOut = false) {
     if(!this.timerMap.has(key) && fn) {
       this.timerMap.set(key, {
         timeout: null,
@@ -35,7 +39,8 @@ class KeepInterval {
         end: 0,
         fn,
         intervalTime,
-        remainTime: intervalTime
+        remainTime: intervalTime,
+        isTimeOut,
       })
     }
     // console.log(`---${key}---`);
@@ -46,17 +51,16 @@ class KeepInterval {
     timeItem.end = Date.now()
     timeItem.timeout = setTimeout(() => { 
       timeItem.cur = Date.now()
-      if(!isTimeOut) {
+      if(!timeItem.isTimeOut) {
         timeItem.interval = setInterval(() => { 
           timeItem.cur = Date.now()
           timeItem.fn() 
         }, timeItem.intervalTime)
-      } else {
-        setTimeout(() => {
-          this.delete(key)
-        }, 10);
       }
       timeItem.fn()
+      if(timeItem.isTimeOut) {
+        this.delete(key)
+      }
     }, timeItem.remainTime)
   }
   /** 暂停计时器 */
@@ -130,4 +134,6 @@ export type TimerMap = {
   intervalTime: number
   // 用于setTimeout的剩余时间间隔
   remainTime: number
+  /** 是否只是倒计时 */
+  isTimeOut: boolean
 }

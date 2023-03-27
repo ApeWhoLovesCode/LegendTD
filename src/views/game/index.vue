@@ -11,6 +11,7 @@ import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
 import UserBall from '@/components/userBall.vue'
 import { requireCDN } from '@/utils/handleImg';
+import { ElPopconfirm } from 'element-plus';
 
 const source = useSourceStore()
 const route = useRoute()
@@ -54,10 +55,14 @@ onMounted(() => {
 
 <template>
   <div id='protect-horse-index'>
-    <div class="title" @click="$router.push('/')">
-      <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
-      <span>{{state.title}}</span>
-    </div>
+    <ElPopconfirm title="您确定要回到首页吗，当前页面游戏数据将清除" @confirm="$router.push('/')">
+      <template #reference>
+        <div class="title">
+          <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
+          <span>{{state.title}}</span>
+        </div>
+      </template>
+    </ElPopconfirm>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
       @re-start="reStart"

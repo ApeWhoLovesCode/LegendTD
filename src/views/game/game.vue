@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { ElMessage } from 'element-plus'
 
 import useAudioState from './tools/audioState';
-import useBaseData from './tools/baseData';
+import useBaseData, { TargetCircleInfo } from './tools/baseData';
 import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
@@ -16,7 +16,7 @@ import StartAndEnd from './components/startAndEnd.vue';
 import TowerBuild from './components/towerBuild.vue';
 import Skill from './components/skill.vue'
 
-import { limitRange, randomNum, randomNumList, waitTime } from '@/utils/tools'
+import { limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
 
 import levelData from '@/dataSource/levelData'
@@ -42,7 +42,7 @@ const userInfoStore = useUserInfoStore()
 
 // 抽离的数据
 const { audioState, createAudio, playDomAudio, removeAudio} = useAudioState()
-const { baseDataState, gamePause, enterAttackScopeList, initAllGrid, powAndSqrt } = useBaseData()
+const { baseDataState, checkValInCircle, gamePause, initAllGrid } = useBaseData()
 const { gameConfigState } = useGameConfig()
 const { gameSkillState } = useGameSkill()
 const { enemyList, enemyState, slowEnemy} = useEnemy()
@@ -218,29 +218,37 @@ function startDraw() {
   drawSpecialBullets()
 }
 
-// 处理敌人的移动和塔防的碰撞
+/** 处理敌人的移动，进入塔防的范围 */
 function checkEnemyAndTower() {
   if(!enemyList.length) return
   for(let t_i in towerList) {
-    const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
-    // 进入攻击范围，开始射击 
-    if(eIdList.length) {
-      if(towerList[t_i].name === 'huonan') {
-        towerList[t_i].targetIdList = eIdList
-      } else {
-        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
-      }
+    const t = towerList[t_i]
+    if(t.name === 'huonan') {
+      t.targetIdList = enterAttackScopeList(t)
     } else {
-      if(towerList[t_i].targetIdList) {
-        towerList[t_i].targetIdList = []
+      if(t.isToTimeShoot) {
+        const eIdList = enterAttackScopeList(t)
+        // 进入攻击范围，开始射击 
+        if(eIdList.length) {
+          // t.shootFun(eIdList, +t_i)
+          t.isToTimeShoot = false
+          shootBullet(eIdList, +t_i)
+          keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
+            t.isToTimeShoot = true
+          }, t.rate, true)
+        } else {
+          if(t.targetIdList.length) {
+            t.targetIdList = []
+          }
+        }
       }
     }
   }
   for(const bItem of specialBullets.twitch) {
     // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
-    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
+    const eIdList = enterAttackScopeList({x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
     if(eIdList.length) {
-      triggerPoisonFun(eIdList, 'twitch')
+      triggerPoisonFun(eIdList)
     }
   }
 }
@@ -431,6 +439,7 @@ function removeEnemy(e_idList: string[]) {
       keepInterval.delete(`${KeepIntervalKey.slow}-${e_id}`) // 清除减速持续时间定时器
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`) // 清除中毒持续时间定时器
       keepInterval.delete(`${KeepIntervalKey.twitchDelete}-${e_id}`)
+      keepInterval.delete(`${KeepIntervalKey.poisonFun}-${e_id}`)
       if(enemyList[e_i].skill) {
         keepInterval.delete(e_id)
       }
@@ -576,9 +585,10 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   tower.bSize.h *= size
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
-    tower.shootFun = _.throttle((eIdList, t_i) => {
-      shootBullet(eIdList, t_i)
-    }, rate, { leading: true, trailing: false })
+    // tower.shootFun = _.throttle((eIdList, t_i) => {
+    //   shootBullet(eIdList, t_i)
+    // }, rate, { leading: true, trailing: false })
+    tower.isToTimeShoot = true
   }
   if(tower.name === 'lanbo') {
     tower.scale = 1
@@ -617,6 +627,7 @@ function saleTower(index: number) {
   baseDataState.gridInfo.arr[y / size][x / size] = 0
   baseDataState.money += saleMoney
   removeAudio(id)
+  keepInterval.delete(`towerShoot-${id}`)
   towerList.splice(index, 1)
 }
 /** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
@@ -898,6 +909,7 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
     id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
   specialBullets.twitch.push(bullet)
+  // 倒计时清除该子弹
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
@@ -916,19 +928,27 @@ function drawSpecialBullets() {
   ctx.restore()
 }
 /** 中毒触发函数 */
-function triggerPoisonFun(eIdList: string[], tName: TowerName) {
-  const t = towerArr[tName]
+function triggerPoisonFun(eIdList: string[]) {
+  const t = towerArr['twitch']
   for(const e_id of eIdList) {
     const enemy = enemyList.find(e => e.id === e_id) 
     if(!enemy) return
     if(!enemy.poison) {
-      const poisonFun = _.throttle((e_id: string, t: TowerType) => {
+      // const poisonFun = _.throttle((e_id: string, t: TowerType) => {
+      //   slowEnemy(e_id, t.slow!)
+      //   startPoisonInterval(e_id, t)
+      // }, 1000, { leading: true, trailing: false })
+      enemy.poison = {level: 0, damage: t.damage, isToTimePoison: true}
+    } else {
+      // enemy.poison.poisonFun(e_id, t)
+      if(enemy.poison.isToTimePoison) {
+        enemy.poison!.isToTimePoison = false
         slowEnemy(e_id, t.slow!)
         startPoisonInterval(e_id, t)
-      }, 1000, { leading: true, trailing: false })
-      enemy.poison = {level: 0, damage: t.damage, poisonFun}
-    } else {
-      enemy.poison.poisonFun(e_id, t)
+        keepInterval.set(`${KeepIntervalKey.poisonFun}-${e_id}`, () => {
+          enemy.poison!.isToTimePoison = true
+        }, 1000, true)
+      }
     }
   }
 }
@@ -1006,6 +1026,18 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
   // 子弹中心(当前的xy在绘画时已经是偏移过了) 和 敌人中心 
   return checkIn(x, w, ex + ew / 2) && checkIn(y, h, ey + eh / 2)
 }   
+
+/** 返回进入攻击范围的值的数组 */
+function enterAttackScopeList(target: TargetCircleInfo) {
+  const arr = [] as {curFloorI: number, id: string}[]
+  enemyList.some((enemy) => {
+    if(checkValInCircle(enemy, target)) {
+      arr.push({curFloorI: enemy.curFloorI, id: enemy.id})
+    }
+    return arr.length === target.targetNum
+  }, )
+  return arr.sort((a, b) => b.curFloorI - a.curFloorI).map(item => item.id)
+}
 
 /** 开始游戏 */
 function beginGame() {

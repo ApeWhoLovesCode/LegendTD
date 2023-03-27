@@ -81,8 +81,10 @@ export type EnemyPoison = {
   timer?: NodeJS.Timer
   /** 中毒清除计时器 */
   timeout?: NodeJS.Timeout
+  /** 是否到时间允许继续中毒了 */
+  isToTimePoison: boolean
   /** 中毒触发函数 */
-  poisonFun: DebouncedFunc<(e_id: string, t: TowerType) => void>
+  // poisonFun: DebouncedFunc<(e_id: string, t: TowerType) => void>
 }
 
 /** 子弹类型 */
@@ -114,6 +116,8 @@ export type TowerStateType = {
   id: string
   x: number
   y: number
+  /** 是否到时间允许射击了 */
+  isToTimeShoot?: boolean
   /** 防抖的射击函数 */
   shootFun: DebouncedFunc<(eIdList: string[], t_i: number) => void>
   /** 攻击的目标id数组 */
