@@ -436,7 +436,7 @@ function triggerPoisonFun(eIdList: string[], tName: TowerName) {
       }, 1000, { leading: true, trailing: false })
       enemy!.poison = {level: 1, damage: t.damage, poisonFun}
     } else {
-      enemy!.poison.poisonFun(e_id, t)
+      enemy!.poison.poisonFun?.(e_id, t)
     }
   }
 }
