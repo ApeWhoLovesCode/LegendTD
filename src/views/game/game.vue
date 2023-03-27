@@ -31,6 +31,7 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
+import testBuildData from './tools/testBuild';
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -230,7 +231,6 @@ function checkEnemyAndTower() {
         const eIdList = enterAttackScopeList(t)
         // 进入攻击范围，开始射击 
         if(eIdList.length) {
-          // t.shootFun(eIdList, +t_i)
           t.isToTimeShoot = false
           shootBullet(eIdList, +t_i)
           keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
@@ -585,9 +585,6 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   tower.bSize.h *= size
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
-    // tower.shootFun = _.throttle((eIdList, t_i) => {
-    //   shootBullet(eIdList, t_i)
-    // }, rate, { leading: true, trailing: false })
     tower.isToTimeShoot = true
   }
   if(tower.name === 'lanbo') {
@@ -934,13 +931,8 @@ function triggerPoisonFun(eIdList: string[]) {
     const enemy = enemyList.find(e => e.id === e_id) 
     if(!enemy) return
     if(!enemy.poison) {
-      // const poisonFun = _.throttle((e_id: string, t: TowerType) => {
-      //   slowEnemy(e_id, t.slow!)
-      //   startPoisonInterval(e_id, t)
-      // }, 1000, { leading: true, trailing: false })
       enemy.poison = {level: 0, damage: t.damage, isToTimePoison: true}
     } else {
-      // enemy.poison.poisonFun(e_id, t)
       if(enemy.poison.isToTimePoison) {
         enemy.poison!.isToTimePoison = false
         slowEnemy(e_id, t.slow!)

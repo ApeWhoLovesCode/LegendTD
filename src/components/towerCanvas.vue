@@ -109,7 +109,7 @@ function checkEnemyAndTower() {
       if(towerList[t_i].name === 'huonan') {
         towerList[t_i].targetIdList = eIdList
       } else {
-        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
+        towerList[t_i].shootFun!(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
       }
     } else {
       if(towerList[t_i].targetIdList) {

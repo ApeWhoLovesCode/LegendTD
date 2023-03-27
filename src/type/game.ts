@@ -3,7 +3,7 @@
 import { EnemyType } from "@/dataSource/enemyData"
 import { GridInfo, MapGridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
-import { TowerName, TowerSlowType, TowerType } from "@/dataSource/towerData"
+import { TowerSlowType, TowerType } from "@/dataSource/towerData"
 import { DebouncedFunc } from "lodash"
 import { ImgLoadType } from "."
 
@@ -82,9 +82,9 @@ export type EnemyPoison = {
   /** 中毒清除计时器 */
   timeout?: NodeJS.Timeout
   /** 是否到时间允许继续中毒了 */
-  isToTimePoison: boolean
+  isToTimePoison?: boolean
   /** 中毒触发函数 */
-  // poisonFun: DebouncedFunc<(e_id: string, t: TowerType) => void>
+  poisonFun?: DebouncedFunc<(e_id: string, t: TowerType) => void>
 }
 
 /** 子弹类型 */
@@ -119,7 +119,7 @@ export type TowerStateType = {
   /** 是否到时间允许射击了 */
   isToTimeShoot?: boolean
   /** 防抖的射击函数 */
-  shootFun: DebouncedFunc<(eIdList: string[], t_i: number) => void>
+  shootFun?: DebouncedFunc<(eIdList: string[], t_i: number) => void>
   /** 攻击的目标id数组 */
   targetIdList: string[]
   /** 当前攻击的目标，用于攻击单一目标切换目标后的判断 */
