@@ -1023,14 +1023,15 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  const arr = [] as {curFloorI: number, id: string}[]
-  enemyList.some((enemy) => {
+  return enemyList.reduce((pre, enemy) => {
     if(checkValInCircle(enemy, target)) {
-      arr.push({curFloorI: enemy.curFloorI, id: enemy.id})
+      pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
     }
-    return arr.length === target.targetNum
-  }, )
-  return arr.sort((a, b) => b.curFloorI - a.curFloorI).map(item => item.id)
+    return pre
+  }, [] as {curFloorI: number, id: string}[])
+  .sort((a, b) => b.curFloorI - a.curFloorI)
+  .splice(0, target.targetNum)
+  .map(item => item.id)
 }
 
 /** 开始游戏 */
