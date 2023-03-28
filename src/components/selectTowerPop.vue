@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, computed } from 'vue';
 import { ElDrawer, ElMessage, ElMessageBox } from 'element-plus';
 import towerData, { TowerType, towerStaticData, TowerName } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
@@ -29,9 +29,13 @@ const state = reactive({
   pageSize: 10,
 })
 
+const towerList = computed(() => {
+  return Object.values(towerData)
+})
+
 const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) => {
   const preIndex = (pageNum - 1) * pageSize
-  const arr = Object.values(towerData).slice(preIndex, preIndex + pageSize)
+  const arr = towerList.value.slice(preIndex, preIndex + pageSize)
   state.items = arr
   state.pageNum = pageNum
   state.pageSize = pageSize
@@ -74,7 +78,7 @@ const selectTower = (name: TowerName) => {
 
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
-  state.items = Object.values(towerData).slice(preIndex, preIndex + state.pageSize)
+  state.items = towerList.value.slice(preIndex, preIndex + state.pageSize)
 }
 onMounted(() => {
   init()
@@ -109,7 +113,7 @@ onMounted(() => {
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
-        :list="Object.values(towerData)" 
+        :list="towerList" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >

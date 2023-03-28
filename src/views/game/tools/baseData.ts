@@ -1,4 +1,5 @@
 import { EnemyStateType, GameBaseData } from "@/type/game";
+import { powAndSqrt } from "@/utils/tools";
 import { reactive } from "vue";
 
 export default function useBaseData() {
@@ -40,18 +41,6 @@ export default function useBaseData() {
     baseDataState.gridInfo.arr = arr
   }
   
-  /** 返回进入攻击范围的值的数组 */
-  function enterAttackScopeList(eList: EnemyStateType[], target: TargetCircleInfo) {
-    const list = eList.reduce((pre, enemy) => {
-      if(checkValInCircle(enemy, target)) {
-        pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
-      }
-      return pre
-    }, [] as {curFloorI: number, id: string}[])
-    list.sort((a, b) => b.curFloorI - a.curFloorI)
-    return list.map(item => item.id)
-  }
-  
   /** 判断值是否在圆内 */
   function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
     const {x, y, w, h} = enemy
@@ -70,10 +59,6 @@ export default function useBaseData() {
     const size_2 = (size ?? baseDataState.gridInfo.size) / 2
     return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
   }
-  /** 两值平方相加并开方 求斜边 */
-  function powAndSqrt(val1: number, val2: number) {
-    return Math.sqrt(Math.pow(val1, 2) + Math.pow(val2, 2))
-  }
   
   /** 游戏暂停 */
   function gamePause() {
@@ -85,9 +70,8 @@ export default function useBaseData() {
   return {
     baseDataState,
     initAllGrid,
-    enterAttackScopeList,
-    powAndSqrt,
     gamePause,
+    checkValInCircle,
   }
 }
 
@@ -98,4 +82,6 @@ export type TargetCircleInfo = {
   r: number
   /** 目标的大小 */
   size?: number
+  /** 目标的数量 */
+  targetNum?: number
 }

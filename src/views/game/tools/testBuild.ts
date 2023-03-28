@@ -1,12 +1,12 @@
 import { TowerName } from "@/dataSource/towerData"
 
 const testBuildData: {x: number, y: number, tname: TowerName}[] = [
-  {x: 400, y: 450, tname: 'jin'},{x: 450, y: 250, tname: 'jin'},{x: 300, y: 200, tname: 'aixi'},{x: 200, y: 100, tname: 'twitch'},{x: 200, y: 50, tname: 'delaiwen'},
-  {x: 250, y: 250, tname: 'twitch'},{x: 250, y: 200, tname: 'lanbo'},{x: 200, y: 200, tname: 'lanbo'},{x: 50, y: 300, tname: 'delaiwen'},{x: 100, y: 300, tname: 'delaiwen'},
-  {x: 150, y: 300, tname: 'delaiwen'},{x: 100, y: 150, tname: 'lanbo'},{x: 500, y: 250, tname: 'jin'},{x: 600, y: 250, tname: 'jin'},{x: 550, y: 250, tname: 'jin'},
-  {x: 800, y: 50, tname: 'delaiwen'},{x: 300, y: 250, tname: 'twitch'},{x: 500, y: 150, tname: 'ejiate'},{x: 450, y: 150, tname: 'ejiate'},{x: 550, y: 150, tname: 'ejiate'},
-  {x: 600, y: 150, tname: 'ejiate'},{x: 800, y: 300, tname: 'aixi'},{x: 750, y: 300, tname: 'lanbo'},{x: 800, y: 250, tname: 'lanbo'},{x: 750, y: 250, tname: 'lanbo'},
-  {x: 800, y: 350, tname: 'lanbo'},{x: 750, y: 350, tname: 'lanbo'},
+  {x: 8, y: 9, tname: 'jin'},{x: 9, y: 5, tname: 'jin'},{x: 6, y: 4, tname: 'aixi'},{x: 4, y: 2, tname: 'twitch'},{x: 4, y: 1, tname: 'delaiwen'},
+  {x: 5, y: 5, tname: 'twitch'},{x: 5, y: 4, tname: 'lanbo'},{x: 4, y: 4, tname: 'lanbo'},{x: 1, y: 6, tname: 'delaiwen'},{x: 2, y: 6, tname: 'delaiwen'},
+  {x: 3, y: 6, tname: 'delaiwen'},{x: 2, y: 3, tname: 'lanbo'},{x: 10, y: 5, tname: 'jin'},{x: 12, y: 5, tname: 'jin'},{x: 11, y: 5, tname: 'jin'},
+  {x: 16, y: 1, tname: 'delaiwen'},{x: 6, y: 5, tname: 'twitch'},{x: 10, y: 3, tname: 'ejiate'},{x: 9, y: 3, tname: 'ejiate'},{x: 11, y: 3, tname: 'ejiate'},
+  {x: 12, y: 3, tname: 'ejiate'},{x: 16, y: 6, tname: 'aixi'},{x: 15, y: 6, tname: 'lanbo'},{x: 16, y: 5, tname: 'lanbo'},{x: 15, y: 5, tname: 'lanbo'},
+  {x: 16, y: 7, tname: 'lanbo'},{x: 15, y: 7, tname: 'lanbo'},
 ]
 
 export default testBuildData

@@ -3,6 +3,11 @@ export function limitRange(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
 }
 
+/** 两值平方相加并开方 求斜边 */
+export function powAndSqrt(val1: number, val2: number) {
+  return Math.sqrt(Math.pow(val1, 2) + Math.pow(val2, 2))
+}
+
 /** 生成范围内的随机数 */
 export function randomNum(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min)
