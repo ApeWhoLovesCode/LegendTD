@@ -5,7 +5,8 @@ import { useSourceStore } from '@/stores/source';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType, SpecialBulletItem } from '@/type/game';
 import { getAngle } from '@/utils/handleCircle';
 import { randomStr } from '@/utils/random';
-import useBaseData from '@/views/game/tools/baseData';
+import { powAndSqrt } from '@/utils/tools';
+import useBaseData, { TargetCircleInfo } from '@/views/game/tools/baseData';
 import useEnemy from '@/views/game/tools/enemy';
 import useSpecialBullets from '@/views/game/tools/specialBullets';
 import useTower from '@/views/game/tools/tower';
@@ -14,7 +15,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 const { enemyList } = useEnemy()
 const { towerList } = useTower()
-const { enterAttackScopeList, powAndSqrt } = useBaseData()
+const { checkValInCircle } = useBaseData()
 const { specialBullets } = useSpecialBullets()
 
 const props = withDefaults(defineProps<{
@@ -36,31 +37,6 @@ const state = reactive({
   mapGridInfoItem: {x: 1, y: 5, x_y: 3, num: 20},
 })
 const makeEnemyTimer = ref<NodeJS.Timer>()
-
-// 监听敌人的移动
-watch(() => enemyList, (enemyList) => {
-  for(let t_i in towerList) {
-    const eIdList = enterAttackScopeList(enemyList, towerList[t_i])
-    // 进入攻击范围，开始射击 
-    if(eIdList.length) {
-      if(towerList[t_i].name === 'huonan') {
-        towerList[t_i].targetIdList = eIdList
-      } else {
-        towerList[t_i].shootFun(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
-      }
-    } else {
-      if(towerList[t_i].targetIdList) {
-        towerList[t_i].targetIdList = []
-      }
-    }
-  }
-  for(const bItem of specialBullets.twitch) {
-    const eIdList = enterAttackScopeList(enemyList, {x: bItem.x, y: bItem.y, r: bItem.w / 2})
-    if(eIdList.length) {
-      triggerPoisonFun(eIdList, 'twitch')
-    }
-  }
-}, { deep: true })
 
 onMounted(() => {
   setTimeout(() => {
@@ -119,10 +95,35 @@ function startDraw() {
     if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
     else enemyList[index].imgIndex++
   }
+  checkEnemyAndTower()
   handleBulletMove()
   drawSpecialBullets()
 }
-
+/** 处理敌人的移动，进入塔防的范围 */
+function checkEnemyAndTower() {
+  if(!enemyList.length) return
+  for(let t_i in towerList) {
+    const eIdList = enterAttackScopeList(towerList[t_i])
+    // 进入攻击范围，开始射击 
+    if(eIdList.length) {
+      if(towerList[t_i].name === 'huonan') {
+        towerList[t_i].targetIdList = eIdList
+      } else {
+        towerList[t_i].shootFun!(eIdList.slice(0, towerList[t_i].targetNum), +t_i)
+      }
+    } else {
+      if(towerList[t_i].targetIdList) {
+        towerList[t_i].targetIdList = []
+      }
+    }
+  }
+  for(const bItem of specialBullets.twitch) {
+    const eIdList = enterAttackScopeList({x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
+    if(eIdList.length) {
+      triggerPoisonFun(eIdList, 'twitch')
+    }
+  }
+}
 /** 点击建造塔防 */
 function buildTower() {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } =  _.cloneDeep(source.towerSource![props.tname])
@@ -435,7 +436,7 @@ function triggerPoisonFun(eIdList: string[], tName: TowerName) {
       }, 1000, { leading: true, trailing: false })
       enemy!.poison = {level: 1, damage: t.damage, poisonFun}
     } else {
-      enemy!.poison.poisonFun(e_id, t)
+      enemy!.poison.poisonFun?.(e_id, t)
     }
   }
 }
@@ -688,6 +689,18 @@ function slowEnemy(e_id: string, t_slow: TowerSlow) {
     enemyList[e_i].curSpeed = newSpeed
     enemyList[e_i].slowType = t_slow.type
   }
+}
+
+/** 返回进入攻击范围的值的数组 */
+function enterAttackScopeList(target: TargetCircleInfo) {
+  return enemyList.reduce((pre, enemy) => {
+    if(checkValInCircle(enemy, target)) {
+      pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
+    }
+    return pre
+  }, [] as {curFloorI: number, id: string}[])
+  .sort((a, b) => b.curFloorI - a.curFloorI)
+  .map(item => item.id)
 }
 
 function getCanvasWH() {
