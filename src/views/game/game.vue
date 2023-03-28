@@ -562,6 +562,8 @@ function getMouse(e: MouseEvent) {
 // 测试建造塔防
 // function testBuildTowers() {
 //   testBuildData.forEach(item => {
+//     item.x *= gameConfigState.size
+//     item.y *= gameConfigState.size
 //     buildTower(item.tname, item)
 //   })
 // }
