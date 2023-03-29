@@ -113,6 +113,8 @@ watch(() => baseDataState.isPause, (val) => {
     makeEnemy()
     startAnimation();
     startMoneyTimer()
+  } else {
+    cancelAnimationFrame(gameConfigState.animationFrame)
   }
 })
 // 监听等级变化生成对应敌人
@@ -167,7 +169,7 @@ onBeforeUnmount(() => {
   keepInterval.clear()
 })
 
-async function init() {
+function init() {
   initZoomData()
   if(isInfinite.value) {
     baseDataState.money = 999999
@@ -182,20 +184,25 @@ async function init() {
   initMovePath()
   onKeyDown()
   source.isGameInit = true
-  await waitTime(800)
-  gameConfigState.loadingDone = true
-  startAnimation()
-  // testBuildTowers()
+  waitTime(800).then(() => {
+    gameConfigState.loadingDone = true
+    startDraw()
+    // testBuildTowers()
+  })
 }
 
 /** 开启动画绘画 */
 function startAnimation() {
+  const fpx = 60;
+  let fpsInterval = 1000 / fpx;
+  let then = Date.now();
   (function go() {
-    startDraw();
-    if (!baseDataState.isPause) {
-      gameConfigState.animationFrame = requestAnimationFrame(go);
-    } else {
-      cancelAnimationFrame(gameConfigState.animationFrame)
+    gameConfigState.animationFrame = requestAnimationFrame(go);
+    const now = Date.now();
+    const elapsed = now - then;
+    if (elapsed > fpsInterval) {
+      startDraw();
+      then = now - (elapsed % fpsInterval);
     }
   })();
 }
@@ -225,12 +232,16 @@ function checkEnemyAndTower() {
   for(let t_i in towerList) {
     const t = towerList[t_i]
     if(t.name === 'huonan') {
-      t.targetIdList = enterAttackScopeList(t)
+      const targetIdList = enterAttackScopeList(t)
+      if(targetIdList) t.targetIdList = targetIdList
+      else {
+        if(t.targetIdList.length) t.targetIdList = []
+      }
     } else {
       if(t.isToTimeShoot) {
         const eIdList = enterAttackScopeList(t)
         // 进入攻击范围，开始射击 
-        if(eIdList.length) {
+        if(eIdList?.length) {
           t.isToTimeShoot = false
           shootBullet(eIdList, +t_i)
           keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
@@ -247,7 +258,7 @@ function checkEnemyAndTower() {
   for(const bItem of specialBullets.twitch) {
     // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
     const eIdList = enterAttackScopeList({x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
-    if(eIdList.length) {
+    if(eIdList?.length) {
       triggerPoisonFun(eIdList)
     }
   }
@@ -601,7 +612,7 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   }
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
-  baseDataState.gridInfo.arr[y / size][x / size] = 't' + tname
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
   drawTower(tower)
   createAudio(`${audioKey}-choose`, tower.id)
   if(p) return
@@ -623,7 +634,7 @@ function saleTower(index: number) {
   const size = gameConfigState.size
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
-  baseDataState.gridInfo.arr[y / size][x / size] = 0
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
   baseDataState.money += saleMoney
   removeAudio(id)
   keepInterval.delete(`towerShoot-${id}`)
@@ -886,16 +897,29 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.translate(-_x, -_y)
   const newY = _y - (thickness - t.bSize.w) / 2
   // 设置渐变色
-  const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
-  linearGradient.addColorStop(0, '#de5332');
-  linearGradient.addColorStop(0.4, '#f3c105');
-  linearGradient.addColorStop(0.5, '#ffc800');
-  linearGradient.addColorStop(0.6, '#f3c105');
-  linearGradient.addColorStop(1, '#de5332'); 
-  ctx.strokeStyle = linearGradient
-  ctx.fillStyle = linearGradient
+  if(ctx.createLinearGradient) {
+    const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
+    linearGradient.addColorStop(0, '#de5332');
+    linearGradient.addColorStop(0.4, '#f3c105');
+    linearGradient.addColorStop(0.5, '#ffc800');
+    linearGradient.addColorStop(0.6, '#f3c105');
+    linearGradient.addColorStop(1, '#de5332'); 
+    ctx.strokeStyle = linearGradient
+    ctx.fillStyle = linearGradient
+  } else {
+    ctx.strokeStyle = '#de5332'
+    ctx.fillStyle = '#f3c105'
+  }
   ctx.beginPath()
-  ctx.roundRect(_x, newY, xy, thickness, size / 2)
+  if((ctx as any).roundRect) {
+    (ctx as any).roundRect(_x, newY, xy, thickness, size / 2)
+  } else {
+    ctx.moveTo(_x + thickness / 2, newY)
+    ctx.arcTo(_x + xy, newY, _x + xy, newY + thickness, thickness / 2)
+    ctx.arcTo(_x + xy, newY + thickness, _x, newY + thickness, thickness / 2)
+    ctx.arcTo(_x, newY + thickness, _x, newY, thickness / 2)
+    ctx.arcTo(_x, newY, _x + xy, newY, thickness / 2)
+  }
   ctx.fill()
   ctx.stroke()
   ctx.restore()
@@ -1023,15 +1047,18 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  return enemyList.reduce((pre, enemy) => {
+  const arr = enemyList.reduce((pre, enemy) => {
     if(checkValInCircle(enemy, target)) {
       pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
     }
     return pre
   }, [] as {curFloorI: number, id: string}[])
-  .sort((a, b) => b.curFloorI - a.curFloorI)
-  .splice(0, target.targetNum)
-  .map(item => item.id)
+  if(!arr.length) return
+  arr.sort((a, b) => b.curFloorI - a.curFloorI)
+  if(target.targetNum) {
+    return arr.splice(0, target.targetNum).map(item => item.id)
+  }
+  return arr.map(item => item.id)
 }
 
 /** 开始游戏 */
@@ -1047,15 +1074,15 @@ function beginGame() {
 /** 按比例缩放数据 */
 function initZoomData() {
   let p = source.ratio
+  const {w, h} = gameConfigState.defaultCanvas
   if(source.isMobile) {
-    const {w, h} = gameConfigState.defaultCanvas
     const wp = document.documentElement.clientWidth / (h + 150)
     const hp = document.documentElement.clientHeight / (w + 100)
     p *= Math.floor(Math.min(wp, hp) * 100) / 100
   }
-  gameConfigState.size *= p
-  gameConfigState.defaultCanvas.w *= p
-  gameConfigState.defaultCanvas.h *= p
+  gameConfigState.size = Math.floor(gameConfigState.size * p)
+  gameConfigState.defaultCanvas.w = Math.floor(w * p)
+  gameConfigState.defaultCanvas.h = Math.floor(h * p)
 }
 
 /** 初始化行动轨迹 */
@@ -1077,7 +1104,7 @@ function initMovePath() {
     else movePathItem.y += x_y === 4 ? size : -size
     movePathItem.x_y = x_y
     movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-    baseDataState.gridInfo.arr[movePathItem.y / size][movePathItem.x / size] = 1
+    baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
   }
   baseDataState.terminal = movePath[movePath.length - 1]
   enemyState.movePath = movePath
