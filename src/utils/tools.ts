@@ -16,12 +16,14 @@ export function randomNum(min: number, max: number) {
 /** 根据概率生成敌人索引 */
 export function createProbNum(level: number) {
   const list = [
-    0, 5, 6, 7, 8, 10, 8,
-    20,   // 舞王
-    12, 13, 15, 
-    25,   // 弗利萨
+    0, 6, 7, 8, 9, 10, 8,
+    15,   // 舞王
+    10, 14, 13, 
+    20,   // 弗利萨
     0, 0, 
-    20,   // 坤坤
+    17,   // 坤坤
+    13,
+    15,
   ]
   const powN = Math.sqrt(Math.sqrt(level))
   let sum = 0
@@ -44,7 +46,7 @@ export function createProbNum(level: number) {
 export const randomNumList = (level: number) => {
   const arr = []
   // 等值是: 16
-  const len = Math.pow(Math.sqrt(level), Math.sqrt(Math.sqrt(level)))
+  const len = Math.floor(Math.pow(Math.sqrt(level), Math.sqrt(Math.sqrt(level))) * 12 / level)
   for(let i = 0; i < len; i++) {
     arr.push(createProbNum(level))
   }

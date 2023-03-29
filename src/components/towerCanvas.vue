@@ -75,10 +75,17 @@ function drawInit() {
 
 /** 开启动画绘画 */
 function startAnimation() {
+  const fpx = 60;
+  let fpsInterval = 1000 / fpx;
+  let then = Date.now();
   (function go() {
-    startDraw();
-    // 时间间隔为 1000/60 每秒 60 帧
     state.animationFrame = requestAnimationFrame(go);
+    const now = Date.now();
+    const elapsed = now - then;
+    if (elapsed > fpsInterval) {
+      startDraw();
+      then = now - (elapsed % fpsInterval);
+    }
   })();
 }
 
@@ -105,7 +112,7 @@ function checkEnemyAndTower() {
   for(let t_i in towerList) {
     const eIdList = enterAttackScopeList(towerList[t_i])
     // 进入攻击范围，开始射击 
-    if(eIdList.length) {
+    if(eIdList?.length) {
       if(towerList[t_i].name === 'huonan') {
         towerList[t_i].targetIdList = eIdList
       } else {
@@ -119,7 +126,7 @@ function checkEnemyAndTower() {
   }
   for(const bItem of specialBullets.twitch) {
     const eIdList = enterAttackScopeList({x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
-    if(eIdList.length) {
+    if(eIdList?.length) {
       triggerPoisonFun(eIdList, 'twitch')
     }
   }
@@ -396,8 +403,8 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
     ctx.fillStyle = '#f3c105'
   }
   ctx.beginPath()
-  if(ctx.roundRect) {
-    ctx.roundRect(_x, newY, xy, thickness, size / 2)
+  if((ctx as any).roundRect) {
+    (ctx as any).roundRect(_x, newY, xy, thickness, size / 2)
   } else {
     ctx.moveTo(_x + thickness / 2, newY)
     ctx.arcTo(_x + xy, newY, _x + xy, newY + thickness, thickness / 2)
@@ -706,14 +713,18 @@ function slowEnemy(e_id: string, t_slow: TowerSlow) {
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  return enemyList.reduce((pre, enemy) => {
+  const arr = enemyList.reduce((pre, enemy) => {
     if(checkValInCircle(enemy, target)) {
       pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
     }
     return pre
   }, [] as {curFloorI: number, id: string}[])
-  .sort((a, b) => b.curFloorI - a.curFloorI)
-  .map(item => item.id)
+  if(!arr.length) return
+  arr.sort((a, b) => b.curFloorI - a.curFloorI)
+  if(target.targetNum) {
+    return arr.splice(0, target.targetNum).map(item => item.id)
+  }
+  return arr.map(item => item.id)
 }
 
 function getCanvasWH() {
