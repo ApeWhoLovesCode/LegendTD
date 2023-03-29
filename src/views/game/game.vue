@@ -167,7 +167,7 @@ onBeforeUnmount(() => {
   keepInterval.clear()
 })
 
-async function init() {
+function init() {
   initZoomData()
   if(isInfinite.value) {
     baseDataState.money = 999999
@@ -182,10 +182,11 @@ async function init() {
   initMovePath()
   onKeyDown()
   source.isGameInit = true
-  await waitTime(800)
-  gameConfigState.loadingDone = true
-  startAnimation()
-  // testBuildTowers()
+  waitTime(800).then(() => {
+    gameConfigState.loadingDone = true
+    startAnimation()
+    // testBuildTowers()
+  })
 }
 
 /** 开启动画绘画 */
@@ -1077,7 +1078,7 @@ function initMovePath() {
     else movePathItem.y += x_y === 4 ? size : -size
     movePathItem.x_y = x_y
     movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-    baseDataState.gridInfo.arr[movePathItem.y / size][movePathItem.x / size] = 1
+    baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
   }
   baseDataState.terminal = movePath[movePath.length - 1]
   enemyState.movePath = movePath
