@@ -1048,15 +1048,15 @@ function beginGame() {
 /** 按比例缩放数据 */
 function initZoomData() {
   let p = source.ratio
+  const {w, h} = gameConfigState.defaultCanvas
   if(source.isMobile) {
-    const {w, h} = gameConfigState.defaultCanvas
     const wp = document.documentElement.clientWidth / (h + 150)
     const hp = document.documentElement.clientHeight / (w + 100)
     p *= Math.floor(Math.min(wp, hp) * 100) / 100
   }
-  gameConfigState.size *= p
-  gameConfigState.defaultCanvas.w *= p
-  gameConfigState.defaultCanvas.h *= p
+  gameConfigState.size = Math.floor(gameConfigState.size * p)
+  gameConfigState.defaultCanvas.w = Math.floor(w * p)
+  gameConfigState.defaultCanvas.h = Math.floor(h * p)
 }
 
 /** 初始化行动轨迹 */
