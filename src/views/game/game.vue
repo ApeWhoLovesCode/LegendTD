@@ -113,6 +113,8 @@ watch(() => baseDataState.isPause, (val) => {
     makeEnemy()
     startAnimation();
     startMoneyTimer()
+  } else {
+    cancelAnimationFrame(gameConfigState.animationFrame)
   }
 })
 // 监听等级变化生成对应敌人
@@ -184,19 +186,23 @@ function init() {
   source.isGameInit = true
   waitTime(800).then(() => {
     gameConfigState.loadingDone = true
-    startAnimation()
+    startDraw()
     // testBuildTowers()
   })
 }
 
 /** 开启动画绘画 */
 function startAnimation() {
+  const fpx = 60
+  let fpsInterval = 1000 / fpx;
+  let then = Date.now();
   (function go() {
-    startDraw();
-    if (!baseDataState.isPause) {
-      gameConfigState.animationFrame = requestAnimationFrame(go);
-    } else {
-      cancelAnimationFrame(gameConfigState.animationFrame)
+    gameConfigState.animationFrame = requestAnimationFrame(go);
+    const now = Date.now();
+    const elapsed = now - then;
+    if (elapsed > fpsInterval) {
+      startDraw();
+      then = now - (elapsed % fpsInterval);
     }
   })();
 }
