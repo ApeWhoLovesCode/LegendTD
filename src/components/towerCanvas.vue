@@ -382,16 +382,29 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   ctx.translate(-_x, -_y)
   const newY = _y - (thickness - t.bSize.w) / 2
   // 设置渐变色
-  const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
-  linearGradient.addColorStop(0, '#de5332');
-  linearGradient.addColorStop(0.4, '#f3c105');
-  linearGradient.addColorStop(0.5, '#ffc800');
-  linearGradient.addColorStop(0.6, '#f3c105');
-  linearGradient.addColorStop(1, '#de5332'); 
-  ctx.strokeStyle = linearGradient
-  ctx.fillStyle = linearGradient
+  if(ctx.createLinearGradient) {
+    const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
+    linearGradient.addColorStop(0, '#de5332');
+    linearGradient.addColorStop(0.4, '#f3c105');
+    linearGradient.addColorStop(0.5, '#ffc800');
+    linearGradient.addColorStop(0.6, '#f3c105');
+    linearGradient.addColorStop(1, '#de5332'); 
+    ctx.strokeStyle = linearGradient
+    ctx.fillStyle = linearGradient
+  } else {
+    ctx.strokeStyle = '#de5332'
+    ctx.fillStyle = '#f3c105'
+  }
   ctx.beginPath()
-  ctx.roundRect(_x, newY, xy, thickness, size / 2)
+  if(ctx.roundRect) {
+    ctx.roundRect(_x, newY, xy, thickness, size / 2)
+  } else {
+    ctx.moveTo(_x + thickness / 2, newY)
+    ctx.arcTo(_x + xy, newY, _x + xy, newY + thickness, thickness / 2)
+    ctx.arcTo(_x + xy, newY + thickness, _x, newY + thickness, thickness / 2)
+    ctx.arcTo(_x, newY + thickness, _x, newY, thickness / 2)
+    ctx.arcTo(_x, newY, _x + xy, newY, thickness / 2)
+  }
   ctx.fill()
   ctx.stroke()
   ctx.restore()
