@@ -602,7 +602,7 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   }
   towerList.push(tower)
   // 用于标记是哪个塔防 10 + index
-  baseDataState.gridInfo.arr[y / size][x / size] = 't' + tname
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
   drawTower(tower)
   createAudio(`${audioKey}-choose`, tower.id)
   if(p) return
@@ -624,7 +624,7 @@ function saleTower(index: number) {
   const size = gameConfigState.size
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
-  baseDataState.gridInfo.arr[y / size][x / size] = 0
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
   baseDataState.money += saleMoney
   removeAudio(id)
   keepInterval.delete(`towerShoot-${id}`)
