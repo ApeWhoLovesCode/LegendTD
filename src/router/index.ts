@@ -25,6 +25,11 @@ const routes = [
     name: 'workerCanvas',
     component: () => import('../views/workerCanvas/index.vue') 
   },
+  {
+    path: '/gameWorker',
+    name: 'gameWorker',
+    component: () => import('../views/gameWorker/index.vue') 
+  },
 ]
 
 const router = createRouter({

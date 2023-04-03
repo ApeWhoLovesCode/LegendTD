@@ -1,7 +1,17 @@
 import { powAndSqrt } from "@/utils/tools";
 
+const state = {
+  x: 125,
+  y: 125,
+  w: 50,
+  h: 50,
+  speed: 1,
+  r: 300,
+}
+
 addEventListener('message', e => {
   const { data } = e;
+  console.log('data: ', data);
   const offscreen = data.canvas;
   const ctx = offscreen.getContext('2d');
   // setTimeout(() => {
@@ -10,11 +20,11 @@ addEventListener('message', e => {
   draw()
   function draw() {
     let scale = 1;
-    const {w, h, r, speed} = data.state
+    const {w, h, r, speed} = state
     const l = powAndSqrt(w / 2, h / 2);
     const addScale = (r / l - 1) / ((r - l) / speed);
     (function go() {
-      const {x, y, w, h} = data.state
+      const {x, y, w, h} = state
       if (scale < 4) {
         scale += addScale
       } else {
