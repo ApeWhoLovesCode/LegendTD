@@ -1,7 +1,13 @@
 <script setup lang='ts'>
-import { onMounted, reactive } from 'vue';
+import { useSourceStore } from '@/stores/source';
+import { onMounted, reactive, toRaw } from 'vue';
+import useDomRef from '../game/tools/domRef';
 
 import Worker from "./workers/index.ts?worker"
+
+const source = useSourceStore()
+
+const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
 
 const state = reactive({
   x: 125,
@@ -13,10 +19,20 @@ const state = reactive({
 })
 
 const openWorker = () => {
-  const canvasBitmap = document.getElementById('canvas') as HTMLCanvasElement;
+  const canvasBitmap = document.getElementById('game-canvas') as HTMLCanvasElement;
   const offscreen = canvasBitmap.transferControlToOffscreen();
   const worker = new Worker()
-  worker.postMessage({ state: {name: '123'}, canvas: offscreen }, [offscreen]);
+  worker.postMessage({
+    screenInfo: {
+      width: document.documentElement.clientWidth, 
+      height: document.documentElement.clientHeight, 
+    }, 
+    canvasInfo: {
+      offscreen,
+      width: canvasRef.value!.width,
+      height: canvasRef.value!.height
+    }
+  }, [offscreen]);
   worker.onmessage = e => {
     console.log(e.data)
     // setTimeout(() => {
@@ -26,17 +42,43 @@ const openWorker = () => {
   }
 }
 
+const gamePause = () => {
+  
+}
+
+/** 监听用户的键盘事件 */
+function onKeyDown() {
+  document.onkeydown = (e) => {
+    // if(gameConfigState.isGameBeginMask) return
+    switch (e.code) {
+      case "Space":{
+        gamePause()
+        break;
+      } 
+    }
+  };
+}
+
+const init = () => {
+  openWorker()
+  onKeyDown()
+}
+
+
 onMounted(() => {
-  // source.loadingAllImg().then(() => {
-  //   isOnload.value = true
-  // })
+  init()
 })
 
 </script>
 
 <template>
   <div class='worker'>
-    <canvas id="canvas" width="1000" height="450"></canvas>
+    <canvas 
+      ref="canvasRef"
+      id="game-canvas" 
+      width="1000" 
+      height="450"
+    ></canvas>
     <button @click="openWorker">开启</button>
   </div>
 </template>
