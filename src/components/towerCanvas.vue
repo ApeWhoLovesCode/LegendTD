@@ -99,7 +99,7 @@ function startDraw() {
     const item = enemyList[index]
     moveEnemy(index)
     drawEnemy(index)
-    if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
+    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) enemyList[index].imgIndex = 0
     else enemyList[index].imgIndex++
   }
   checkEnemyAndTower()
@@ -633,7 +633,7 @@ function moveEnemy(index: number) {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
+  const { name, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = state.ctx!
   ctx.save() // 保存画布
   // 翻转图片
@@ -641,7 +641,7 @@ function drawEnemy(index: number) {
     ctx.translate(w + x * 2, 0)
     ctx.scale(-1, 1); // 翻转画布
   }
-  ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  ctx.drawImage(source.enemyImgSource[name].imgList[imgIndex], x, y, w, h) 
   ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {
