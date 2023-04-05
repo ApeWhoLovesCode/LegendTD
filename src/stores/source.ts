@@ -19,6 +19,12 @@ type StateType = {
   isGameing: boolean
   /** 敌人处理好的静态资源 */
   enemySource: EnemyStateType[]
+  /** 敌人加载完成的图片资源 */
+  enemyImgSource: {
+    [key in string]: {
+      imgList: HTMLImageElement[]
+    }
+  }
   /** 塔防处理好的静态资源 */
   towerSource?: TowerSource
   /** 图片资源 */
@@ -38,6 +44,7 @@ export const useSourceStore = defineStore('source', {
     isGameInit: false,
     isGameing: false,
     enemySource: [],
+    enemyImgSource: {},
     towerSource: void 0,
     othOnloadImg: {},
     mapLevel: 0,
@@ -64,9 +71,9 @@ export const useSourceStore = defineStore('source', {
       }
       const step = 70 / enemyData.length
       return Promise.all(enemyData.map(async (enemy, index) => {
-        const item = this.$state.enemySource[index]
-        if(!item.imgList.length) {
-          item.imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
+        if(!this.$state.enemyImgSource[enemy.name]?.imgList.length) {
+          const imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
+          this.$state.enemyImgSource[enemy.name] = {imgList}
           this.$state.progress += step
         }
         return 

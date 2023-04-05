@@ -18,7 +18,8 @@
     "pinia": "^2.0.28",
     "pinia-plugin-persist": "^1.0.0",
     "vue": "^3.2.41",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "worker-loader": "^3.0.8"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
