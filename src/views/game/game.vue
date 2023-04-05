@@ -31,7 +31,7 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
-import testBuildData from './tools/testBuild';
+// import testBuildData from './tools/testBuild';
 
 const emit = defineEmits<{
   (event: 'reStart'): void
