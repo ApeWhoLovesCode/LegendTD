@@ -76,8 +76,8 @@ onMounted(() => {
     <canvas 
       ref="canvasRef"
       id="game-canvas" 
-      width="1000" 
-      height="450"
+      width="1050" 
+      height="600"
     ></canvas>
     <button @click="openWorker">开启</button>
   </div>

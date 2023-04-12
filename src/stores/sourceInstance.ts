@@ -3,7 +3,7 @@ import otherImgData from "@/dataSource/otherImgData"
 import towerData, { TowerName } from "@/dataSource/towerData"
 import { EnemyStateType } from "@/type/game"
 import { range } from "@/utils/format"
-import { gifToStaticImg, loadImage } from "@/utils/handleImg"
+import { gifToStaticImgWorker, loadImageWorker } from "@/utils/handleImg"
 import _ from "lodash"
 import { OnloadImgKey, SourceStateType, TowerSource } from "./source"
 
@@ -41,7 +41,7 @@ class SourceClass {
     return Promise.all([
       this.handleOtherImg(),
       this.handleEnemyImg(), 
-      this.handleTowerImg(),
+      // this.handleTowerImg(),
     ]).then(() => {
       this.state.progress = range(this.state.progress, 0, 100)
     })
@@ -54,7 +54,7 @@ class SourceClass {
     return Promise.all(enemyData.map(async (enemy, index) => {
       const item = this.state.enemySource[index]
       if(!item.imgList.length) {
-        item.imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
+        item.imgList = await gifToStaticImgWorker({type: enemy.type, imgSource: enemy.imgSource})
         this.state.progress += step
       }
       return 
@@ -69,11 +69,11 @@ class SourceClass {
     return Promise.all(arr.map(async (key) => {
       const item = this.state.towerSource![key]
       if(!item.onloadImg) {
-        item.onloadImg = await loadImage(towerData[key].img)
+        item.onloadImg = await loadImageWorker(towerData[key].img)
         this.state.progress += step
       }
       if(!item.onloadbulletImg) {
-        item.onloadbulletImg = await loadImage(towerData[key].bulletImg)
+        item.onloadbulletImg = await loadImageWorker(towerData[key].bulletImg)
         this.state.progress += step
       }
       return
@@ -84,7 +84,7 @@ class SourceClass {
     const step = 10 / arr.length
     return Promise.all(
       arr.map(key => (
-        !this.state.othOnloadImg[key] ? loadImage(otherImgData[key]).then((img) => {
+        !this.state.othOnloadImg[key] ? loadImageWorker(otherImgData[key]).then((img) => {
           this.state.othOnloadImg[key] = img
           this.state.progress += step
         }) : ''
