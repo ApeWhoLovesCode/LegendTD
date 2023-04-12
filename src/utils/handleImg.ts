@@ -20,17 +20,16 @@ export function loadImage(imgUrl: string) {
 
  /** 单张gif转静态图片 */
 export function gifToStaticImg(target: {type: string, imgSource: string}) {
-  return new Promise<HTMLImageElement[]>((resolve, reject) => {
+  return new Promise<HTMLImageElement[]>(async (resolve, reject) => {
     try {
       const {type, imgSource} = target
       if(type !== 'gif') {
-        const newImg = new Image();
-        newImg.src = imgSource
+        const newImg = await loadImage(imgSource)
         resolve([newImg])
+        return
       }
       const gifImg = document.createElement('img');
       gifImg.src = imgSource
-      // gifImg.style.transform = 'rotate(90deg)';
       // 创建gif实例
       const rub = new SuperGif({ gif: gifImg } );
       rub.load(() => {
