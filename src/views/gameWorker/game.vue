@@ -1,13 +1,18 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
-import { onMounted, reactive, toRaw } from 'vue';
+import { onMounted, reactive, ref, toRaw } from 'vue';
 import useDomRef from '../game/tools/domRef';
+import useGameConfig from '../game/tools/gameConfig';
 
 import Worker from "./workers/index.ts?worker"
+import useBaseData from '../game/tools/baseData';
 
 const source = useSourceStore()
 
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
+
+const { gameConfigState } = useGameConfig()
+const { baseDataState } = useBaseData()
 
 const state = reactive({
   x: 125,
@@ -17,12 +22,15 @@ const state = reactive({
   speed: 1,
   r: 300,
 })
+const workerRef = ref()
 
 const openWorker = () => {
   const canvasBitmap = document.getElementById('game-canvas') as HTMLCanvasElement;
   const offscreen = canvasBitmap.transferControlToOffscreen();
   const worker = new Worker()
+  workerRef.value = worker
   worker.postMessage({
+    init: true,
     screenInfo: {
       width: document.documentElement.clientWidth, 
       height: document.documentElement.clientHeight, 
@@ -43,7 +51,10 @@ const openWorker = () => {
 }
 
 const gamePause = () => {
-  
+  baseDataState.isPause = !baseDataState.isPause
+  workerRef.value.postMessage({
+    isPause: baseDataState.isPause
+  })
 }
 
 /** 监听用户的键盘事件 */
