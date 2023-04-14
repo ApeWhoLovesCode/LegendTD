@@ -5,14 +5,15 @@ import { EnemyStateType, TowerStateType } from '@/type/game'
 import { range } from '@/utils/format'
 import { gifToStaticImg, loadImage } from '@/utils/handleImg'
 import _ from 'lodash'
-import {defineStore} from 'pinia'
+import { defineStore } from 'pinia'
 
-type TowerSource = {[key in TowerName]: TowerStateType}
+export type TowerSource = {[key in TowerName]: TowerStateType}
 
-type OnloadImgKey = keyof typeof otherImgData
-type OthOnloadImg = {[key in OnloadImgKey]?: HTMLImageElement}
+export type OnloadImgKey = keyof typeof otherImgData
 
-type StateType = {
+export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
+
+export type SourceStateType = {
   /** 游戏页面是否初始化完成 */
   isGameInit: boolean
   /** 游戏在进行中 */
@@ -40,7 +41,7 @@ type StateType = {
 }
 
 export const useSourceStore = defineStore('source', {
-  state: (): StateType => ({
+  state: (): SourceStateType => ({
     isGameInit: false,
     isGameing: false,
     enemySource: [],
