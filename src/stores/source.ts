@@ -11,7 +11,7 @@ export type TowerSource = {[key in TowerName]: TowerStateType}
 
 export type OnloadImgKey = keyof typeof otherImgData
 
-export type OthOnloadImg = {[key in OnloadImgKey]?: HTMLImageElement}
+export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
 
 export type SourceStateType = {
   /** 游戏页面是否初始化完成 */

@@ -1,12 +1,10 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
 import { limitRange, powAndSqrt, randomNumList, waitTime } from "@/utils/tools";
-import { computed } from "vue";
 import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, GameConfigType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
 import { TargetCircleInfo, baseDataState, checkValInCircle, gamePause, initAllGrid } from "./tools/baseData";
 import { enemyList, enemyState, slowEnemy } from './tools/enemy'
-import { towerList, towerState, handlerTower, hiddenTowerOperation } from './tools/tower'
 import { specialBullets } from './tools/specialBullets'
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
 import { EnemyType } from "@/dataSource/enemyData";
@@ -15,52 +13,57 @@ import { randomStr } from "@/utils/random";
 import { getAngle } from "@/utils/handleCircle";
 import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
 import levelData from "@/dataSource/levelData";
+import { VueFnName, WorkerFnName } from "./type/worker";
 
 const source = sourceInstance.state
-const screenInfo = {
-  width: 0,
-  height: 0,
-}
 const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
   width: 0,
   height: 0,
 }
 
-const gameConfigState: GameConfigType = {
-  // canvas 默认大小
-  defaultCanvas: {w: 1050, h: 600},
+const gameConfigState = {
   /** 一格的大小 */
   size: 50,
-  // canvas 对象
-  canvas: {},
   // requestAnimationFrame api的保存对象
   animationFrame: 0,
   // 得到 canvas 的 2d 上下文
   ctx: null as unknown as CanvasRenderingContext2D,
-  // 是否加载完成
-  loadingDone: false,
-  isGameBeginMask: true,
 }
+const towerList: TowerStateType[] = []
 
 addEventListener('message', e => {
   const { data } = e;
+  console.log('worker-init: ', data);
   // 初始化
   if(data.init) {
     const offscreen = data.canvasInfo.offscreen;
     canvasInfo.offscreen = offscreen
     gameConfigState.ctx = (offscreen.getContext('2d') as CanvasRenderingContext2D);
-    screenInfo.width = data.screenInfo.width
-    screenInfo.height = data.screenInfo.height
+    gameConfigState.size = data.canvasInfo.size
+    source.isMobile = data.source.isMobile
+    source.ratio = data.source.ratio
     init()
-  } else {
-    if(data.isPause === void 0) return
+  } 
+  // 暂停或继续游戏
+  if(data.isPause !== void 0) { 
     if(!data.isPause) {
       makeEnemy()
       startAnimation();
       // startMoneyTimer()
     } else {
       cancelAnimationFrame(gameConfigState.animationFrame)
+    }
+  }
+  switch (data.fnName as WorkerFnName) {
+    case 'getMouse': {
+      getMouse(data.event); break;
+    }
+    case 'buildTower': {
+      buildTower(data.event); break;
+    }
+    case 'saleTower': {
+      saleTower(data.event); break;
     }
   }
 })
@@ -70,7 +73,6 @@ const isInfinite = () => source.mapLevel === mapData.length - 1
 
 async function init() {
   await sourceInstance.loadingAllImg()
-  initZoomData()
   if(isInfinite()) {
     baseDataState.money = 999999
   }
@@ -84,7 +86,7 @@ async function init() {
   onLevelChange()
   source.isGameInit = true
   waitTime(800).then(() => {
-    gameConfigState.loadingDone = true
+    onWorkerPostFn('onWorkerReady')
     startDraw()
     // testBuildTowers()
   })
@@ -878,7 +880,9 @@ function initMovePath() {
 /** 判断穿透性子弹是否越界了 */
 function checkThroughBullet(bItem: TargetInfo) {
   let {x, y, w, h} = bItem
-  const {w: canvasW, h: canvasH} = gameConfigState.defaultCanvas
+  // const {w: canvasW, h: canvasH} = gameConfigState.defaultCanvas
+  const canvasW = canvasInfo.offscreen.width
+  const canvasH = canvasInfo.offscreen.height
   x = x - w / 2, y = y - h / 2
   return x + w < 0 || y + h < 0 || x > canvasW || y > canvasH
 }
@@ -909,18 +913,81 @@ function enterAttackScopeList(target: TargetCircleInfo) {
   return arr.map(item => item.id)
 }
 
-/** 按比例缩放数据 */
-function initZoomData() {
-  let p = source.ratio
-  const {w, h} = gameConfigState.defaultCanvas
-  if(source.isMobile) {
-    const wp = screenInfo.width / (h + 150)
-    const hp = screenInfo.height / (w + 100)
-    p *= Math.floor(Math.min(wp, hp) * 100) / 100
+/** ----- 与worker交互的事件 ----- */
+
+/** 点击获取鼠标位置 操作塔防 */
+function getMouse(e: {offsetX:number, offsetY:number}) {
+  const size = gameConfigState.size
+  const _x = e.offsetX * source.ratio, _y = e.offsetY * source.ratio
+  // 当前点击的格子的索引值
+  const col = Math.floor(_y / size), row = Math.floor(_x / size)
+  const gridVal = baseDataState.gridInfo.arr[col][row]
+  const left = row * size, top = col * size
+  // 已经有地板或者有建筑了
+  if(String(gridVal).includes('t')) {
+    onWorkerPostFn('handlerTower', {left, top})
   }
-  gameConfigState.size = Math.floor(gameConfigState.size * p)
-  gameConfigState.defaultCanvas.w = Math.floor(w * p)
-  gameConfigState.defaultCanvas.h = Math.floor(h * p)
+  if(gridVal) {
+    return
+  }
+  onWorkerPostFn('showTowerBuilding', {left, top})
 }
+
+/** 点击建造塔防 */
+function buildTower({x, y, tname, p}: {
+  x:number, y: number, tname: TowerName, p?: {x: number, y: number}
+}) {
+  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
+  if(baseDataState.money < money) return
+  baseDataState.money -= money
+  if(p) {
+    x = p.x, y = p.y
+  }
+  const size = gameConfigState.size
+  // 处理多个相同塔防的id值
+  const tower: TowerStateType = {
+    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+  }
+  tower.r *= size 
+  tower.speed *= size
+  tower.bSize.w *= size
+  tower.bSize.h *= size
+  // 子弹射击的防抖函数
+  if(tower.name !== 'huonan') {
+    tower.isToTimeShoot = true
+  }
+  if(tower.name === 'lanbo') {
+    tower.scale = 1
+    const {r, speed, bSize: {w, h}} = tower
+    const l = powAndSqrt(w / 2, h / 2)
+    // 这里 speed + 1 是为了让子弹扩散的效果快于真实子弹
+    tower.addScale = (r / l - 1) / ((r - l) / (speed + 1))
+  } else if(tower.name === 'huonan') {
+    tower.thickness = tower.bSize.w
+    tower.preDamage = tower.damage
+  }
+  towerList.push(tower)
+  // 用于标记是哪个塔防 10 + index
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
+  drawTower(tower)
+  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey, isMusic: false})
+}
+
+/** 售卖防御塔 */
+function saleTower(index: number) {
+  const size = gameConfigState.size
+  const {x, y, saleMoney, id} = towerList[index]
+  gameConfigState.ctx.clearRect(x, y, size, size);
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
+  baseDataState.money += saleMoney
+  keepInterval.delete(`towerShoot-${id}`)
+  towerList.splice(index, 1)
+  onWorkerPostFn('saleTowerCallback', id)
+}
+
+function onWorkerPostFn(fnName: VueFnName, event?: any) {
+  postMessage({fnName, event})
+}
+/** ----- 与worker交互的事件 end ----- */
 
 export default {}

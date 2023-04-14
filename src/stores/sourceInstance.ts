@@ -41,7 +41,7 @@ class SourceClass {
     return Promise.all([
       this.handleOtherImg(),
       this.handleEnemyImg(), 
-      // this.handleTowerImg(),
+      this.handleTowerImg(),
     ]).then(() => {
       this.state.progress = range(this.state.progress, 0, 100)
     })

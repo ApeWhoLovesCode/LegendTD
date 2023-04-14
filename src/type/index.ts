@@ -10,5 +10,5 @@ export type IndexType = {
 
 /** 图片加载完成的类型 */
 export type ImgLoadType = {
-  [key: string]: HTMLImageElement
+  [key: string]: CanvasImageSource
 }

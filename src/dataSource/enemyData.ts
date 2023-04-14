@@ -63,7 +63,7 @@ export type EnemyType = {
   /** 图片资源 */
   imgSource: string
   /** 加载完成的图片资源 */
-  imgList: HTMLImageElement[]
+  imgList: CanvasImageSource[]
   /** 当前绘画到的图片索引，用于gif图 */
   imgIndex: number
 }
