@@ -5,19 +5,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // chainWebpack: config => {
-  //   config.module
-  //     .rule('worker-loader')
-  //     .test(/\.worker\.js$/)
-  //     .use({
-  //       loader: 'worker-loader',
-  //       options: {
-  //         inline: true
-  //       }
-  //     })
-  //     .loader('worker-loader')
-  //     .end()
-  // },
   plugins: [
     vue(), 
     vueJsx()
