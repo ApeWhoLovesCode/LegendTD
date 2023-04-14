@@ -2,7 +2,7 @@
 import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
 import imgSource from '@/dataSource/imgSource';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 import GameNavBar from '../game/components/gameNavBar.vue'
 import StartAndEnd from '../game/components/startAndEnd.vue';
@@ -103,11 +103,14 @@ function initWorker() {
 function onWorkerReady() {
   gameConfigState.loadingDone = true;
 }
-function gamePause() {
-  baseDataState.isPause = !baseDataState.isPause
-  workerRef.value?.postMessage({
-    isPause: baseDataState.isPause
-  })
+function gamePause(val?: boolean) {
+  baseDataState.isPause = val ?? !baseDataState.isPause
+  const isPause = baseDataState.isPause
+  keepInterval.allPause(isPause)
+  if(!isPause) {
+    startMoneyTimer()
+  }
+  workerRef.value?.postMessage({ isPause })
 }
 /** 点击获取鼠标位置 操作塔防 */
 function getMouse(e: MouseEvent) {
@@ -149,7 +152,7 @@ function beginGame() {
   audioLevelRef.value?.play()
   playBgAudio()
   gameConfigState.isGameBeginMask = false
-  baseDataState.isPause = false
+  gamePause(false)
   ElMessage({type: 'success', message: '点击右上方按钮或按空格键继续 / 暂停游戏', duration: 2500, showClose: true})
   source.isGameing = true
 }

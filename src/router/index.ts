@@ -20,6 +20,11 @@ const routes = [
     name: 'test',
     component: () => import('../views/test/index.vue') 
   },
+  {
+    path: '/gameWorker',
+    name: 'gameWorker',
+    component: () => import('../views/gameWorker/index.vue') 
+  },
 ]
 
 const router = createRouter({

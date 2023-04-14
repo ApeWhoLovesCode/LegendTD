@@ -1,7 +1,7 @@
 import { CDN_URL } from '@/config';
 import SuperGif from 'libgif'
 
-/** 加载图片 imgUrl: 图片地址,   */
+/** 加载图片 */
 export function loadImage(imgUrl: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     try {

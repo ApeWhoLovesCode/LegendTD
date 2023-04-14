@@ -218,8 +218,9 @@ function startDraw() {
     // 当敌人已经到达终点，后面就不执行了
     if(res) break
     drawEnemy(index)
-    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) enemyList[index].imgIndex = 0
-    else enemyList[index].imgIndex++
+    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) {
+      enemyList[index].imgIndex = 0
+    } else enemyList[index].imgIndex++
   }
   checkEnemyAndTower()
   handleBulletMove()

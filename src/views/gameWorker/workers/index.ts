@@ -120,12 +120,22 @@ function startDraw() {
     // 当敌人已经到达终点，后面就不执行了
     if(res) break
     drawEnemy(index)
-    if(item.imgIndex === item.imgList.length - 1) enemyList[index].imgIndex = 0
-    else enemyList[index].imgIndex++
+    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) {
+      enemyList[index].imgIndex = 0
+    } else enemyList[index].imgIndex++
   }
   checkEnemyAndTower()
   handleBulletMove()
   drawSpecialBullets()
+  watchEnemyList()
+}
+
+function watchEnemyList() {
+  // 敌人已经清空
+  if(!enemyList.length && allEnemyIn() && baseDataState.hp) {
+    baseDataState.level++
+    onLevelChange()
+  }
 }
 
 function onLevelChange() {
@@ -614,7 +624,7 @@ function makeEnemy() {
 
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { x, y, w, h, imgList, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
+  const { name, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = gameConfigState.ctx
   ctx.save() // 保存画布
   // 翻转图片
@@ -622,7 +632,7 @@ function drawEnemy(index: number) {
     ctx.translate(w + x * 2, 0)
     ctx.scale(-1, 1); // 翻转画布
   }
-  ctx.drawImage(imgList[imgIndex], x, y, w, h) 
+  ctx.drawImage(source.enemyImgSource[name].imgList[imgIndex], x, y, w, h) 
   ctx.restore() // 还原画布
   // 绘画减速效果
   if(curSpeed !== speed) {

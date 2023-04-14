@@ -20,6 +20,7 @@ class SourceClass {
     isGameInit: false,
     isGameing: false,
     enemySource: [],
+    enemyImgSource: {},
     towerSource: void 0,
     othOnloadImg: {},
     mapLevel: 0,
@@ -51,10 +52,10 @@ class SourceClass {
       this.state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
     }
     const step = 70 / enemyData.length
-    return Promise.all(enemyData.map(async (enemy, index) => {
-      const item = this.state.enemySource[index]
-      if(!item.imgList.length) {
-        item.imgList = await gifToStaticImgWorker({type: enemy.type, imgSource: enemy.imgSource})
+    return Promise.all(enemyData.map(async (enemy) => {
+      if(!this.state.enemyImgSource[enemy.name]?.imgList.length) {
+        const imgList = await gifToStaticImgWorker({type: enemy.type, imgSource: enemy.imgSource})
+        this.state.enemyImgSource[enemy.name] = {imgList}
         this.state.progress += step
       }
       return 

@@ -23,7 +23,7 @@ export type SourceStateType = {
   /** 敌人加载完成的图片资源 */
   enemyImgSource: {
     [key in string]: {
-      imgList: HTMLImageElement[]
+      imgList: CanvasImageSource[]
     }
   }
   /** 塔防处理好的静态资源 */
@@ -71,7 +71,7 @@ export const useSourceStore = defineStore('source', {
         this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
       }
       const step = 70 / enemyData.length
-      return Promise.all(enemyData.map(async (enemy, index) => {
+      return Promise.all(enemyData.map(async (enemy) => {
         if(!this.$state.enemyImgSource[enemy.name]?.imgList.length) {
           const imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
           this.$state.enemyImgSource[enemy.name] = {imgList}
