@@ -1,9 +1,9 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
 import { limitRange, powAndSqrt, randomNumList, waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
-import { BulletType, EnemyStateType, GameConfigType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
+import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
-import { TargetCircleInfo, baseDataState, checkValInCircle, gamePause, initAllGrid } from "./tools/baseData";
+import { TargetCircleInfo, baseDataState, checkValInCircle, initAllGrid } from "./tools/baseData";
 import { enemyList, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
@@ -31,10 +31,11 @@ const gameConfigState = {
   ctx: null as unknown as CanvasRenderingContext2D,
 }
 const towerList: TowerStateType[] = []
+/** 控制等级的切换 */
+let isLevelLock = false
 
 addEventListener('message', e => {
   const { data } = e;
-  console.log('worker-init: ', data);
   // 初始化
   if(data.init) {
     const offscreen = data.canvasInfo.offscreen;
@@ -74,7 +75,7 @@ const isInfinite = () => source.mapLevel === mapData.length - 1
 async function init() {
   await sourceInstance.loadingAllImg()
   if(isInfinite()) {
-    baseDataState.money = 999999
+    changeMoney(999999)
   }
   const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
   item.x *= gameConfigState.size
@@ -131,9 +132,11 @@ function startDraw() {
 }
 
 function watchEnemyList() {
+  if(isLevelLock) return
   // 敌人已经清空
   if(!enemyList.length && allEnemyIn() && baseDataState.hp) {
     baseDataState.level++
+    isLevelLock = true
     onLevelChange()
   }
 }
@@ -161,13 +164,10 @@ function onLevelChange() {
       enemyState.levelEnemy = randomNumList(levelNum)
     }
     if(val) {
-      // if((val / 10) % 1 === 0) {
-      //   playAudio('ma-pvz', 'End')
-      // }
-      // baseDataState.money += (val + 1) * Math.round(gameSkillState.proMoney.money / 2)
+      changeMoney((val + 1) * Math.round(10))
       makeEnemy()
-      // audioLevelRef.value?.play()
     }
+    onWorkerPostFn('onLevelChange', val)
   }, 500);
 }
 
@@ -387,7 +387,7 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
         reward = enemy.reward * 2
       }
     }
-    baseDataState.money += reward
+    changeMoney(reward)
     // 这里可以放击杀音频
     // if(t.name === '茄子') {
     //   playDomAudio({id: t.id})
@@ -403,7 +403,7 @@ function damageTheEnemy(enemy: EnemyStateType, damage: number) {
   enemy.hp.cur = Math.max(enemy.hp.cur - damage, 0)
   if(enemy.hp.cur <= 0) {
     removeEnemy([enemy.id])
-    baseDataState.money += enemy.reward
+    changeMoney(enemy.reward)
   }
 }
 /** 画塔防的特殊子弹 */
@@ -618,6 +618,7 @@ function makeEnemy() {
       keepInterval.delete(KeepIntervalKey.makeEnemy)
     } else {
       setEnemy()
+      if(isLevelLock) isLevelLock = false
     }
   }, baseDataState.intervalTime)
 }
@@ -989,10 +990,15 @@ function saleTower(index: number) {
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
-  baseDataState.money += saleMoney
+  changeMoney(saleMoney)
   keepInterval.delete(`towerShoot-${id}`)
   towerList.splice(index, 1)
   onWorkerPostFn('saleTowerCallback', id)
+}
+
+function changeMoney(money: number) {
+  baseDataState.money += money
+  onWorkerPostFn('changeMoney', money)
 }
 
 function onWorkerPostFn(fnName: VueFnName, event?: any) {

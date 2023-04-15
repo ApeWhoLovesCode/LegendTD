@@ -1,19 +1,17 @@
-import { EnemyStateType, GameBaseData } from "@/type/game";
+import { EnemyStateType } from "@/type/game";
 import { powAndSqrt } from "@/utils/tools";
 
-const baseDataState: GameBaseData = {
+const baseDataState = {
   // 终点位置
   terminal: undefined,
   // 地板：大小 数量
   floorTile: {size: 50, num: 83},
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] },
+  gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] as number[][] },
   // 游戏结束
   isGameOver: false,
   // 设置游戏的暂停
   isPause: true,
-  /** 是否播放背景音乐 */
-  isPlayBgAudio: false,
   // 等级
   level: 0,
   // 生命值

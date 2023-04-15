@@ -80,6 +80,12 @@ function initWorker() {
       case 'onWorkerReady': {
         onWorkerReady(); break;
       }
+      case 'changeMoney': {
+        baseDataState.money += data.event; break;
+      }
+      case 'onLevelChange': {
+        onLevelChange(data.event); break;
+      }
       case 'handlerTower': {
         handlerTower(data.event?.left, data.event?.right); break;
       }
@@ -100,6 +106,15 @@ function initWorker() {
 
 /** ----- 与worker交互的事件 ----- */
 
+function onLevelChange(level: number) {
+  if(level) {
+    baseDataState.level = level
+    if((level / 10) % 1 === 0) {
+      playAudio('ma-pvz', 'End')
+    }
+    audioLevelRef.value?.play()
+  }
+}
 function onWorkerReady() {
   gameConfigState.loadingDone = true;
 }
@@ -131,7 +146,6 @@ function buildTowerCallback(p: {towerId: string, audioKey: string, isMusic: fals
   if(p.isMusic) return
   playDomAudio({id: p.towerId})
 }
-
 /** 售卖防御塔 */
 function saleTower(index: number) {
   onWorkerPostFn('saleTower', {index})
