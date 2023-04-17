@@ -37,7 +37,7 @@ async function init() {
 function switchMapLevel(index: number) {
   if(source.mapLevel === index) return
   source.mapLevel = index
-  router.push(`/game/${index + 1}`)
+  router.push(`/gameWorker/${index + 1}`)
   reStart()
 }
 /** 重新开始 */
@@ -55,19 +55,19 @@ onMounted(() => {
 
 <template>
   <div id='protect-horse-index'>
-    <!-- <ElPopconfirm title="您确定要回到首页吗，当前页面游戏数据将清除" @confirm="$router.push('/')">
+    <ElPopconfirm title="您确定要回到首页吗，当前页面游戏数据将清除" @confirm="$router.push('/')">
       <template #reference>
         <div class="title">
           <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
           <span>{{state.title}}</span>
         </div>
       </template>
-    </ElPopconfirm> -->
+    </ElPopconfirm>
     <ProtectTheHorse
       v-if="state.isProtectTheHorse" 
       @re-start="reStart"
     />
-    <!-- <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" /> -->
+    <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" />
     <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @re-start="reStart" />
   </div>
 </template>

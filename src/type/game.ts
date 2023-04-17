@@ -146,7 +146,7 @@ export type TowerState = {
   /** 塔防的位置 */
   building: {left: number, top: number, isShow: boolean}
   /** 塔防的攻击范围 */
-  buildingScope: {left: number, top: number, r: number, isShow: boolean, towerIndex: number}
+  buildingScope: {left: number, top: number, r: number, isShow: boolean, towerIndex: number, saleMoney: number}
 }
 
 /** 游戏音乐 */

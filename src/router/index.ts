@@ -21,7 +21,7 @@ const routes = [
     component: () => import('../views/test/index.vue') 
   },
   {
-    path: '/gameWorker',
+    path: '/gameWorker/:id',
     name: 'gameWorker',
     component: () => import('../views/gameWorker/index.vue') 
   },

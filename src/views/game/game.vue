@@ -9,12 +9,12 @@ import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
 import useTower from './tools/tower';
-import imgSource from '@/dataSource/imgSource';
 
 import GameNavBar from './components/gameNavBar.vue'
 import StartAndEnd from './components/startAndEnd.vue';
 import TowerBuild from './components/towerBuild.vue';
-import Skill from './components/skill.vue'
+import Skill from './components/skill.vue';
+import Terminal from './components/terminal.vue';
 
 import { limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
@@ -52,14 +52,6 @@ const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioR
 const { specialBullets } = useSpecialBullets()
 
 /** ---计算属性--- */
-/** 终点位置 */
-const terminalStyle = computed(() => {
-  const size = transRatio(gameConfigState.size)
-  if(baseDataState.terminal) {
-    const {x, y} = baseDataState.terminal
-    return {left: transRatio(x) + size / 2 + 'px', top: transRatio(y) - size / 2 + 'px'}
-  }
-})
 /** 是否是无限火力模式 */
 const isInfinite = computed(() => {
   return source.mapLevel === mapData.length - 1
@@ -1204,7 +1196,6 @@ function transRatio(v: number) {
         ></canvas>
         <TowerBuild 
           :tower-state="towerState"
-          :tower-list="towerList"
           :base-data-state="baseDataState"
           :size="gameConfigState.size"
           @build-tower="buildTower"
@@ -1213,11 +1204,12 @@ function transRatio(v: number) {
         <!-- 游戏底部技能区 -->
         <Skill :skillList="gameSkillState.skillList" :money="baseDataState.money" :isPause="baseDataState.isPause" @handleSkill="handleSkill" />
         <!-- 终点 -->
-        <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
-          <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
-          <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
-          <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="imgSource.SunImg" alt="" @click="proMoneyClick">
-        </div>
+        <Terminal
+          :game-config-state="gameConfigState"
+          :game-skill-state="gameSkillState"
+          :base-data-state="baseDataState"
+          @proMoneyClick="proMoneyClick"
+        />
         <!-- 游戏开始和结束遮罩层 -->
         <StartAndEnd 
           :base-data-state="baseDataState" 

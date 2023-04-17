@@ -1,53 +1,89 @@
 <script setup lang='ts'>
 import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
-import imgSource from '@/dataSource/imgSource';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import GameNavBar from '../game/components/gameNavBar.vue'
 import StartAndEnd from '../game/components/startAndEnd.vue';
 import TowerBuild from '../game/components/towerBuild.vue';
 import Skill from '../game/components/skill.vue'
+import Terminal from "../game/components/terminal.vue";
 
 import useDomRef from './tools/domRef';
 import useGameConfig from './tools/gameConfig';
 import useBaseData from './tools/baseData';
 import useAudioState from './tools/audioState';
 import useGameSkill from "./tools/gameSkill";
+import useTower from "./tools/tower";
+
 import { ElMessage } from "element-plus";
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
-import useTower from "./tools/tower";
 import { VueFnName, WorkerFnName } from "./workers/type/worker";
-import { TowerStateType } from "@/type/game";
 import { TowerName } from "@/dataSource/towerData";
-import { powAndSqrt } from "@/utils/tools";
+import { useUserInfoStore } from "@/stores/userInfo";
+import { updateScoreApi } from "@/service/rank";
+import { useRoute } from "vue-router";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
 }>()
 
 const source = useSourceStore()
+const userInfoStore = useUserInfoStore()
 
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
 const { gameConfigState } = useGameConfig()
 const { gameSkillState } = useGameSkill()
 const { baseDataState } = useBaseData()
 const { audioState, createAudio, playDomAudio, removeAudio} = useAudioState()
-const { towerState, showTowerBuilding, handlerTower, hiddenTowerOperation } = useTower()
+const { towerState, showTowerBuilding, hiddenTowerOperation } = useTower()
 
+const router = useRoute()
 const workerRef = ref<Worker>()
 
-/** 终点位置 */
-const terminalStyle = computed(() => {
-  const size = transRatio(gameConfigState.size)
-  if(baseDataState.terminal) {
-    const {x, y} = baseDataState.terminal
-    return {left: transRatio(x) + size / 2 + 'px', top: transRatio(y) - size / 2 + 'px'}
+// 监听增加的钱
+watch(() => baseDataState.money, (newVal, oldVal) => {
+  gameSkillState.addMoney.num = ''
+  clearTimeout(gameSkillState.addMoney.timer as NodeJS.Timer)
+  gameSkillState.addMoney.timer = null
+  nextTick(() => {
+    const val = newVal - oldVal
+    gameSkillState.addMoney.num = (val >= 0 ? '+' : '') + val
+    gameSkillState.addMoney.timer = setTimeout(() => {
+      gameSkillState.addMoney.num = ''
+    }, gameSkillState.addMoney.time);
+  })
+})
+// 游戏结束判断
+watch(() => baseDataState.hp, (hp) => {
+  if(hp) return
+  baseDataState.isGameOver = true
+  baseDataState.isPause = true
+  playAudio('ma-gameover', 'Skill')
+  audioBgRef.value?.pause()
+  source.isGameing = false
+  const {userInfo} = userInfoStore
+  if(userInfo) {
+    if(!baseDataState.level) {
+      return ElMessage.info('很遗憾你一波敌人都没抵御成功')
+    }
+    updateScoreApi({
+      userId: userInfo.id,
+      score: baseDataState.level,
+      level: source.mapLevel
+    }).then(res => {
+      ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
+    })
+  } else {
+    ElMessage.info('登录后才能上传成绩~~')
   }
 })
 
 onMounted(() => {
   init()
+})
+onBeforeUnmount(() => {
+  workerRef.value?.terminate()
 })
 
 function init() {
@@ -68,44 +104,58 @@ function initWorker() {
     source: {
       isMobile: source.isMobile,
       ratio: source.ratio,
+      mapLevel: source.mapLevel
     },
     canvasInfo: {
       offscreen,
       size: gameConfigState.size,
-    }
+    },
+    isDevTestMode: router.query['dev'] === 'test'
   }, [offscreen]);
   worker.onmessage = e => {
     const { data } = e
+    const param = data.param
     switch (data.fnName as VueFnName) {
+      case 'addMoney': {
+        baseDataState.money += param; break;
+      }
+      case 'createAudio': {
+        createAudio(param.audioKey, param.id); break;
+      }
+      // --- 塔防相关 start ---
+      case 'handlerTower': {
+        towerState.buildingScope = param; break;
+      }
+      case 'showTowerBuilding': {
+        showTowerBuilding(param); break;
+      }
+      case 'buildTowerCallback': {
+        buildTowerCallback(param); break;
+      }
+      case 'saleTowerCallback': {
+        saleTowerCallback(param); break;
+      }
+      // --- 塔防相关 end ---
+      case 'onLevelChange': {
+        onLevelChange(param); break;
+      }
+      case 'onHpChange': {
+        baseDataState.hp = param;
+        playAudio('ma-nansou', 'End');
+        break;
+      }
       case 'onWorkerReady': {
         onWorkerReady(); break;
       }
-      case 'changeMoney': {
-        baseDataState.money += data.event; break;
-      }
-      case 'onLevelChange': {
-        onLevelChange(data.event); break;
-      }
-      case 'handlerTower': {
-        handlerTower(data.event?.left, data.event?.right); break;
-      }
-      case 'showTowerBuilding': {
-        showTowerBuilding(data.event); break;
-      }
-      case 'buildTowerCallback': {
-        buildTowerCallback(data.event); break;
-      }
-      case 'saleTowerCallback': {
-        saleTowerCallback(data.event); break;
+      case 'initMovePathCallback': {
+        baseDataState.terminal = param; break;
       }
     }
   }
-  // worker.postMessage('线程关闭')
-  // worker.terminate()
 }
 
 /** ----- 与worker交互的事件 ----- */
-
+/** 改变等级 */
 function onLevelChange(level: number) {
   if(level) {
     baseDataState.level = level
@@ -132,34 +182,45 @@ function getMouse(e: MouseEvent) {
   e.stopPropagation()
   onWorkerPostFn('getMouse', {offsetX: e.offsetX, offsetY: e.offsetY})
 }
-
 /** 点击建造塔防 */
-function buildTower(tname: TowerName, p?: {x: number, y: number}) {
-  const { money } = source.towerSource![tname]
-  if(baseDataState.money < money) return
-  baseDataState.money -= money
+function buildTower(tname: TowerName) {
+  if(baseDataState.money < source.towerSource![tname].money) return
   let {left: x, top: y} = towerState.building
-  onWorkerPostFn('buildTower', {x, y, tname, p})
+  onWorkerPostFn('buildTower', {x, y, tname})
 }
-function buildTowerCallback(p: {towerId: string, audioKey: string, isMusic: false}) {
+function buildTowerCallback(p: {towerId: string, audioKey: string, isMusic: boolean}) {
   createAudio(`${p.audioKey}-choose`, p.towerId)
-  if(p.isMusic) return
-  playDomAudio({id: p.towerId})
+  if(p.isMusic) {
+    playDomAudio({id: p.towerId})
+  }
 }
-/** 售卖防御塔 */
 function saleTower(index: number) {
-  onWorkerPostFn('saleTower', {index})
+  onWorkerPostFn('saleTower', index)
 }
 function saleTowerCallback(id: string) {
   removeAudio(id)
 }
+/** 发动技能 */
+function handleSkill(index: number) {
+  const { name, audioKey, showTime, cd } = gameSkillState.skillList[index]
+  playAudio(audioKey, 'Skill')
+  // 显示技能效果
+  gameSkillState.skillList[index].isShow = true
+  setTimeout(() => {
+    gameSkillState.skillList[index].isShow = false
+  }, showTime);
+  // 技能进入cd
+  gameSkillState.skillList[index].curTime = cd 
+  keepInterval.set(`${KeepIntervalKey.skill}-${name}`, () => {
+    gameSkillState.skillList[index].curTime -= 1000
+    if(gameSkillState.skillList[index].curTime <= 0) {
+      keepInterval.delete(`${KeepIntervalKey.skill}-${name}`)
+    }
+  })
+  onWorkerPostFn('handleSkill', index)
+}
 
 /** ----- 与worker交互的事件 end ----- */
-
-
-function handleSkill() {
-
-}
 
 /** 开始游戏 */
 function beginGame() {
@@ -276,7 +337,6 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
         ></canvas>
         <TowerBuild 
           :tower-state="towerState"
-          :tower-list="[]"
           :base-data-state="baseDataState"
           :size="gameConfigState.size"
           @build-tower="buildTower"
@@ -290,17 +350,12 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
           @handleSkill="handleSkill" 
         />
         <!-- 终点 -->
-        <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
-          <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
-          <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
-          <img 
-            v-show="gameSkillState.proMoney.isShow" 
-            class="money-icon" 
-            :src="imgSource.SunImg" 
-            alt=""
-            @click="proMoneyClick"
-          >
-        </div>
+        <Terminal
+          :game-config-state="gameConfigState"
+          :game-skill-state="gameSkillState"
+          :base-data-state="baseDataState"
+          @proMoneyClick="proMoneyClick"
+        />
         <!-- 游戏开始和结束遮罩层 -->
         <StartAndEnd 
           :base-data-state="baseDataState" 
@@ -316,7 +371,7 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <!-- <div class="screenMask"></div> -->
+    <div class="screenMask"></div>
   </div>
 </template>
 
@@ -336,36 +391,6 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       background-image: radial-gradient(circle calc(@size * 10) at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
       border-radius: 4px;
       overflow: hidden;
-      .terminal {
-        position: absolute;
-        user-select: none;
-        .hp {
-          position: absolute;
-          top: calc(@size * 0.15);
-          left: calc(@size * 0.35);
-          color: #f24410;
-          font-size: calc(@size * 0.3);
-          font-weight: bold;
-          text-align: center;
-          &-mobile {
-            font-size: calc(@size * 0.4);
-            top: calc(@size * 0.1);
-            left: calc(@size * 0.25);
-          }
-        }
-        .terminal-icon {
-          display: block;
-          width: calc(@size * 1.8);
-        }
-        .money-icon {
-          position: absolute;
-          top: 0;
-          right: 0;
-          width: calc(@size * 1.2);
-          height: calc(@size * 1.2);
-          cursor: pointer;
-        }
-      }
     }
   }
   .screenMask {

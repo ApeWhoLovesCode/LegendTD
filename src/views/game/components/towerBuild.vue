@@ -6,10 +6,8 @@ import imgSource from '@/dataSource/imgSource';
 import { useUserInfoStore } from '@/stores/userInfo';
 import { TowerName } from '@/dataSource/towerData';
 
-// const {towerState, baseDataState, towerList, ...props} = defineProps<{
 const props = defineProps<{
   towerState: TowerState
-  towerList: TowerStateType[]
   baseDataState: GameBaseData
   size: number
 }>()
@@ -106,7 +104,7 @@ function transRatio(v: number) {
     <div v-show="towerState.buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
       <span class="sale-wrap" @click="emit('saleTower', towerState.buildingScope.towerIndex)" :style="saleTowerStyle">
         <span class="iconfont icon-ashbin"></span>
-        <span class="sale-num">{{ towerList[towerState.buildingScope.towerIndex]?.saleMoney }}</span>
+        <span class="sale-num">{{ towerState.buildingScope?.saleMoney }}</span>
       </span>
     </div>
   </div>

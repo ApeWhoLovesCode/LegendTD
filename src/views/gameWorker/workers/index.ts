@@ -1,11 +1,12 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
-import { limitRange, powAndSqrt, randomNumList, waitTime } from "@/utils/tools";
+import { limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
 import { TargetCircleInfo, baseDataState, checkValInCircle, initAllGrid } from "./tools/baseData";
 import { enemyList, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
+
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
 import { EnemyType } from "@/dataSource/enemyData";
 import _ from "lodash";
@@ -14,6 +15,8 @@ import { getAngle } from "@/utils/handleCircle";
 import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
 import levelData from "@/dataSource/levelData";
 import { VueFnName, WorkerFnName } from "./type/worker";
+import skillData from "@/dataSource/skillData";
+import testBuildData from "./tools/testBuild";
 
 const source = sourceInstance.state
 const canvasInfo = {
@@ -30,9 +33,19 @@ const gameConfigState = {
   // 得到 canvas 的 2d 上下文
   ctx: null as unknown as CanvasRenderingContext2D,
 }
+const gameSkillState = {
+  // 生产的金钱
+  proMoney: {isShow: false, interval: 10000, money: 25},
+  // 增加的金钱
+  addMoney: {num: '', timer: null, time: 1000},
+  // 底部技能栏
+  skillList: JSON.parse(JSON.stringify(skillData)),
+}
 const towerList: TowerStateType[] = []
 /** 控制等级的切换 */
 let isLevelLock = false
+/** 是否是开发测试模式 */
+let isDevTestMode = false
 
 addEventListener('message', e => {
   const { data } = e;
@@ -44,14 +57,15 @@ addEventListener('message', e => {
     gameConfigState.size = data.canvasInfo.size
     source.isMobile = data.source.isMobile
     source.ratio = data.source.ratio
+    source.mapLevel = data.source.mapLevel
     init()
   } 
   // 暂停或继续游戏
   if(data.isPause !== void 0) { 
+    keepInterval.allPause(data.isPause)
     if(!data.isPause) {
       makeEnemy()
       startAnimation();
-      // startMoneyTimer()
     } else {
       cancelAnimationFrame(gameConfigState.animationFrame)
     }
@@ -66,6 +80,12 @@ addEventListener('message', e => {
     case 'saleTower': {
       saleTower(data.event); break;
     }
+    case 'handleSkill': {
+      handleSkill(data.event); break;
+    }
+  }
+  if(data.isDevTestMode) {
+    isDevTestMode = true
   }
 })
 
@@ -75,7 +95,7 @@ const isInfinite = () => source.mapLevel === mapData.length - 1
 async function init() {
   await sourceInstance.loadingAllImg()
   if(isInfinite()) {
-    changeMoney(999999)
+    addMoney(999999)
   }
   const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
   item.x *= gameConfigState.size
@@ -89,7 +109,7 @@ async function init() {
   waitTime(800).then(() => {
     onWorkerPostFn('onWorkerReady')
     startDraw()
-    // testBuildTowers()
+    testBuildTowers()
   })
 }
 
@@ -164,7 +184,7 @@ function onLevelChange() {
       enemyState.levelEnemy = randomNumList(levelNum)
     }
     if(val) {
-      changeMoney((val + 1) * Math.round(10))
+      addMoney((val + 1) * Math.round(10))
       makeEnemy()
     }
     onWorkerPostFn('onLevelChange', val)
@@ -387,7 +407,7 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
         reward = enemy.reward * 2
       }
     }
-    changeMoney(reward)
+    addMoney(reward)
     // 这里可以放击杀音频
     // if(t.name === '茄子') {
     //   playDomAudio({id: t.id})
@@ -403,7 +423,7 @@ function damageTheEnemy(enemy: EnemyStateType, damage: number) {
   enemy.hp.cur = Math.max(enemy.hp.cur - damage, 0)
   if(enemy.hp.cur <= 0) {
     removeEnemy([enemy.id])
-    changeMoney(enemy.reward)
+    addMoney(enemy.reward)
   }
 }
 /** 画塔防的特殊子弹 */
@@ -705,8 +725,8 @@ function setEnemy() {
   enemyItem.y = y - h / 2
   enemyList.push(enemyItem)
   enemyState.createdEnemyNum++
-  handleEnemySkill(name, enemyItem.id)
-  // createAudio(audioKey, String(id))
+  handleEnemySkill(name, id)
+  onWorkerPostFn('createAudio', {audioKey, id})
 }
 
 /** 设置敌人技能 */
@@ -819,8 +839,8 @@ function moveEnemy(index: number) {
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
-    baseDataState.hp -= 1
-    // playAudio('ma-nansou', 'End')
+    baseDataState.hp = Math.max(0, baseDataState.hp - 1)
+    onWorkerPostFn('onHpChange', baseDataState.hp)
     return true
   }
   // 将格子坐标同步到敌人的坐标
@@ -884,14 +904,13 @@ function initMovePath() {
     movePath.push(JSON.parse(JSON.stringify(movePathItem)))
     baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
   }
-  baseDataState.terminal = movePath[movePath.length - 1]
+  onWorkerPostFn('initMovePathCallback', movePath[movePath.length - 1])
   enemyState.movePath = movePath
 }
 
 /** 判断穿透性子弹是否越界了 */
 function checkThroughBullet(bItem: TargetInfo) {
   let {x, y, w, h} = bItem
-  // const {w: canvasW, h: canvasH} = gameConfigState.defaultCanvas
   const canvasW = canvasInfo.offscreen.width
   const canvasH = canvasInfo.offscreen.height
   x = x - w / 2, y = y - h / 2
@@ -936,7 +955,11 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
   const left = row * size, top = col * size
   // 已经有地板或者有建筑了
   if(String(gridVal).includes('t')) {
-    onWorkerPostFn('handlerTower', {left, top})
+    // 当前点击的是哪个塔防
+    const towerIndex = towerList.findIndex(item => item.x === left && item.y === top)
+    const {r, saleMoney} = towerList[towerIndex]
+    // 展示攻击范围
+    onWorkerPostFn('handlerTower', {isShow: true, left, top, r, towerIndex, saleMoney})
   }
   if(gridVal) {
     return
@@ -945,15 +968,12 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
 }
 
 /** 点击建造塔防 */
-function buildTower({x, y, tname, p}: {
-  x:number, y: number, tname: TowerName, p?: {x: number, y: number}
-}) {
+function buildTower({x, y, tname}: {
+  x: number, y: number, tname: TowerName
+}, isMusic = true) {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(baseDataState.money < money) return
-  baseDataState.money -= money
-  if(p) {
-    x = p.x, y = p.y
-  }
+  addMoney(-money)
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
@@ -981,7 +1001,7 @@ function buildTower({x, y, tname, p}: {
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
   drawTower(tower)
-  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey, isMusic: false})
+  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey, isMusic})
 }
 
 /** 售卖防御塔 */
@@ -990,20 +1010,72 @@ function saleTower(index: number) {
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
-  changeMoney(saleMoney)
+  addMoney(saleMoney)
   keepInterval.delete(`towerShoot-${id}`)
   towerList.splice(index, 1)
   onWorkerPostFn('saleTowerCallback', id)
 }
 
-function changeMoney(money: number) {
-  baseDataState.money += money
-  onWorkerPostFn('changeMoney', money)
+/** 发动技能 */
+function handleSkill(index: number) {
+  const { name, money, damage } = gameSkillState.skillList[index]
+  addMoney(-money)
+  if(name !== '礼物') {
+    const e_idList = []
+    for(const enemy of enemyList) {
+      const e_id = enemy.id
+      enemy.hp.cur -= damage
+        if(enemy.hp.cur <= 0) {
+        addMoney(enemy.reward)
+        e_idList.push(e_id)
+        // 遍历清除防御塔里的该攻击目标
+        for(const t of towerList) {
+          t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
+        }
+      }
+      if(name === "肉弹冲击") {
+        slowEnemy(e_id, {num: 0, time: 6000, type: 'vertigo'})
+      }
+    }
+    removeEnemy(e_idList)
+  } else {
+    addMoney(randomNum(1, 100))
+  }
 }
 
-function onWorkerPostFn(fnName: VueFnName, event?: any) {
-  postMessage({fnName, event})
+/** 改变金钱 */
+function addMoney(money: number) {
+  baseDataState.money += money
+  onWorkerPostFn('addMoney', money)
+}
+
+function onWorkerPostFn(fnName: VueFnName, param?: any) {
+  postMessage({fnName, param})
 }
 /** ----- 与worker交互的事件 end ----- */
+
+/** 测试: 建造塔防 */
+function testBuildTowers() {
+  if(!isDevTestMode) return
+  addMoney(999999)
+  const size = gameConfigState.size
+  testBuildData.forEach(item => {
+    item.x *= size
+    item.y *= size
+    buildTower({...item}, false)
+  })
+  for(let i = 0; i < 20; i++) {
+    buildTower({x: i * size, y: 0, tname: 'ez'}, false)
+  }
+  for(let i = 0; i < 4; i++) {
+    buildTower({x: i * size, y: size, tname: 'ez'}, false)
+  }
+  for(let i = 0; i < 4; i++) {
+    buildTower({x: i * size, y: 2 * size, tname: 'ez'}, false)
+  }
+  for(let i = 6; i < 15; i++) {
+    buildTower({x: i * size, y: 2 * size, tname: 'ez'}, false)
+  }
+}
 
 export default {}
