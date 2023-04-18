@@ -347,7 +347,7 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   // 设置敌人的初始位置
-  const id = item.audioKey + randomStr('enemy')
+  const id = randomStr(item.audioKey)
   const enemyItem: EnemyStateType = {...item, id}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
@@ -510,7 +510,7 @@ function handleSkill(index: number) {
     for(const enemy of enemyList) {
       const e_id = enemy.id
       enemy.hp.cur -= damage
-        if(enemy.hp.cur <= 0) {
+      if(enemy.hp.cur <= 0) {
         baseDataState.money += enemy.reward
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
@@ -583,7 +583,7 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size

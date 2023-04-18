@@ -1,5 +1,7 @@
 import { CDN_URL } from '@/config';
-import SuperGif from 'libgif'
+import SuperGif from 'libgif';
+import loadWorkerGIF from "./worker-libgif/worker-libgif"
+// const loadWorkerGIF = require("./worker-libgif/worker-libgif")
 
 /** 加载图片 */
 export function loadImage(imgUrl: string) {
@@ -75,28 +77,18 @@ export function loadImageWorker(imgUrl: string) {
 
  /** worker 单张gif转静态图片 */
  export function gifToStaticImgWorker(target: {type: string, imgSource: string}) {
-  return new Promise<ImageBitmap[]>(async (resolve, reject) => {
+  return new Promise<(ImageBitmap | OffscreenCanvas)[]>(async (resolve, reject) => {
     try {
       const {type, imgSource} = target
-      const newImg = await loadImageWorker(imgSource)
-      // worker用不了 superGif 先不处理 gif 图
-      // if(type !== 'gif') {  
-      if(true) { 
-        resolve([newImg])
-        return
+      if(type !== 'gif') {  
+        loadImageWorker(imgSource).then(newImg => {
+          resolve([newImg])
+        })
+      } else {
+        loadWorkerGIF(imgSource).then((list: {delay: number, data: OffscreenCanvas}[]) => {
+          resolve(list.map(item => item.data))
+        })
       }
-      // 创建gif实例
-      const rub = new SuperGif({ gif: newImg } );
-      rub.load(() => {
-        const imgList = [];
-        for (let i = 1; i <= rub.get_length(); i++) {
-          // 遍历gif实例的每一帧
-          rub.move_to(i);
-          const imgUrl = rub.get_canvas()
-          imgList.push(imgUrl)
-        }
-        resolve(imgList)
-      });
     } catch (error) {
       console.log('gifToStaticImgWorker-error: ', error);
       reject(error)

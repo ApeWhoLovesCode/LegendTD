@@ -717,7 +717,7 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   // 设置敌人的初始位置
-  const id = item.audioKey + randomStr('enemy')
+  const id = randomStr(item.audioKey)
   const enemyItem: EnemyStateType = {...item, id}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
@@ -833,14 +833,21 @@ function removeEnemy(e_idList: string[]) {
   }
 }
 
+function onReduceHp(hp: number) {
+  baseDataState.hp = Math.max(0, baseDataState.hp - hp)
+  onWorkerPostFn('onHpChange', baseDataState.hp)
+  if(!baseDataState.hp) {
+    cancelAnimationFrame(gameConfigState.animationFrame)
+  }
+}
+
 /** 敌人移动 */
 function moveEnemy(index: number) {
   const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemyList[index]
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
-    baseDataState.hp = Math.max(0, baseDataState.hp - 1)
-    onWorkerPostFn('onHpChange', baseDataState.hp)
+    onReduceHp(1)
     return true
   }
   // 将格子坐标同步到敌人的坐标
@@ -974,10 +981,13 @@ function buildTower({x, y, tname}: {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(baseDataState.money < money) return
   addMoney(-money)
+  if(isDevTestMode) {
+    ret.damage = 0.01
+  }
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
@@ -1025,7 +1035,7 @@ function handleSkill(index: number) {
     for(const enemy of enemyList) {
       const e_id = enemy.id
       enemy.hp.cur -= damage
-        if(enemy.hp.cur <= 0) {
+      if(enemy.hp.cur <= 0) {
         addMoney(enemy.reward)
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
@@ -1058,6 +1068,7 @@ function onWorkerPostFn(fnName: VueFnName, param?: any) {
 function testBuildTowers() {
   if(!isDevTestMode) return
   addMoney(999999)
+  enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,11,11,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
   const size = gameConfigState.size
   testBuildData.forEach(item => {
     item.x *= size
@@ -1065,16 +1076,16 @@ function testBuildTowers() {
     buildTower({...item}, false)
   })
   for(let i = 0; i < 20; i++) {
-    buildTower({x: i * size, y: 0, tname: 'ez'}, false)
+    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false)
   }
   for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: size, tname: 'ez'}, false)
+    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false)
   }
   for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'ez'}, false)
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false)
   }
   for(let i = 6; i < 15; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'ez'}, false)
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false)
   }
 }
 

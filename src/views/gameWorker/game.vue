@@ -54,36 +54,13 @@ watch(() => baseDataState.money, (newVal, oldVal) => {
     }, gameSkillState.addMoney.time);
   })
 })
-// 游戏结束判断
-watch(() => baseDataState.hp, (hp) => {
-  if(hp) return
-  baseDataState.isGameOver = true
-  baseDataState.isPause = true
-  playAudio('ma-gameover', 'Skill')
-  audioBgRef.value?.pause()
-  source.isGameing = false
-  const {userInfo} = userInfoStore
-  if(userInfo) {
-    if(!baseDataState.level) {
-      return ElMessage.info('很遗憾你一波敌人都没抵御成功')
-    }
-    updateScoreApi({
-      userId: userInfo.id,
-      score: baseDataState.level,
-      level: source.mapLevel
-    }).then(res => {
-      ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
-    })
-  } else {
-    ElMessage.info('登录后才能上传成绩~~')
-  }
-})
 
 onMounted(() => {
   init()
 })
 onBeforeUnmount(() => {
   workerRef.value?.terminate()
+  keepInterval.clear()
 })
 
 function init() {
@@ -140,9 +117,7 @@ function initWorker() {
         onLevelChange(param); break;
       }
       case 'onHpChange': {
-        baseDataState.hp = param;
-        playAudio('ma-nansou', 'End');
-        break;
+        onHpChange(param); break;
       }
       case 'onWorkerReady': {
         onWorkerReady(); break;
@@ -181,6 +156,32 @@ function gamePause(val?: boolean) {
 function getMouse(e: MouseEvent) {
   e.stopPropagation()
   onWorkerPostFn('getMouse', {offsetX: e.offsetX, offsetY: e.offsetY})
+}
+function onHpChange(hp: number) {
+  baseDataState.hp = hp;
+  playAudio('ma-nansou', 'End');
+  // 判断游戏结束
+  if(hp) return
+  baseDataState.isGameOver = true
+  baseDataState.isPause = true
+  playAudio('ma-gameover', 'Skill')
+  audioBgRef.value?.pause()
+  source.isGameing = false
+  const {userInfo} = userInfoStore
+  if(userInfo) {
+    if(!baseDataState.level) {
+      return ElMessage.info('很遗憾你一波敌人都没抵御成功')
+    }
+    updateScoreApi({
+      userId: userInfo.id,
+      score: baseDataState.level,
+      level: source.mapLevel
+    }).then(res => {
+      ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
+    })
+  } else {
+    ElMessage.info('登录后才能上传成绩~~')
+  }
 }
 /** 点击建造塔防 */
 function buildTower(tname: TowerName) {
