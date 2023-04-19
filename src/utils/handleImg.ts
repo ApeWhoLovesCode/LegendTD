@@ -1,7 +1,6 @@
 import { CDN_URL } from '@/config';
 import SuperGif from 'libgif';
-import loadWorkerGIF from "./worker-libgif/worker-libgif"
-// const loadWorkerGIF = require("./worker-libgif/worker-libgif")
+import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
 
 /** 加载图片 */
 export function loadImage(imgUrl: string) {
@@ -20,7 +19,7 @@ export function loadImage(imgUrl: string) {
 }
 
  /** 单张gif转静态图片 */
-export function gifToStaticImg(target: {type: string, imgSource: string}) {
+export function gifToStaticImgLibGif(target: {type: string, imgSource: string}) {
   return new Promise<HTMLImageElement[]>(async (resolve, reject) => {
     try {
       const {type, imgSource} = target
@@ -75,23 +74,14 @@ export function loadImageWorker(imgUrl: string) {
   })
 }
 
- /** worker 单张gif转静态图片 */
- export function gifToStaticImgWorker(target: {type: string, imgSource: string}) {
-  return new Promise<(ImageBitmap | OffscreenCanvas)[]>(async (resolve, reject) => {
-    try {
-      const {type, imgSource} = target
-      if(type !== 'gif') {  
-        loadImageWorker(imgSource).then(newImg => {
-          resolve([newImg])
-        })
-      } else {
-        loadWorkerGIF(imgSource).then((list: {delay: number, data: OffscreenCanvas}[]) => {
-          resolve(list.map(item => item.data))
-        })
-      }
-    } catch (error) {
-      console.log('gifToStaticImgWorker-error: ', error);
+/** 单张gif转静态图片 */
+export function gifToStaticImgList(url: string, isWorker = false) {
+  return new Promise<(SourceImgObj)[]>((resolve, reject) => {
+    loadGifToCanvas(url, isWorker).then((list) => {
+      resolve(list)
+    }).catch((error: any) => {
+      console.log('gifToStaticImg-error: ', error);
       reject(error)
-    }
+    })
   })
 }

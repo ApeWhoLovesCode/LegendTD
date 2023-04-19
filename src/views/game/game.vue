@@ -205,14 +205,9 @@ function startDraw() {
   drawTower()
   // 循环静态图片数组画敌人形成gif效果
   for(let index = 0; index < enemyList.length; index++) {
-    const item = enemyList[index]
-    const res = moveEnemy(index)
     // 当敌人已经到达终点，后面就不执行了
-    if(res) break
+    if(moveEnemy(index)) break
     drawEnemy(index)
-    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) {
-      enemyList[index].imgIndex = 0
-    } else enemyList[index].imgIndex++
   }
   checkEnemyAndTower()
   handleBulletMove()
@@ -275,7 +270,7 @@ function makeEnemy() {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { name, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
+  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = gameConfigState.ctx
   ctx.save() // 保存画布
   // 翻转图片
@@ -283,8 +278,19 @@ function drawEnemy(index: number) {
     ctx.translate(w + x * 2, 0)
     ctx.scale(-1, 1); // 翻转画布
   }
-  ctx.drawImage(source.enemyImgSource[name].imgList[imgIndex], x, y, w, h) 
+  const imgItem = source.enemyImgSource[name]
+  // 处理需要绘画的敌人图片
+  const img = imgType === 'gif' ? (
+    imgItem.imgList![Math.floor(imgIndex / imgItem.imgList![0].delay)].img
+  ) : imgItem.img!
+  ctx.drawImage(img, x, y, w, h) 
   ctx.restore() // 还原画布
+  // 控制图片的索引
+  if(imgType === 'gif') {
+    if(imgIndex === imgItem.imgList!.length * imgItem.imgList![0].delay - 1) {
+      enemyList[index].imgIndex = 0
+    } else enemyList[index].imgIndex++
+  }
   // 绘画减速效果
   if(curSpeed !== speed) {
     if(slowType === 'twitch') {

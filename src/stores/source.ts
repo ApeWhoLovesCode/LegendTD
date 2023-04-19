@@ -1,15 +1,14 @@
 import enemyData from '@/dataSource/enemyData'
-import otherImgData from '@/dataSource/otherImgData'
+import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
 import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
 import { range } from '@/utils/format'
-import { gifToStaticImg, loadImage } from '@/utils/handleImg'
+import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
+import { SourceImgObj } from '@/utils/worker-libgif'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 
 export type TowerSource = {[key in TowerName]: TowerStateType}
-
-export type OnloadImgKey = keyof typeof otherImgData
 
 export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
 
@@ -23,7 +22,8 @@ export type SourceStateType = {
   /** 敌人加载完成的图片资源 */
   enemyImgSource: {
     [key in string]: {
-      imgList: CanvasImageSource[]
+      img?: HTMLImageElement | ImageBitmap
+      imgList?: SourceImgObj[]
     }
   }
   /** 塔防处理好的静态资源 */
@@ -72,9 +72,15 @@ export const useSourceStore = defineStore('source', {
       }
       const step = 70 / enemyData.length
       return Promise.all(enemyData.map(async (enemy) => {
-        if(!this.$state.enemyImgSource[enemy.name]?.imgList.length) {
-          const imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
-          this.$state.enemyImgSource[enemy.name] = {imgList}
+        const item = this.$state.enemyImgSource[enemy.name]
+        if(!item?.imgList?.length && !item?.img) {
+          if(enemy.imgType === 'gif') {
+            const imgList = await gifToStaticImgList(enemy.imgSource, true)
+            this.$state.enemyImgSource[enemy.name] = {imgList}
+          } else {
+            const img = await loadImage(enemy.imgSource)
+            this.$state.enemyImgSource[enemy.name] = {img}
+          }
           this.$state.progress += step
         }
         return 

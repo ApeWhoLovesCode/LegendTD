@@ -1,7 +1,7 @@
 import { requireCDN } from "@/utils/handleImg"
 
 /** 用于canvas的图片数据 */
-export default {
+const otherImgData = {
   /** 地板 */
   floor: requireCDN('floor-tile.png'),
   /** 金币 */
@@ -15,3 +15,7 @@ export default {
   /** 中毒 */
   poison: requireCDN('poison.png'),
 }
+
+export default otherImgData
+
+export type OnloadImgKey = keyof typeof otherImgData

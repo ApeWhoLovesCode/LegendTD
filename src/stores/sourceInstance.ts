@@ -1,11 +1,11 @@
 import enemyData from "@/dataSource/enemyData"
-import otherImgData from "@/dataSource/otherImgData"
+import otherImgData, { OnloadImgKey } from "@/dataSource/otherImgData"
 import towerData, { TowerName } from "@/dataSource/towerData"
 import { EnemyStateType } from "@/type/game"
 import { range } from "@/utils/format"
-import { gifToStaticImgWorker, loadImageWorker } from "@/utils/handleImg"
+import { gifToStaticImgList, loadImageWorker } from "@/utils/handleImg"
 import _ from "lodash"
-import { OnloadImgKey, SourceStateType, TowerSource } from "./source"
+import { SourceStateType, TowerSource } from "./source"
 
 export type SourceClassType = {
   state: SourceStateType
@@ -53,9 +53,15 @@ class SourceClass {
     }
     const step = 70 / enemyData.length
     return Promise.all(enemyData.map(async (enemy) => {
-      if(!this.state.enemyImgSource[enemy.name]?.imgList.length) {
-        const imgList = await gifToStaticImgWorker({type: enemy.type, imgSource: enemy.imgSource})
-        this.state.enemyImgSource[enemy.name] = {imgList}
+      const item = this.state.enemyImgSource[enemy.name]
+      if(!item?.imgList?.length && !item?.img) {
+        if(enemy.imgType === 'gif') {
+          const imgList = await gifToStaticImgList(enemy.imgSource, true)
+          this.state.enemyImgSource[enemy.name] = {imgList}
+        } else {
+          const img = await loadImageWorker(enemy.imgSource)
+          this.state.enemyImgSource[enemy.name] = {img}
+        }
         this.state.progress += step
       }
       return 

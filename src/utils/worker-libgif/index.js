@@ -1,9 +1,19 @@
-// 用xhr请求本地文件
-export default function loadWorkerGIF(url) {
+/** 
+ * 将gif图片转可供canvas绘画的数组
+ * @param url: 图片地址
+ * @param isWorker: 是否是worker环境下 默认为false
+ */
+export default function loadGifToCanvas(url, isWorker = false) {
+  // console.log(self instanceof WorkerGlobalScope);
   var FRAME_LIST = []; // 存放每一帧数据以及对应的延时
   // var TEMP_CANVAS = document.createElement("canvas");
-  var TEMP_CANVAS = new OffscreenCanvas(100, 100)
-  var TEMP_CANVAS_CTX = null
+  var TEMP_CANVAS;
+  if(isWorker) {
+    TEMP_CANVAS = new OffscreenCanvas(100, 100);
+  } else {
+    TEMP_CANVAS = document.createElement("canvas");
+  }
+  var TEMP_CANVAS_CTX = null;
   var GIF_INFO = {};
   var STREAM = null;
   var LAST_DISPOSA_METHOD = null;
@@ -206,11 +216,16 @@ export default function loadWorkerGIF(url) {
       return
     };
     // FRAME_LIST.push({ delay, data: TEMP_CANVAS_CTX.getImageData(0, 0, GIF_INFO.width, GIF_INFO.height) });
-    var canvas = new OffscreenCanvas(GIF_INFO.width, GIF_INFO.height)
+    var canvas
+    if(isWorker) {
+      canvas = new OffscreenCanvas(GIF_INFO.width, GIF_INFO.height)
+    } else {
+      canvas = document.createElement("canvas");
+    }
     var ctx = canvas.getContext('2d')
     const data = TEMP_CANVAS_CTX.getImageData(0, 0, GIF_INFO.width, GIF_INFO.height)
     ctx.putImageData(data, 0, 0)
-    FRAME_LIST.push({ delay, data: canvas });
+    FRAME_LIST.push({ delay, img: canvas });
   };
 
   // 解析
@@ -388,8 +403,10 @@ export default function loadWorkerGIF(url) {
     TEMP_CANVAS.width = GIF_INFO.width;
     TEMP_CANVAS.height = GIF_INFO.height;
     TEMP_CANVAS_CTX = TEMP_CANVAS.getContext('2d');
-    // TEMP_CANVAS.style.width = GIF_INFO.width + 'px';
-    // TEMP_CANVAS.style.height = GIF_INFO.height + 'px';
+    if(!isWorker) {
+      TEMP_CANVAS.style.width = GIF_INFO.width + 'px';
+      TEMP_CANVAS.style.height = GIF_INFO.height + 'px';
+    }
     TEMP_CANVAS_CTX.setTransform(1, 0, 0, 1, 0, 0);
   };
 
@@ -411,7 +428,7 @@ export default function loadWorkerGIF(url) {
           case ';':
             block.type = 'eof';
             pushFrame(DELAY);
-            // 已经结束啦。
+            // 结束递归，截去第一帧，第一帧是空白的。
             resolve(FRAME_LIST.slice(1, FRAME_LIST.length))
             break;
           default:
