@@ -1,12 +1,11 @@
 /** 
- * 将gif图片转可供canvas绘画的数组
+ * 将gif图片转为可供canvas绘画的数组
  * @param url: 图片地址
  * @param isWorker: 是否是worker环境下 默认为false
  */
 export default function loadGifToCanvas(url, isWorker = false) {
   // console.log(self instanceof WorkerGlobalScope);
   var FRAME_LIST = []; // 存放每一帧数据以及对应的延时
-  // var TEMP_CANVAS = document.createElement("canvas");
   var TEMP_CANVAS;
   if(isWorker) {
     TEMP_CANVAS = new OffscreenCanvas(100, 100);

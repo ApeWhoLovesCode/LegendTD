@@ -8,7 +8,7 @@ import { enemyList, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
-import { EnemyType } from "@/dataSource/enemyData";
+import { ENEMY_MAX_LEVEL, EnemyType, enemyHpColors } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
 import { getAngle } from "@/utils/handleCircle";
@@ -92,6 +92,8 @@ addEventListener('message', e => {
 
 /** 是否是无限火力模式 */
 const isInfinite = () => source.mapLevel === mapData.length - 1
+/** 随着关卡增加敌人等级提升 */
+const addEnemyLevel = () => range(Math.ceil((baseDataState.level - 20) / 5), 0, ENEMY_MAX_LEVEL)
 
 async function init() {
   await sourceInstance.loadingAllImg((progress: number) => {
@@ -704,10 +706,15 @@ function drawEnemy(index: number) {
   if(hp.cur === hp.sum) return
   // 绘画生命值
   const w_2 = w - hp.size
-  ctx.fillStyle = '#0066a1'
+  // 每一条血条的生命值
+  const oneHp = hp.sum / hp.level!
+  const colorI = Math.ceil(hp.cur / oneHp)
+  // 血条背景色
+  ctx.fillStyle = enemyHpColors[colorI - 1]
   ctx.fillRect(x, y - hp.size, w_2, hp.size)
-  ctx.fillStyle = '#49ca00'
-  ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
+  // 血条颜色
+  ctx.fillStyle = enemyHpColors[colorI]
+  ctx.fillRect(x, y - hp.size,  w_2 * (colorI * oneHp - hp.cur) / oneHp, hp.size)
   // 画边框
   ctx.beginPath();
   ctx.lineWidth = 1;
@@ -725,11 +732,18 @@ function setEnemy() {
   item.curSpeed *= size
   item.speed *= size
   item.hp.size *= size
-  // 设置敌人的初始位置
   const id = randomStr(item.audioKey)
-  const enemyItem: EnemyStateType = {...item, id}
+  const level = item.level + addEnemyLevel()
+  // const level = 10
+  item.hp.cur = item.hp.sum * (level + 1) / 2 
+  item.hp.level = level
+  if(level > 1) {
+    item.hp.sum *= (level + 1) / 2
+  }
+  const enemyItem: EnemyStateType = {...item, id, level}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
+  // 设置敌人的初始位置
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
   enemyList.push(enemyItem)
@@ -798,11 +812,13 @@ function callEnemy(newEnemy: EnemyType, i: number) {
   newEnemy.curSpeed *= size
   newEnemy.speed *= size
   newEnemy.hp.size *= size
+  newEnemy.hp.cur = newEnemy.hp.sum
+  newEnemy.hp.level = 1
   return {
     ...newEnemy,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
-    y: y - newEnemy.h / 2
+    y: y - newEnemy.h / 2,
   } as EnemyStateType
 }
 

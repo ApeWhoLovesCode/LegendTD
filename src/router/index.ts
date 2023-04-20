@@ -7,12 +7,12 @@ const routes = [
     component: () => import('../views/index.vue') 
   },
   {
-    path: '/game',
-    redirect: '/game/1'
+    path: '/gameVue',
+    redirect: '/gameVue/1'
   },
   {
-    path: '/game/:id',
-    name: 'game',
+    path: '/gameVue/:id',
+    name: 'gameVue',
     component: () => import('../views/game/index.vue') 
   },
   {
@@ -21,8 +21,12 @@ const routes = [
     component: () => import('../views/test/index.vue') 
   },
   {
-    path: '/gameWorker/:id',
-    name: 'gameWorker',
+    path: '/game',
+    redirect: '/game/1'
+  },
+  {
+    path: '/game/:id',
+    name: 'game',
     component: () => import('../views/gameWorker/index.vue') 
   },
 ]

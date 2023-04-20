@@ -23,12 +23,7 @@ const state = reactive({
 
 /** 初始化加载图片等内容 */
 async function init() {
-  // source.loadingAllImg().then(() => {
-  //   setTimeout(() => {
-  //     state.isProgressBar = false
-  //     state.isProtectTheHorse = true
-  //   }, 100);
-  // })
+  source.loadingAllImg()
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {

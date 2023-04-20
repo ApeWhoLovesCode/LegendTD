@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { nextTick, onMounted, onBeforeUnmount, computed, watch, reactive } from 'vue';
 import _ from 'lodash'
 import { ElMessage } from 'element-plus'
 
@@ -10,6 +10,7 @@ import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
 import useTower from './tools/tower';
 
+import ProgressBar from '@/components/progressBar.vue'
 import GameNavBar from './components/gameNavBar.vue'
 import StartAndEnd from './components/startAndEnd.vue';
 import TowerBuild from './components/towerBuild.vue';
@@ -50,6 +51,10 @@ const { enemyList, enemyState, slowEnemy} = useEnemy()
 const { towerList, towerState, handlerTower, hiddenTowerOperation } = useTower()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
 const { specialBullets } = useSpecialBullets()
+
+const state = reactive({
+  isProgressBar: false,
+})
 
 /** ---计算属性--- */
 /** 是否是无限火力模式 */
@@ -163,6 +168,7 @@ onBeforeUnmount(() => {
 
 function init() {
   initZoomData()
+  state.isProgressBar = source.progress < 100
   if(isInfinite.value) {
     baseDataState.money = 999999
   }
@@ -1222,6 +1228,11 @@ function transRatio(v: number) {
           :game-config-state="gameConfigState" 
           @begin-game="beginGame"
           @re-start="emit('reStart')"
+        />
+        <ProgressBar 
+          v-if="state.isProgressBar" 
+          :progress="Math.ceil(source.progress)"
+          @load-done="state.isProgressBar = false"
         />
       </div>
     </div>

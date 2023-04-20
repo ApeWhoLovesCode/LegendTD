@@ -9,13 +9,14 @@
         :height="state.canvasInfo.h" 
         :style="canvasStyle"
       ></canvas>
-      <div class="progress-text">{{Math.round(state.curProgress)}} / 100%</div>
+      <div class="progress-text">{{range(Math.round(state.curProgress), 0, 100)}} / 100%</div>
     </div>
   </div>
 </template>
 
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
+import { range } from '@/utils/format';
 import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from 'vue';
 
 const props = defineProps({
@@ -126,16 +127,4 @@ const drawProgress = (newVal: number) => {
     }
   }
 }
-// @media screen and (orientation: portrait) {
-//   .com-progress-bar {
-//     left: 50%;
-//     top: 50%;
-//     width: 100vh;
-//     height: 100vw;
-//     -webkit-transform: translate(-50%, -50%) rotate(90deg);
-//     -moz-transform: translate(-50%, -50%) rotate(90deg);
-//     -ms-transform: translate(-50%, -50%) rotate(90deg);
-//     transform: translate(-50%, -50%) rotate(90deg);
-//   }
-// }
 </style>
