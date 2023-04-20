@@ -2,12 +2,10 @@
 import { nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
-import ProgressBar from '@/components/progressBar.vue'
 import ProtectTheHorse from './game.vue'
 
 import _ from 'lodash'
 
-import { IndexType } from '@/type';
 import { useSourceStore } from '@/stores/source';
 import UserBall from '@/components/userBall.vue'
 import { requireCDN } from '@/utils/handleImg';
@@ -17,21 +15,20 @@ const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
 
-const state = reactive<IndexType>({
+const state = reactive({
   title: '塔防联盟',
-  isProgressBar: source.progress < 100,
   // 控制游戏区域的显示与隐藏
-  isProtectTheHorse: false,
+  isProtectTheHorse: true,
 })
 
 /** 初始化加载图片等内容 */
 async function init() {
-  source.loadingAllImg().then(() => {
-    setTimeout(() => {
-      state.isProgressBar = false
-      state.isProtectTheHorse = true
-    }, 100);
-  })
+  // source.loadingAllImg().then(() => {
+  //   setTimeout(() => {
+  //     state.isProgressBar = false
+  //     state.isProtectTheHorse = true
+  //   }, 100);
+  // })
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {
@@ -67,7 +64,6 @@ onMounted(() => {
       v-if="state.isProtectTheHorse" 
       @re-start="reStart"
     />
-    <ProgressBar v-if="state.isProgressBar" :progress="Math.ceil(source.progress)" />
     <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @re-start="reStart" />
   </div>
 </template>

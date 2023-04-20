@@ -1,13 +1,14 @@
 <script setup lang='ts'>
 import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 
 import GameNavBar from '../game/components/gameNavBar.vue'
 import StartAndEnd from '../game/components/startAndEnd.vue';
 import TowerBuild from '../game/components/towerBuild.vue';
 import Skill from '../game/components/skill.vue'
 import Terminal from "../game/components/terminal.vue";
+import ProgressBar from '@/components/progressBar.vue';
 
 import useDomRef from './tools/domRef';
 import useGameConfig from './tools/gameConfig';
@@ -41,6 +42,11 @@ const { towerState, showTowerBuilding, hiddenTowerOperation } = useTower()
 const router = useRoute()
 const workerRef = ref<Worker>()
 
+const state = reactive({
+  isProgressBar: false,
+  progress: 0,
+})
+
 // 监听增加的钱
 watch(() => baseDataState.money, (newVal, oldVal) => {
   gameSkillState.addMoney.num = ''
@@ -65,6 +71,7 @@ onBeforeUnmount(() => {
 
 function init() {
   initZoomData()
+  state.isProgressBar = true
   setTimeout(() => {
     initWorker()
     onKeyDown()
@@ -124,6 +131,9 @@ function initWorker() {
       }
       case 'initMovePathCallback': {
         baseDataState.terminal = param; break;
+      }
+      case 'onProgress': {
+        state.progress = param; break;
       }
     }
   }
@@ -364,6 +374,11 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
           @begin-game="beginGame"
           @re-start="emit('reStart')"
         />
+        <ProgressBar 
+          v-if="state.isProgressBar" 
+          :progress="Math.ceil(state.progress!)"
+          @load-done="state.isProgressBar = false"
+        />
       </div>
     </div>
     <div id="audio-wrap">
@@ -372,7 +387,7 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <!-- <div class="screenMask"></div> -->
+    <div class="screenMask"></div>
   </div>
 </template>
 

@@ -17,6 +17,7 @@ import levelData from "@/dataSource/levelData";
 import { VueFnName, WorkerFnName } from "./type/worker";
 import skillData from "@/dataSource/skillData";
 import testBuildData from "./tools/testBuild";
+import { range } from "@/utils/format";
 
 const source = sourceInstance.state
 const canvasInfo = {
@@ -93,7 +94,9 @@ addEventListener('message', e => {
 const isInfinite = () => source.mapLevel === mapData.length - 1
 
 async function init() {
-  await sourceInstance.loadingAllImg()
+  await sourceInstance.loadingAllImg((progress: number) => {
+    onWorkerPostFn('onProgress', range(progress, 0, 100))
+  })
   if(isInfinite()) {
     addMoney(999999)
   }
@@ -106,7 +109,7 @@ async function init() {
   initMovePath()
   onLevelChange()
   source.isGameInit = true
-  waitTime(500).then(() => {
+  waitTime(800).then(() => {
     onWorkerPostFn('onWorkerReady')
     startDraw()
     testBuildTowers()

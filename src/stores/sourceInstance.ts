@@ -9,7 +9,7 @@ import { SourceStateType, TowerSource } from "./source"
 
 export type SourceClassType = {
   state: SourceStateType
-  loadingAllImg: () => Promise<void>
+  loadingAllImg: (fn: (progress: number) => void) => Promise<number>
   handleEnemyImg: () => Promise<void[]>
   handleTowerImg: () => Promise<void[]>
   handleOtherImg: () => Promise<(void | "")[]>
@@ -35,16 +35,23 @@ class SourceClass {
     }
     return this._instance
   }
-  public async loadingAllImg() {
+  public async loadingAllImg(fn: (progress: number) => void) {
     if(this.state.progress >= 100) {
-      return
+      return 100
     }
     return Promise.all([
-      this.handleOtherImg(),
-      this.handleEnemyImg(), 
-      this.handleTowerImg(),
+      this.handleOtherImg().then(() => {
+        fn(this.state.progress)
+      }),
+      this.handleEnemyImg().then(() => {
+        fn(this.state.progress)
+      }), 
+      this.handleTowerImg().then(() => {
+        fn(this.state.progress)
+      }),
     ]).then(() => {
       this.state.progress = range(this.state.progress, 0, 100)
+      return this.state.progress
     })
   }
   public async handleEnemyImg() {
