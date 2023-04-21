@@ -647,6 +647,7 @@ function drawEnemy(index: number) {
   if(!enemyList[index]) return
   const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = gameConfigState.ctx
+  // --- 绘画敌人图片 ---
   ctx.save() // 保存画布
   // 翻转图片
   if(!isForward) { 
@@ -666,7 +667,7 @@ function drawEnemy(index: number) {
       enemyList[index].imgIndex = 0
     } else enemyList[index].imgIndex++
   }
-  // 绘画减速效果
+  // --- 绘画减速效果 ---
   if(curSpeed !== speed) {
     if(slowType === 'twitch') {
       ctx.save()
@@ -687,7 +688,7 @@ function drawEnemy(index: number) {
       }
     }
   }
-  // 画中毒效果
+  // --- 画中毒效果 ---
   if(poison) {
     ctx.save()
     ctx.globalAlpha = 0.9
@@ -704,7 +705,7 @@ function drawEnemy(index: number) {
     ctx.restore()
   }
   if(hp.cur === hp.sum) return
-  // 绘画生命值
+  // --- 绘画生命值 ---
   const w_2 = w - hp.size
   // 每一条血条的生命值
   const oneHp = hp.sum / hp.level!
@@ -714,13 +715,45 @@ function drawEnemy(index: number) {
   ctx.fillRect(x, y - hp.size, w_2, hp.size)
   // 血条颜色
   ctx.fillStyle = enemyHpColors[colorI]
-  ctx.fillRect(x, y - hp.size,  w_2 * (colorI * oneHp - hp.cur) / oneHp, hp.size)
+  ctx.fillRect(x, y - hp.size, w_2 * (hp.cur - (colorI - 1) * oneHp) / oneHp, hp.size)
   // 画边框
   ctx.beginPath();
   ctx.lineWidth = 1;
   ctx.strokeStyle = "#cff1d3"; //边框颜色
   ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
   ctx.stroke();
+  // --- 绘画星级 ---
+  if(hp.level! < 10) {
+    const levelSize = hp.size
+    const moonN = Math.floor(hp.level! / 3)
+    const starN = Math.floor(hp.level! % 3)
+    let levelX = x - levelSize * 2, levelY = y - levelSize
+    if(starN + moonN === 1) {
+      ctx.drawImage(source.othOnloadImg[starN ? 'star' : 'moon']!, levelX, levelY, levelSize, levelSize)
+    } else if(starN + moonN === 2) {
+      levelX -= levelSize
+      for(let i = 0; i < 2; i++) {
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+        levelX += levelSize
+      }
+    } else if(starN + moonN === 3) {
+      for(let i = 0; i < 3; i++) {
+        if(i === 0) {levelX -= levelSize / 2; levelY -= levelSize / 2;}
+        else if(i === 1) {levelX -= levelSize / 2; levelY += levelSize;}
+        else if(i === 2) levelX += levelSize;
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+      }
+    } else if(starN + moonN === 4) {
+      for(let i = 0; i < 4; i++) {
+        if(i === 0) {levelX -= levelSize; levelY -= levelSize / 2;}
+        else if(i === 1 || i === 3) levelX += levelSize;
+        else if(i === 2) {levelX -= levelSize; levelY += levelSize;}
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+      }
+    }
+  } else {
+    ctx.drawImage(source.othOnloadImg.sun!, x - hp.size * 2, y - hp.size * 3 / 2, hp.size * 2, hp.size * 2)
+  }
 }
 
 /** 生成敌人 */
@@ -787,7 +820,7 @@ function setEnemySkill(enemyName: string, e_id: string) {
     enemyList[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
     volume = 0.5
   }
-  // playDomAudio({id, volume})
+  onWorkerPostFn('playDomAudio', {id, volume})
 }
 
 /** 处理敌人技能 */
@@ -1036,7 +1069,10 @@ function buildTower({x, y, tname}: {
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
   drawTower(tower)
-  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey, isMusic})
+  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
+  if(isMusic) {
+    onWorkerPostFn('playDomAudio', {id: tower.id})
+  }
 }
 
 /** 售卖防御塔 */

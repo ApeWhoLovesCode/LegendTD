@@ -14,6 +14,12 @@ const otherImgData = {
   snowVertigo: requireCDN('snow-vertigo1.png'),
   /** 中毒 */
   poison: requireCDN('poison.png'),
+  /** 星星 */
+  star: requireCDN('star.png'),
+  /** 月亮 */
+  moon: requireCDN('moon.png'),
+  /** 太阳 */
+  sun: requireCDN('sun.png'),
 }
 
 export default otherImgData

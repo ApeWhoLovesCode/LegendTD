@@ -135,6 +135,9 @@ function initWorker() {
       case 'onProgress': {
         state.progress = param; break;
       }
+      case 'playDomAudio': {
+        playDomAudio(param); break;
+      }
     }
   }
 }
@@ -199,11 +202,8 @@ function buildTower(tname: TowerName) {
   let {left: x, top: y} = towerState.building
   onWorkerPostFn('buildTower', {x, y, tname})
 }
-function buildTowerCallback(p: {towerId: string, audioKey: string, isMusic: boolean}) {
+function buildTowerCallback(p: {towerId: string, audioKey: string}) {
   createAudio(`${p.audioKey}-choose`, p.towerId)
-  if(p.isMusic) {
-    playDomAudio({id: p.towerId})
-  }
 }
 function saleTower(index: number) {
   onWorkerPostFn('saleTower', index)

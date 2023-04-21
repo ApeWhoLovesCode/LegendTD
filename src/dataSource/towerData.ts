@@ -24,16 +24,16 @@ export default towerObj
 
 export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'icestar': { name: '冰星', explain: '向最前方的一个敌人发射一颗会使敌人减速的冰星。' },
-  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。', eIndexList: [1,2,3] },
+  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。', enemyList: [{i:1},{i:2},{i:3}] },
   'ejiate': { name: '厄加特', explain: '向一个敌人发射一连串的子弹。' },
   'jin': { name: '烬', explain: '攻击范围更大，子弹伤害更高。' },
-  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。', eIndexList: [2,3] },
-  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.', eIndexList: [1,2,3] },
-  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', eIndexList: [1,2,3,4,5] },
-  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', eIndexList: [1,2,3,4,5] },
-  'delaiwen': { name: '德莱文', explain: '往前方敌人处最多丢出两个会回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', eIndexList: [1,2,3,4,5] },
-  'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', eIndexList: [4] },
-  'twitch': { name: '老鼠', explain: '每隔5秒往敌人的地上喷射毒液，路过的敌人将减速并受到持续的中毒效果，每隔1秒将叠加一层毒液效果，最大5层', eIndexList: [2,3,4] },
+  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。', enemyList: [{i:1},{i:2}] },
+  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.', enemyList: [{i:1},{i:2},{i:3}] },
+  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', enemyList: [{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}] },
+  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', enemyList: [{i:1},{i:2},{i:3}] },
+  'delaiwen': { name: '德莱文', explain: '往前方敌人处最多丢出两个会回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', enemyList: [{i:1, level: 3},{i:3, level: 3},{i:4, level: 3}] },
+  'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', enemyList: [{i:1},{i:2}]},
+  'twitch': { name: '老鼠', explain: '每隔5秒往敌人的地上喷射毒液，路过的敌人将减速并受到持续的中毒效果，每隔1秒将叠加一层毒液效果，最大5层', enemyList: [{i:1,level:1},{i:2,level:2},{i:3,level:3}]},
 }
 
 export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan' | 'twitch'
@@ -104,5 +104,5 @@ export type TowerStaticItem = {
   /** 说明文本 */
   explain: string
   /** 展示的敌人数组 */
-  eIndexList?: number[]
+  enemyList?: {i: number, level?: number}[]
 }

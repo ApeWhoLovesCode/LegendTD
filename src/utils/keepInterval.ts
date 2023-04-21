@@ -43,17 +43,19 @@ class KeepInterval {
         isTimeOut,
       })
     }
-    // console.log(`---${key}---`);
     const timeItem = this.timerMap.get(key)!
     this.stopTime(key)
     timeItem.remainTime -= timeItem.end - timeItem.cur
     timeItem.cur = Date.now()
-    timeItem.end = Date.now()
+    timeItem.end = timeItem.cur
     timeItem.timeout = setTimeout(() => { 
       timeItem.cur = Date.now()
+      timeItem.end = timeItem.cur
+      timeItem.remainTime = timeItem.intervalTime
       if(!timeItem.isTimeOut) {
         timeItem.interval = setInterval(() => { 
           timeItem.cur = Date.now()
+          timeItem.end = timeItem.cur
           timeItem.fn() 
         }, timeItem.intervalTime)
       }

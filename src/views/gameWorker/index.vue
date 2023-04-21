@@ -29,7 +29,7 @@ async function init() {
 function switchMapLevel(index: number) {
   if(source.mapLevel === index) return
   source.mapLevel = index
-  router.push(`/gameWorker/${index + 1}`)
+  router.push(`/game/${index + 1}`)
   reStart()
 }
 /** 重新开始 */

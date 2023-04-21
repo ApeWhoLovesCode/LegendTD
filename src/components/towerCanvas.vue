@@ -1,9 +1,13 @@
 <script setup lang='ts'>
+import { ENEMY_MAX_LEVEL, enemyHpColors } from '@/dataSource/enemyData';
 import { DirectionType, GridInfo } from '@/dataSource/mapData';
 import towerArr, { TowerName, TowerSlow, TowerType } from '@/dataSource/towerData';
+import useKeepInterval from '@/hooks/useKeepInterval';
 import { useSourceStore } from '@/stores/source';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType, SpecialBulletItem } from '@/type/game';
+import { range } from '@/utils/format';
 import { getAngle } from '@/utils/handleCircle';
+import { KeepIntervalKey } from '@/utils/keepInterval';
 import { randomStr } from '@/utils/random';
 import { powAndSqrt } from '@/utils/tools';
 import useBaseData, { TargetCircleInfo } from '@/views/game/tools/baseData';
@@ -17,12 +21,13 @@ const { enemyList } = useEnemy()
 const { towerList } = useTower()
 const { checkValInCircle } = useBaseData()
 const { specialBullets } = useSpecialBullets()
+const keepInterval = useKeepInterval()
 
 const props = withDefaults(defineProps<{
   tname: TowerName;
-  eIndexList?: number[];
+  enemyList?: {i: number, level?: number}[];
 }>(), {
-  eIndexList: () => [1]
+  enemyList: () => [{i: 1}]
 })
 const source = useSourceStore()
 const idRef = ref(randomStr('com-cover-canvas'))
@@ -47,14 +52,6 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(state.animationFrame)
   clearInterval(makeEnemyTimer.value)
-  specialBullets.twitch.forEach(b => {
-    clearInterval(b.timer)
-  })
-  enemyList.forEach(e => {
-    if(e.slowTimer) clearTimeout(e.slowTimer)
-    if(e.poison?.timer) clearInterval(e.poison?.timer)
-    if(e.poison?.timeout) clearTimeout(e.poison?.timeout)
-  })
 })
 
 function init() {
@@ -421,13 +418,12 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   const bullet: SpecialBulletItem = {
     id: bId, tId: t.id, x: bItem.x - bw / 2, y: bItem.y - bh / 2, w: bw, h: bh
   }
-  // 清除毒液子弹
-  bullet.timer = setTimeout(() => {
-    const index = specialBullets.twitch.findIndex(b => b.id === bId)
-    clearInterval(specialBullets.twitch[index].timer) 
-    specialBullets.twitch.splice(index, 1)
-  }, t.poison?.bulletTime)
   specialBullets.twitch.push(bullet)
+  // 倒计时清除该子弹
+  keepInterval.set(bId, () => {
+    const index = specialBullets.twitch.findIndex(b => b.id === bId)
+    specialBullets.twitch.splice(index, 1)
+  }, t.poison!.bulletTime, true)
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -465,16 +461,14 @@ function startPoisonInterval(e_id: string, t: TowerType) {
     if(ePoison.level < 5) ePoison.level++
     damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     // 开启毒液伤害计时器 清除：1.敌人死亡 2.中毒时间到了 3.组件卸载
-    if(ePoison.timer) clearInterval(ePoison.timer)
-    ePoison.timer = setInterval(() => {
+    keepInterval.set(`${KeepIntervalKey.twitch}-${e_id}`, () => {
       damageTheEnemy(enemy, ePoison.level * ePoison.damage)
     }, 1000)
     // 清除敌人受到的毒液计时器
-    if(ePoison.timeout) clearTimeout(ePoison.timeout)
-    ePoison.timeout = setTimeout(() => {
-      clearInterval(enemy.poison?.timer)
+    keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
+      keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, t.poison!.time)
+    }, t.poison!.time, true)
   }
 }
 
@@ -555,31 +549,36 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 }
 
 function makeEnemy() {
-  setEnemy(props.eIndexList[0])
+  setEnemy(props.enemyList[0])
   makeEnemyTimer.value = setInterval(() => {
     const index = enemyList.length
-    if(index === props.eIndexList.length) {
+    if(index === props.enemyList.length) {
       clearInterval(makeEnemyTimer.value)
     } else {
-      setEnemy(props.eIndexList[index])
+      setEnemy(props.enemyList[index])
     }
-  }, 900);
+  }, 1200);
 }
 
 /** 生成敌人 */
-function setEnemy(i: number) {
-  const item = _.cloneDeep(source.enemySource[i])
+function setEnemy(e: {i: number, level?: number}) {
+  const item = _.cloneDeep(source.enemySource[e.i])
   const size = state.size
   item.w *= size
   item.h *= size
   item.curSpeed *= size
   item.speed *= size
   item.hp.size *= size
-  const {audioKey, w, h} = item
-  // 设置敌人的初始位置
-  const id = item.audioKey + Date.now()
+  const id = randomStr(item.audioKey)
+  const level = range(e.level ?? 1, 0, ENEMY_MAX_LEVEL)
+  item.hp.cur = item.hp.sum * (level + 1) / 2 
+  item.hp.level = level
+  if(level > 1) {
+    item.hp.sum *= (level + 1) / 2
+  }
   const enemyItem: EnemyStateType = {...item, id}
   const {x, y} = state.mapGridInfoItem
+  const {w, h} = item
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
   enemyList.push(enemyItem)
@@ -682,37 +681,76 @@ function drawEnemy(index: number) {
     ctx.restore()
   }
   if(hp.cur === hp.sum) return
-  // 绘画生命值
+  // --- 绘画生命值 ---
   const w_2 = w - hp.size
-  ctx.fillStyle = '#0066a1'
+  // 每一条血条的生命值
+  const oneHp = hp.sum / hp.level!
+  const colorI = Math.ceil(hp.cur / oneHp)
+  // 血条背景色
+  ctx.fillStyle = enemyHpColors[colorI - 1]
   ctx.fillRect(x, y - hp.size, w_2, hp.size)
-  ctx.fillStyle = '#49ca00'
-  ctx.fillRect(x, y - hp.size,  w_2 * hp.cur / hp.sum, hp.size)
+  // 血条颜色
+  ctx.fillStyle = enemyHpColors[colorI]
+  ctx.fillRect(x, y - hp.size, w_2 * (hp.cur - (colorI - 1) * oneHp) / oneHp, hp.size)
   // 画边框
   ctx.beginPath();
   ctx.lineWidth = 1;
   ctx.strokeStyle = "#cff1d3"; //边框颜色
   ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
   ctx.stroke();
+  // --- 绘画星级 ---
+  if(hp.level! < 10) {
+    const levelSize = hp.size
+    const moonN = Math.floor(hp.level! / 3)
+    const starN = Math.floor(hp.level! % 3)
+    let levelX = x - levelSize * 2, levelY = y - levelSize
+    if(starN + moonN === 1) {
+      ctx.drawImage(source.othOnloadImg[starN ? 'star' : 'moon']!, levelX, levelY, levelSize, levelSize)
+    } else if(starN + moonN === 2) {
+      levelX -= levelSize
+      for(let i = 0; i < 2; i++) {
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+        levelX += levelSize
+      }
+    } else if(starN + moonN === 3) {
+      for(let i = 0; i < 3; i++) {
+        if(i === 0) {levelX -= levelSize / 2; levelY -= levelSize / 2;}
+        else if(i === 1) {levelX -= levelSize / 2; levelY += levelSize;}
+        else if(i === 2) levelX += levelSize;
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+      }
+    } else if(starN + moonN === 4) {
+      for(let i = 0; i < 4; i++) {
+        if(i === 0) {levelX -= levelSize; levelY -= levelSize / 2;}
+        else if(i === 1 || i === 3) levelX += levelSize;
+        else if(i === 2) {levelX -= levelSize; levelY += levelSize;}
+        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
+      }
+    }
+  } else {
+    ctx.drawImage(source.othOnloadImg.sun!, x - hp.size * 2, y - hp.size * 3 / 2, hp.size * 2, hp.size * 2)
+  }
 }
 
 /** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
 function slowEnemy(e_id: string, t_slow: TowerSlow) {
   const e_i = enemyList.findIndex(e => e.id === e_id)
-  const { speed: e_speed, curSpeed } = enemyList[e_i]
+  const { speed, curSpeed } = enemyList[e_i]
   // 当前已经被眩晕了不能减速了
   if(curSpeed === 0) return
-  // 新增或重置减速定时器
-  if(enemyList[e_i].slowTimer) clearTimeout(enemyList[e_i].slowTimer)
-  enemyList[e_i].slowTimer = setTimeout(() => {
-    const newE_i = enemyList.findIndex(e => e.id === e_id)
-    if(enemyList[newE_i]) {
-      enemyList[newE_i].curSpeed = e_speed
-      enemyList[newE_i].slowType = void 0
-    }
-  }, t_slow.time);
+  const newSpeed = t_slow.num ? speed / t_slow.num : t_slow.num
+  // 防止艾希覆盖老鼠
+  if(newSpeed <= curSpeed) {
+    // 重新设置恢复速度定时器
+    keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
+      const newE_i = enemyList.findIndex(e => e.id === e_id)
+      if(enemyList[newE_i]) {
+        enemyList[newE_i].curSpeed = enemyList[newE_i].speed
+        enemyList[newE_i].slowType = void 0
+      }
+    }, t_slow.time, true)
+  }
   // 减速敌人
-  const newSpeed = t_slow.num ? e_speed / t_slow.num : t_slow.num
   if(newSpeed < curSpeed) {
     enemyList[e_i].curSpeed = newSpeed
     enemyList[e_i].slowType = t_slow.type

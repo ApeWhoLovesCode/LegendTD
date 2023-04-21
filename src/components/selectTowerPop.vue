@@ -127,7 +127,7 @@ onMounted(() => {
         >
           <div class="card">
             <div class="towerImg"> 
-              <TowerCanvas :tname="item.name" :e-index-list="towerStaticData[item.name].eIndexList" />
+              <TowerCanvas :tname="item.name" :enemy-list="towerStaticData[item.name].enemyList" />
             </div>
             <div class="name">{{ towerStaticData[item.name].name }}</div>
             <div class="explain">{{ towerStaticData[item.name].explain }}</div>

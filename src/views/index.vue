@@ -72,7 +72,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
             <CoverCanvas v-if="state.isOnload" :index="cardIndex(i)" />
             <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
           </div>
-          <div class="card-level">{{ cardIndex(i) + 1 }}</div>
+          <div class="card-level">{{ (cardIndex(i) !== mapData.length - 1) ? cardIndex(i) + 1 : '卍' }}</div>
         </div>
       </ScrollCircleItem>
     </ScrollCircle>
