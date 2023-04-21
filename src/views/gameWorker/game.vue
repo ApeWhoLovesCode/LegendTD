@@ -387,7 +387,7 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
       <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
     </div>
-    <div class="screenMask"></div>
+    <!-- <div class="screenMask"></div> -->
   </div>
 </template>
 

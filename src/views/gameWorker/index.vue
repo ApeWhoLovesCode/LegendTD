@@ -1,15 +1,12 @@
 <script setup lang='ts'>
 import { nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-
-import ProtectTheHorse from './game.vue'
-
-import _ from 'lodash'
-
-import { useSourceStore } from '@/stores/source';
-import UserBall from '@/components/userBall.vue'
-import { requireCDN } from '@/utils/handleImg';
 import { ElPopconfirm } from 'element-plus';
+import ProtectTheHorse from './game.vue'
+import UserBall from '@/components/userBall.vue'
+import _ from 'lodash'
+import { useSourceStore } from '@/stores/source';
+import { requireCDN } from '@/utils/handleImg';
 
 const source = useSourceStore()
 const route = useRoute()

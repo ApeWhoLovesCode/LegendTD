@@ -895,8 +895,13 @@ function onReduceHp(hp: number) {
   baseDataState.hp = Math.max(0, baseDataState.hp - hp)
   onWorkerPostFn('onHpChange', baseDataState.hp)
   if(!baseDataState.hp) {
-    cancelAnimationFrame(gameConfigState.animationFrame)
+    onGameOver()
   }
+}
+
+function onGameOver() {
+  keepInterval.clear()
+  cancelAnimationFrame(gameConfigState.animationFrame)
 }
 
 /** 敌人移动 */
