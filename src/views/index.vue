@@ -68,7 +68,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
         @on-click="onCardClick(cardIndex(i))"
       >
         <div class="card">
-          <div class="card-bg">
+          <div class="card-bg" :style="{filter: `blur(${20 - source.progress * 20 / 100}px)`}">
             <CoverCanvas v-if="state.isOnload" :index="cardIndex(i)" />
             <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
           </div>
@@ -107,6 +107,8 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
       z-index: -1;
       width: 100%;
       height: 100%;
+      background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+      transition: filter .5s ease-out;
     }
     &-disable {
       position: absolute;

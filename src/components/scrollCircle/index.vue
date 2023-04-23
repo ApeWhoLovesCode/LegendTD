@@ -126,7 +126,7 @@ watch(() => provideState.isVertical, () => {
 onMounted(() => {
   setTimeout(() => {
     init()
-  }, 10);
+  }, 0);
   window.addEventListener('resize', resizeFn)
 })
 onBeforeUnmount(() => {
