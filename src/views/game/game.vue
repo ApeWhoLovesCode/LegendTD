@@ -32,6 +32,7 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
+import { useSettingStore } from '@/stores/setting';
 // import testBuildData from './tools/testBuild';
 
 const emit = defineEmits<{
@@ -41,6 +42,7 @@ const emit = defineEmits<{
 // 全局资源
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
+const setting = useSettingStore()
 
 // 抽离的数据
 const { audioState, createAudio, playDomAudio, removeAudio} = useAudioState()
@@ -191,6 +193,17 @@ function init() {
 
 /** 开启动画绘画 */
 function startAnimation() {
+  if(setting.isHighRefreshScreen) {
+    startAnimationLockFrame()
+  } else {
+    (function go() {
+      gameConfigState.animationFrame = requestAnimationFrame(go);
+      startDraw();
+    })();
+  }
+}
+/** 高刷屏锁帧，锁帧会使绘画出现掉帧 */
+function startAnimationLockFrame() {
   const fpx = 60;
   let fpsInterval = 1000 / fpx;
   let then = Date.now();

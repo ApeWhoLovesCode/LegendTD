@@ -90,7 +90,7 @@ function initWorker() {
     source: {
       isMobile: source.isMobile,
       ratio: source.ratio,
-      mapLevel: source.mapLevel
+      mapLevel: source.mapLevel,
     },
     canvasInfo: {
       offscreen,

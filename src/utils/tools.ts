@@ -66,3 +66,23 @@ export function waitTime(time: number = 1000): Promise<void> {
 export function isMobile() {
   return navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
 }
+
+/**
+ * @param {number} targetCount 不小于1的整数，表示经过targetCount帧之后返回结果
+ * @return {Promise<number>}
+ */
+export const getScreenFps = (targetCount: number = 60): Promise<number> => {
+  return new Promise(resolve => {
+    const begin = Date.now();
+    let count = 0;
+    (function run() {
+      requestAnimationFrame(() => {
+        if (++count >= targetCount) {
+          const fps = Math.ceil((count / (Date.now() - begin)) * 1000)
+          return resolve(fps)
+        }
+        run()
+      })
+    })()
+  })
+}

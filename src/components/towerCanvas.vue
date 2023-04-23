@@ -3,6 +3,7 @@ import { ENEMY_MAX_LEVEL, enemyHpColors } from '@/dataSource/enemyData';
 import { DirectionType, GridInfo } from '@/dataSource/mapData';
 import towerArr, { TowerName, TowerSlow, TowerType } from '@/dataSource/towerData';
 import useKeepInterval from '@/hooks/useKeepInterval';
+import { useSettingStore } from '@/stores/setting';
 import { useSourceStore } from '@/stores/source';
 import { BulletType, EnemyStateType, TargetInfo, TowerStateType, SpecialBulletItem } from '@/type/game';
 import { range } from '@/utils/format';
@@ -21,7 +22,9 @@ const { enemyList } = useEnemy()
 const { towerList } = useTower()
 const { checkValInCircle } = useBaseData()
 const { specialBullets } = useSpecialBullets()
+
 const keepInterval = useKeepInterval()
+const setting = useSettingStore()
 
 const props = withDefaults(defineProps<{
   tname: TowerName;
@@ -72,6 +75,17 @@ function drawInit() {
 
 /** 开启动画绘画 */
 function startAnimation() {
+  if(setting.isHighRefreshScreen) {
+    startAnimationLockFrame()
+  } else {
+    (function go() {
+      state.animationFrame = requestAnimationFrame(go);
+      startDraw();
+    })();
+  }
+}
+/** 高刷屏锁帧，锁帧会使绘画出现掉帧 */
+function startAnimationLockFrame() {
   const fpx = 60;
   let fpsInterval = 1000 / fpx;
   let then = Date.now();

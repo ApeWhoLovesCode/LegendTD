@@ -1,5 +1,5 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
-import { limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from "@/utils/tools";
+import { getScreenFps, limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
@@ -20,6 +20,9 @@ import testBuildData from "./tools/testBuild";
 import { range } from "@/utils/format";
 
 const source = sourceInstance.state
+const setting = {
+  isHighRefreshScreen: false
+}
 const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
   width: 0,
@@ -96,6 +99,9 @@ const isInfinite = () => source.mapLevel === mapData.length - 1
 const addEnemyLevel = () => range(Math.ceil((baseDataState.level - 20) / 5), 0, ENEMY_MAX_LEVEL)
 
 async function init() {
+  getScreenFps().then(fps => {
+    setting.isHighRefreshScreen = fps > 65
+  })
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   })
@@ -120,6 +126,17 @@ async function init() {
 
 /** 开启动画绘画 */
 function startAnimation() {
+  if(setting.isHighRefreshScreen) {
+    startAnimationLockFrame()
+  } else {
+    (function go() {
+      gameConfigState.animationFrame = requestAnimationFrame(go);
+      startDraw();
+    })();
+  }
+}
+/** 高刷屏锁帧，锁帧会使绘画出现掉帧 */
+function startAnimationLockFrame() {
   const fpx = 60;
   let fpsInterval = 1000 / fpx;
   let then = Date.now();
