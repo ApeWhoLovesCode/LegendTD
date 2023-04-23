@@ -10,7 +10,7 @@ import { SourceStateType, TowerSource } from "./source"
 export type SourceClassType = {
   state: SourceStateType
   loadingAllImg: (fn: (progress: number) => void) => Promise<number>
-  handleEnemyImg: () => Promise<void[]>
+  handleEnemyImg: (fn: (progress: number) => void) => Promise<void[]>
   handleTowerImg: () => Promise<void[]>
   handleOtherImg: () => Promise<(void | "")[]>
 }
@@ -43,7 +43,7 @@ class SourceClass {
       this.handleOtherImg().then(() => {
         fn(this.state.progress)
       }),
-      this.handleEnemyImg().then(() => {
+      this.handleEnemyImg(fn).then(() => {
         fn(this.state.progress)
       }), 
       this.handleTowerImg().then(() => {
@@ -51,10 +51,11 @@ class SourceClass {
       }),
     ]).then(() => {
       this.state.progress = range(this.state.progress, 0, 100)
+      fn(this.state.progress)
       return this.state.progress
     })
   }
-  public async handleEnemyImg() {
+  public async handleEnemyImg(fn: (progress: number) => void) {
     if(!this.state.enemySource.length) {
       this.state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
     }
@@ -70,6 +71,7 @@ class SourceClass {
           this.state.enemyImgSource[enemy.name] = {img}
         }
         this.state.progress += step
+        fn(this.state.progress)
       }
       return 
     }))
