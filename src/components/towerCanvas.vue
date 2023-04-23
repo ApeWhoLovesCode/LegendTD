@@ -15,7 +15,7 @@ import useEnemy from '@/views/game/tools/enemy';
 import useSpecialBullets from '@/views/game/tools/specialBullets';
 import useTower from '@/views/game/tools/tower';
 import _ from 'lodash';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 const { enemyList } = useEnemy()
 const { towerList } = useTower()
@@ -423,7 +423,7 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
-  }, t.poison!.bulletTime, true)
+  }, t.poison!.bulletTime, {isTimeOut: true})
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -468,7 +468,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
     keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, t.poison!.time, true)
+    }, t.poison!.time, {isTimeOut: true})
   }
 }
 
@@ -748,7 +748,7 @@ function slowEnemy(e_id: string, t_slow: TowerSlow) {
         enemyList[newE_i].curSpeed = enemyList[newE_i].speed
         enemyList[newE_i].slowType = void 0
       }
-    }, t_slow.time, true)
+    }, t_slow.time, {isTimeOut: true})
   }
   // 减速敌人
   if(newSpeed < curSpeed) {

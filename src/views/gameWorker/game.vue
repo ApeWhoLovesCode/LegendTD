@@ -18,12 +18,13 @@ import useGameSkill from "./tools/gameSkill";
 import useTower from "./tools/tower";
 
 import { ElMessage } from "element-plus";
-import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
+import { KeepIntervalKey } from "@/utils/keepInterval";
 import { VueFnName, WorkerFnName } from "./workers/type/worker";
 import { TowerName } from "@/dataSource/towerData";
 import { useUserInfoStore } from "@/stores/userInfo";
 import { updateScoreApi } from "@/service/rank";
 import { useRoute } from "vue-router";
+import useKeepInterval from "@/hooks/useKeepInterval";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -32,6 +33,7 @@ const emit = defineEmits<{
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
 
+const keepInterval = useKeepInterval()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
 const { gameConfigState } = useGameConfig()
 const { gameSkillState } = useGameSkill()
@@ -286,7 +288,7 @@ function startMoneyTimer() {
   keepInterval.set(KeepIntervalKey.startMoneyTimer, () => {
     gameSkillState.proMoney.isShow = true
     playAudio('create-money', 'End')
-  }, gameSkillState.proMoney.interval, true)
+  }, gameSkillState.proMoney.interval, {isTimeOut: true})
 }
 /** 点击了生产出来的金钱 */
 function proMoneyClick() {

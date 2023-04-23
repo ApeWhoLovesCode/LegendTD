@@ -129,7 +129,10 @@ onMounted(() => {
             <div class="towerImg"> 
               <TowerCanvas :tname="item.name" :enemy-list="towerStaticData[item.name].enemyList" />
             </div>
-            <div class="name">{{ towerStaticData[item.name].name }}</div>
+            <div class="nameWrap">
+              <span class="name">· {{ towerStaticData[item.name].name }}</span>
+              <span class="money">金额: {{ towerData[item.name].money }}</span>
+            </div>
             <div class="explain">{{ towerStaticData[item.name].explain }}</div>
             <div v-if="isSelect(item.name)" class="card-select">已选</div>
           </div>
@@ -263,15 +266,21 @@ onMounted(() => {
         height: calc(7 * @gridSize);
         margin: auto;
       }
-      .name {
-        text-align: center;
-        font-size: 16px;
+      .nameWrap {
         font-weight: bold;
         line-height: 16px;
         color: #fff;
         margin-top: 16px;
         padding: 16px 0 12px;
         border-top: 2px solid @yellow;
+        .name {
+          font-size: 16px;
+          margin-right: 12px;
+        }
+        .money {
+          font-size: 12px;
+          color: @yellow;
+        }
       }
       .explain {
         color: #fff;

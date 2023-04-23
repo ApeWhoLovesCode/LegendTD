@@ -211,7 +211,7 @@ function checkEnemyAndTower() {
           shootBullet(eIdList, +t_i)
           keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
             t.isToTimeShoot = true
-          }, t.rate, true)
+          }, t.rate, {isTimeOut: true})
         } else {
           if(t.targetIdList.length) {
             t.targetIdList = []
@@ -525,7 +525,7 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
-  }, t.poison!.bulletTime, true)
+  }, t.poison!.bulletTime, {isTimeOut: true})
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -554,7 +554,7 @@ function triggerPoisonFun(eIdList: string[]) {
         startPoisonInterval(e_id, t)
         keepInterval.set(`${KeepIntervalKey.poisonFun}-${e_id}`, () => {
           enemy.poison!.isToTimePoison = true
-        }, 1000, true)
+        }, 1000, {isTimeOut: true})
       }
     }
   }
@@ -574,7 +574,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
     keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, t.poison!.time, true)
+    }, t.poison!.time, {isTimeOut: true})
   }
 }
 

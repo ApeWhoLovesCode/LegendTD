@@ -27,7 +27,7 @@ function slowEnemy(e_id: string, t_slow: TowerSlow) {
         enemyList[newE_i].curSpeed = enemyList[newE_i].speed
         enemyList[newE_i].slowType = void 0
       }
-    }, t_slow.time, true)
+    }, t_slow.time, {isTimeOut: true})
   }
   // 减速敌人
   if(newSpeed < curSpeed) {

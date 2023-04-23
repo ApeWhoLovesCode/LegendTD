@@ -1,3 +1,5 @@
+import { KeepIntervalSetParams, TimerMap } from "@/hooks/useKeepInterval"
+
 export const KeepIntervalKey = {
   /** 创建敌人 */
   makeEnemy: 'makeEnemy',
@@ -30,8 +32,9 @@ class KeepInterval {
     return this._instance
   }
   /** 设置/开启计时器 */
-  set(key: string, fn?: () => void, intervalTime = 1000, isTimeOut = false) {
-    if(!this.timerMap.has(key) && fn) {
+  set(key: string, fn?: () => void, intervalTime = 0, {isTimeOut = false, isCover}: KeepIntervalSetParams = {}) {
+    this.stopTime(key)
+    if((!this.timerMap.has(key) || isCover) && fn) {
       this.timerMap.set(key, {
         timeout: null,
         interval: null,
@@ -44,7 +47,10 @@ class KeepInterval {
       })
     }
     const timeItem = this.timerMap.get(key)!
-    this.stopTime(key)
+    if(intervalTime && timeItem.intervalTime !== intervalTime) {
+      timeItem.intervalTime = intervalTime
+      timeItem.remainTime = intervalTime
+    }
     timeItem.remainTime -= timeItem.end - timeItem.cur
     timeItem.cur = Date.now()
     timeItem.end = timeItem.cur
@@ -113,29 +119,10 @@ class KeepInterval {
 export default KeepInterval.instance
 
 export type KeepIntervalInstance = {
-  set(key: string, fn?: () => void, intervalTime?: number, isTimeOut?: boolean): void
+  set(key: string, fn?: () => void, intervalTime?: number, param?: KeepIntervalSetParams): void
   pause(key: string): number | undefined
   allPause(isPause?: boolean): void
   stopTime(key: string): void
   delete(key: string): void
   clear(): void
-}
-
-export type TimerMap = {
-  // 第一层的setTimeout
-  timeout: NodeJS.Timeout | null
-  // 第二层的setInterval
-  interval: NodeJS.Timeout | null
-  // 当前时间
-  cur: number
-  // 暂停时间
-  end: number
-  // 传入的执行函数
-  fn: () => void
-  // 固定的时间间隔
-  intervalTime: number
-  // 用于setTimeout的剩余时间间隔
-  remainTime: number
-  /** 是否只是倒计时 */
-  isTimeOut: boolean
 }

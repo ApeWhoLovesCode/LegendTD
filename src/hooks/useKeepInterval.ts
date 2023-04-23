@@ -1,4 +1,3 @@
-import { TimerMap } from '@/utils/keepInterval';
 import { reactive, onUnmounted } from 'vue';
 
 /**
@@ -12,10 +11,11 @@ export default function useKeepInterval() {
    * @param key 计时器的索引
    * @param fn 执行函数
    * @param intervalTime 间隔时间 
-   * @param isTimeOut 是否setTimeout
+   * @param p KeepIntervalSetParams
    */
-  function set(key: string, fn?: () => void, intervalTime = 1000, isTimeOut = false) {
-    if(!timerMap.has(key) && fn) {
+  function set(key: string, fn?: () => void, intervalTime = 1000, {isTimeOut = false, isCover}: KeepIntervalSetParams = {}) {
+    stopTime(key)
+    if((!timerMap.has(key) || isCover) && fn) {
       timerMap.set(key, {
         timeout: null,
         interval: null,
@@ -28,7 +28,10 @@ export default function useKeepInterval() {
       })
     }
     const timeItem = timerMap.get(key)!
-    stopTime(key)
+    if(intervalTime && timeItem.intervalTime !== intervalTime) {
+      timeItem.intervalTime = intervalTime
+      timeItem.remainTime = intervalTime
+    }
     timeItem.remainTime -= timeItem.end - timeItem.cur
     timeItem.cur = Date.now()
     timeItem.end = timeItem.cur
@@ -105,4 +108,30 @@ export default function useKeepInterval() {
     clear,
     stopTime,
   }
+}
+
+export type KeepIntervalSetParams = {
+  /** 是否仅仅是倒计时 */
+  isTimeOut?: boolean
+  /** 是否覆盖之前的内容 */
+  isCover?: boolean
+}
+
+export type TimerMap = {
+  // 第一层的setTimeout
+  timeout: NodeJS.Timeout | null
+  // 第二层的setInterval
+  interval: NodeJS.Timeout | null
+  // 当前时间
+  cur: number
+  // 暂停时间
+  end: number
+  // 传入的执行函数
+  fn: () => void
+  // 固定的时间间隔
+  intervalTime: number
+  // 用于setTimeout的剩余时间间隔
+  remainTime: number
+  /** 是否只是倒计时 */
+  isTimeOut: boolean
 }
