@@ -109,7 +109,7 @@ const drawProgress = (newVal: number) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1001;
+  z-index: 1;
   .progress-wrap {
     .progress-title {
       margin-bottom: 12px;

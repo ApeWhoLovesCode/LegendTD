@@ -69,7 +69,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
       >
         <div class="card">
           <div class="card-bg" :style="{filter: `blur(${20 - source.progress * 20 / 100}px)`}">
-            <CoverCanvas v-if="state.isOnload" :index="cardIndex(i)" />
+            <CoverCanvas v-if="source.progress > 10" :index="cardIndex(i)" />
             <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
           </div>
           <div class="card-level">{{ (cardIndex(i) !== mapData.length - 1) ? cardIndex(i) + 1 : '卍' }}</div>
@@ -108,7 +108,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
       width: 100%;
       height: 100%;
       background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
-      transition: filter .5s ease-out;
+      transition: filter .4s ease-out;
     }
     &-disable {
       position: absolute;
