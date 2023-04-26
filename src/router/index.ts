@@ -29,6 +29,11 @@ const routes = [
     name: 'game',
     component: () => import('../views/gameWorker/index.vue') 
   },
+  {
+    path: '/dev/createMap',
+    name: 'createMap',
+    component: () => import('../views/dev/createMap/index.vue') 
+  },
 ]
 
 const router = createRouter({

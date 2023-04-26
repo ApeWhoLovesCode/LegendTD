@@ -25,6 +25,7 @@ import { useUserInfoStore } from "@/stores/userInfo";
 import { updateScoreApi } from "@/service/rank";
 import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
+import { waitTime } from "@/utils/tools";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -177,6 +178,9 @@ function onHpChange(hp: number) {
   playAudio('ma-nansou', 'End');
   // 判断游戏结束
   if(hp) return
+  uploadScore()
+}
+async function uploadScore() {
   baseDataState.isGameOver = true
   baseDataState.isPause = true
   playAudio('ma-gameover', 'Skill')
@@ -185,16 +189,21 @@ function onHpChange(hp: number) {
   const {userInfo} = userInfoStore
   if(userInfo) {
     if(!baseDataState.level) {
+      await waitTime(200)
       return ElMessage.info('很遗憾你一波敌人都没抵御成功')
     }
-    updateScoreApi({
-      userId: userInfo.id,
-      score: baseDataState.level,
-      level: source.mapLevel
-    }).then(res => {
+    try {
+      const res = await updateScoreApi({
+        userId: userInfo.id,
+        score: baseDataState.level,
+        level: source.mapLevel
+      })
       ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
-    })
+    } catch (error) {
+      console.log('updateScoreApi-error: ', error);
+    }
   } else {
+    await waitTime(200)
     ElMessage.info('登录后才能上传成绩~~')
   }
 }
@@ -334,7 +343,9 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
           :isPlayBgAudio="baseDataState.isPlayBgAudio"
           @game-pause="gamePause"
           @play-bg-audio="playBgAudio"
-          @re-start="emit('reStart')"
+          @re-start="uploadScore().then(() => {
+            emit('reStart')
+          })"
         />
         <!-- 游戏区域 -->
         <canvas 

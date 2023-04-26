@@ -67,17 +67,14 @@ export function isMobile() {
   return navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
 }
 
-/**
- * @param {number} targetCount 不小于1的整数，表示经过targetCount帧之后返回结果
- * @return {Promise<number>}
- */
-export const getScreenFps = (targetCount: number = 60): Promise<number> => {
+/** 经过多少次计算后，获取fps */
+export const getScreenFps = (total: number = 60): Promise<number> => {
   return new Promise(resolve => {
     const begin = Date.now();
     let count = 0;
     (function run() {
       requestAnimationFrame(() => {
-        if (++count >= targetCount) {
+        if (++count >= total) {
           const fps = Math.ceil((count / (Date.now() - begin)) * 1000)
           return resolve(fps)
         }
@@ -85,4 +82,11 @@ export const getScreenFps = (targetCount: number = 60): Promise<number> => {
       })
     })()
   })
+}
+
+/** 初始化创建二维数组 */
+export function createTwoArray<T>(rowNum: number, colNum: number, cb: (i: number) => T) {
+  return Array.from({length: rowNum}).map(() => (
+    Array.from({length: colNum}).map((_, i) => cb(i))
+  ))
 }
