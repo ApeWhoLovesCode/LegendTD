@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ElPopconfirm } from 'element-plus';
+import { ElPopconfirm, ElMessage } from 'element-plus';
 import ProtectTheHorse from './game.vue'
 import UserBall from '@/components/userBall.vue'
 import _ from 'lodash'
@@ -21,6 +21,7 @@ const state = reactive({
 /** 初始化加载图片等内容 */
 async function init() {
   source.loadingAllImg()
+  ElMessage.info('登录后才能上传成绩噢~~')
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {

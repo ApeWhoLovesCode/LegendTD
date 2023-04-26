@@ -4,6 +4,7 @@ import { createTwoArray } from '@/utils/tools';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { AreaKeyType, AreaType } from './type';
+import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
 
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
