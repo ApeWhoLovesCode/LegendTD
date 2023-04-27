@@ -105,6 +105,7 @@ async function init() {
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   })
+  onWorkerPostFn('onProgress', 100)
   if(isInfinite()) {
     addMoney(999999)
   }

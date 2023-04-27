@@ -79,8 +79,8 @@ const startAnimation = (newVal: number) => {
         setTimeout(() => {
           emit('loadDone')
         }, 300);
+        cancelAnimationFrame(state.animationFrame)
       }
-      cancelAnimationFrame(state.animationFrame)
     }
   })();
 }
