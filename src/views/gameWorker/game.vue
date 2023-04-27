@@ -198,7 +198,7 @@ async function uploadScore() {
         score: baseDataState.level,
         level: source.mapLevel
       })
-      ElMessage.success(res.isUpdate ? '恭喜，创造了新纪录~~' : '还未超越最高分，继续努力吧~~')
+      ElMessage.success(res.isUpdate ? '恭喜，创造了当前地图的新纪录~~' : '还未超越最高分，继续努力吧~~')
     } catch (error) {
       console.log('updateScoreApi-error: ', error);
     }
