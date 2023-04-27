@@ -1,22 +1,18 @@
 <script setup lang='ts'>
 import { nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-
+import { ElPopconfirm, ElMessage } from 'element-plus';
 import ProtectTheHorse from './game.vue'
-
-import _ from 'lodash'
-
-import { IndexType } from '@/type';
-import { useSourceStore } from '@/stores/source';
 import UserBall from '@/components/userBall.vue'
+import _ from 'lodash'
+import { useSourceStore } from '@/stores/source';
 import { requireCDN } from '@/utils/handleImg';
-import { ElPopconfirm } from 'element-plus';
 
 const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
 
-const state = reactive<IndexType>({
+const state = reactive({
   title: '塔防联盟',
   // 控制游戏区域的显示与隐藏
   isProtectTheHorse: true,
@@ -25,11 +21,7 @@ const state = reactive<IndexType>({
 /** 初始化加载图片等内容 */
 async function init() {
   source.loadingAllImg()
-  // source.loadingAllImg().then(() => {
-  //   setTimeout(() => {
-  //     state.isProtectTheHorse = true
-  //   }, 100);
-  // })
+  ElMessage.info('登录后才能上传成绩噢~~')
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {

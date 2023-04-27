@@ -1,18 +1,18 @@
 import enemyData from '@/dataSource/enemyData'
-import otherImgData from '@/dataSource/otherImgData'
+import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
 import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
 import { range } from '@/utils/format'
-import { gifToStaticImg, loadImage } from '@/utils/handleImg'
+import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
+import { SourceImgObj } from '@/utils/worker-libgif'
 import _ from 'lodash'
-import {defineStore} from 'pinia'
+import { defineStore } from 'pinia'
 
-type TowerSource = {[key in TowerName]: TowerStateType}
+export type TowerSource = {[key in TowerName]: TowerStateType}
 
-type OnloadImgKey = keyof typeof otherImgData
-type OthOnloadImg = {[key in OnloadImgKey]?: HTMLImageElement}
+export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
 
-type StateType = {
+export type SourceStateType = {
   /** 游戏页面是否初始化完成 */
   isGameInit: boolean
   /** 游戏在进行中 */
@@ -22,7 +22,8 @@ type StateType = {
   /** 敌人加载完成的图片资源 */
   enemyImgSource: {
     [key in string]: {
-      imgList: HTMLImageElement[]
+      img?: HTMLImageElement | ImageBitmap
+      imgList?: SourceImgObj[]
     }
   }
   /** 塔防处理好的静态资源 */
@@ -40,7 +41,7 @@ type StateType = {
 }
 
 export const useSourceStore = defineStore('source', {
-  state: (): StateType => ({
+  state: (): SourceStateType => ({
     isGameInit: false,
     isGameing: false,
     enemySource: [],
@@ -70,10 +71,16 @@ export const useSourceStore = defineStore('source', {
         this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
       }
       const step = 70 / enemyData.length
-      return Promise.all(enemyData.map(async (enemy, index) => {
-        if(!this.$state.enemyImgSource[enemy.name]?.imgList.length) {
-          const imgList = await gifToStaticImg({type: enemy.type, imgSource: enemy.imgSource})
-          this.$state.enemyImgSource[enemy.name] = {imgList}
+      return Promise.all(enemyData.map(async (enemy) => {
+        const item = this.$state.enemyImgSource[enemy.name]
+        if(!item?.imgList?.length && !item?.img) {
+          if(enemy.imgType === 'gif') {
+            const imgList = await gifToStaticImgList(enemy.imgSource, true)
+            this.$state.enemyImgSource[enemy.name] = {imgList}
+          } else {
+            const img = await loadImage(enemy.imgSource)
+            this.$state.enemyImgSource[enemy.name] = {img}
+          }
           this.$state.progress += step
         }
         return 

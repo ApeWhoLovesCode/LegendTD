@@ -7,18 +7,32 @@ const routes = [
     component: () => import('../views/index.vue') 
   },
   {
-    path: '/game',
-    redirect: '/game/1'
+    path: '/gameVue',
+    redirect: '/gameVue/1'
   },
   {
-    path: '/game/:id',
-    name: 'game',
+    path: '/gameVue/:id',
+    name: 'gameVue',
     component: () => import('../views/game/index.vue') 
   },
   {
     path: '/test',
     name: 'test',
     component: () => import('../views/test/index.vue') 
+  },
+  {
+    path: '/game',
+    redirect: '/game/1'
+  },
+  {
+    path: '/game/:id',
+    name: 'game',
+    component: () => import('../views/gameWorker/index.vue') 
+  },
+  {
+    path: '/dev/createMap',
+    name: 'createMap',
+    component: () => import('../views/dev/createMap/index.vue') 
   },
 ]
 

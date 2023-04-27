@@ -126,7 +126,7 @@ watch(() => provideState.isVertical, () => {
 onMounted(() => {
   setTimeout(() => {
     init()
-  }, 10);
+  }, 0);
   window.addEventListener('resize', resizeFn)
 })
 onBeforeUnmount(() => {
@@ -228,8 +228,8 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   } else {
     mathMethods = xy > 0 ? 'floor' : 'ceil'
   }
-  // 触摸距离小于10，并且触摸时间小于120ms才算点击
-  provideState.isClick = Math.abs(xy) < 10 && _time < 120
+  // 触摸距离小于10，并且触摸时间小于150ms才算点击
+  provideState.isClick = Math.abs(xy) < 10 && _time < 150
   duration.value = _duration
   const _deg = cardDeg.value * Math[mathMethods](deg / cardDeg.value)
   rotateDeg.value = _deg
