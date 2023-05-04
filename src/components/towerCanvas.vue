@@ -590,7 +590,7 @@ function setEnemy(e: {i: number, level?: number}) {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id}
+  const enemyItem: EnemyStateType = {...item, id, imgIndex: 0, curFloorI: 0}
   const {x, y} = state.mapGridInfoItem
   const {w, h} = item
   enemyItem.x = x - w / 4
@@ -652,6 +652,10 @@ function drawEnemy(index: number) {
     ctx.scale(-1, 1); // 翻转画布
   }
   const imgItem = source.enemyImgSource[name]
+  // let delay = imgItem.imgList![0].delay
+  // if(curSpeed !== speed) {
+  //   delay *= 2 - curSpeed / speed
+  // }
   // 处理需要绘画的敌人图片
   const img = imgType === 'gif' ? (
     imgItem.imgList![Math.floor(imgIndex / imgItem.imgList![0].delay)].img
@@ -660,7 +664,7 @@ function drawEnemy(index: number) {
   ctx.restore() // 还原画布
   // 控制图片的索引
   if(imgType === 'gif') {
-    if(imgIndex === imgItem.imgList!.length * imgItem.imgList![0].delay - 1) {
+    if(imgIndex >= imgItem.imgList!.length * imgItem.imgList![0].delay - 1) {
       enemyList[index].imgIndex = 0
     } else enemyList[index].imgIndex++
   }

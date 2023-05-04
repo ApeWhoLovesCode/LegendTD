@@ -58,6 +58,10 @@ export type EnemyStateType = {
   poison?: EnemyPoison
   /** 减速类型 */
   slowType?: TowerSlowType
+  /** 当前僵尸所在的索引 */
+  curFloorI: number
+  /** 当前绘画到的图片索引，用于gif图 */
+  imgIndex: number
 } & EnemyType
 
 /** 敌人数据 */

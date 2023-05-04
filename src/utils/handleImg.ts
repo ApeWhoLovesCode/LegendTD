@@ -1,6 +1,7 @@
 import { CDN_URL } from '@/config';
 import SuperGif from 'libgif';
-import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
+// import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
+import { loadGifToCanvas, SourceImgObj } from "lhh-utils";
 
 /** 加载图片 */
 export function loadImage(imgUrl: string) {

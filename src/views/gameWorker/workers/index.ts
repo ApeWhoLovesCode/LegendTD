@@ -8,7 +8,7 @@ import { enemyList, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
-import { ENEMY_MAX_LEVEL, EnemyType, enemyHpColors } from "@/dataSource/enemyData";
+import { ENEMY_MAX_LEVEL, enemyHpColors } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
 import { getAngle } from "@/utils/handleCircle";
@@ -791,7 +791,7 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, level}
+  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   // 设置敌人的初始位置
@@ -853,7 +853,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 }
 
 /** 召唤敌人的处理 */
-function callEnemy(newEnemy: EnemyType, i: number) {
+function callEnemy(newEnemy: EnemyStateType, i: number) {
   const { curFloorI, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = randomStr(`callenemy-${i}`)
@@ -867,6 +867,7 @@ function callEnemy(newEnemy: EnemyType, i: number) {
   newEnemy.hp.level = 1
   return {
     ...newEnemy,
+    imgIndex: 0,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
     y: y - newEnemy.h / 2,
