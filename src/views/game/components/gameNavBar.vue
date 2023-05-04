@@ -26,7 +26,7 @@
           <span class="iconfont" :class="isPlayBgAudio ? 'icon-mn_shengyin_fill' : 'icon-mn_shengyinwu_fill'"></span>
         </span>
       </el-tooltip>
-      <el-tooltip effect="dark" content="重新开始" :placement="source.isMobile ? 'left' : 'bottom'">
+      <el-tooltip effect="dark" content="上传成绩，重新开始" :placement="source.isMobile ? 'left' : 'bottom'">
         <span class="icon-wrap icon-hover" @click="reStart">
           <span class="iconfont icon-jurassic_restart" ></span>
         </span>
@@ -76,7 +76,7 @@ const source = useSourceStore()
 
 const reStart = () => {
   ElMessageBox.confirm(
-    '当前的游戏数据将清空，您确定要重新开始游戏吗？',
+    '当前的成绩将作为最终的成绩，您确定要上传得分并重新开始游戏吗？',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',

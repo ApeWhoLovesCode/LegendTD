@@ -95,12 +95,12 @@ const progressChange = (v: number) => {
   }
 }
 
-/** 监听球的3s后睡眠 */
+/** 监听球的5s后睡眠 */
 const onBallSleep = () => {
   clearBallSleep()
   ballTimer.value = setTimeout(() => {
     status.value = 0
-  }, 3000);
+  }, 5000);
 }
 
 const clearBallSleep = () => {
@@ -136,10 +136,18 @@ onBeforeUnmount(() => clearBallSleep())
       </div>
       <div class="ball-item" :style="ballItemStyle(props.itemsNum - 1)">
         <ElDropdown size="small">
-          <div class="ball-item-content">设置</div>
+          <div 
+            class="ball-item-content" 
+            @click="() => {
+              if(!userInfoStore.userInfo) {
+                login()
+              }
+            }"
+          >{{ !userInfoStore.userInfo ? '登录' : '设置' }}</div>
           <template #dropdown>
             <ElDropdownItem v-if="userInfoStore.userInfo" @click="openUser">个人信息</ElDropdownItem>
             <ElDropdownItem @click="login">{{ userInfoStore.userInfo ? '退出' : '' }}登录</ElDropdownItem>
+            <!-- <ElDropdownItem v-if="userInfoStore.userInfo" @click="login">退出登录</ElDropdownItem> -->
           </template>
         </ElDropdown>
       </div>

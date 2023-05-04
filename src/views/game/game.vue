@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { nextTick, onMounted, onBeforeUnmount, computed, watch, reactive } from 'vue';
 import _ from 'lodash'
 import { ElMessage } from 'element-plus'
 
@@ -9,12 +9,13 @@ import useEnemy from './tools/enemy';
 import useGameConfig from './tools/gameConfig';
 import useGameSkill from './tools/gameSkill';
 import useTower from './tools/tower';
-import imgSource from '@/dataSource/imgSource';
 
+import ProgressBar from '@/components/progressBar.vue'
 import GameNavBar from './components/gameNavBar.vue'
 import StartAndEnd from './components/startAndEnd.vue';
 import TowerBuild from './components/towerBuild.vue';
-import Skill from './components/skill.vue'
+import Skill from './components/skill.vue';
+import Terminal from './components/terminal.vue';
 
 import { limitRange, powAndSqrt, randomNum, randomNumList, waitTime } from '@/utils/tools'
 import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
@@ -22,7 +23,6 @@ import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
 import levelData from '@/dataSource/levelData'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
 import { useSourceStore } from '@/stores/source';
-import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
@@ -31,6 +31,7 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import towerArr, { TowerName, TowerType } from '@/dataSource/towerData';
 import { randomStr } from '@/utils/random';
 import useSpecialBullets from './tools/specialBullets';
+import { useSettingStore } from '@/stores/setting';
 // import testBuildData from './tools/testBuild';
 
 const emit = defineEmits<{
@@ -40,6 +41,7 @@ const emit = defineEmits<{
 // 全局资源
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
+const setting = useSettingStore()
 
 // 抽离的数据
 const { audioState, createAudio, playDomAudio, removeAudio} = useAudioState()
@@ -51,15 +53,11 @@ const { towerList, towerState, handlerTower, hiddenTowerOperation } = useTower()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
 const { specialBullets } = useSpecialBullets()
 
-/** ---计算属性--- */
-/** 终点位置 */
-const terminalStyle = computed(() => {
-  const size = transRatio(gameConfigState.size)
-  if(baseDataState.terminal) {
-    const {x, y} = baseDataState.terminal
-    return {left: transRatio(x) + size / 2 + 'px', top: transRatio(y) - size / 2 + 'px'}
-  }
+const state = reactive({
+  isProgressBar: false,
 })
+
+/** ---计算属性--- */
 /** 是否是无限火力模式 */
 const isInfinite = computed(() => {
   return source.mapLevel === mapData.length - 1
@@ -171,6 +169,7 @@ onBeforeUnmount(() => {
 
 function init() {
   initZoomData()
+  state.isProgressBar = source.progress < 100
   if(isInfinite.value) {
     baseDataState.money = 999999
   }
@@ -193,6 +192,17 @@ function init() {
 
 /** 开启动画绘画 */
 function startAnimation() {
+  if(setting.isHighRefreshScreen) {
+    startAnimationLockFrame()
+  } else {
+    (function go() {
+      gameConfigState.animationFrame = requestAnimationFrame(go);
+      startDraw();
+    })();
+  }
+}
+/** 高刷屏锁帧，锁帧会使绘画出现掉帧 */
+function startAnimationLockFrame() {
   const fpx = 60;
   let fpsInterval = 1000 / fpx;
   let then = Date.now();
@@ -213,13 +223,9 @@ function startDraw() {
   drawTower()
   // 循环静态图片数组画敌人形成gif效果
   for(let index = 0; index < enemyList.length; index++) {
-    const item = enemyList[index]
-    const res = moveEnemy(index)
     // 当敌人已经到达终点，后面就不执行了
-    if(res) break
+    if(moveEnemy(index)) break
     drawEnemy(index)
-    if(item.imgIndex === source.enemyImgSource[item.name].imgList.length - 1) enemyList[index].imgIndex = 0
-    else enemyList[index].imgIndex++
   }
   checkEnemyAndTower()
   handleBulletMove()
@@ -246,7 +252,7 @@ function checkEnemyAndTower() {
           shootBullet(eIdList, +t_i)
           keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
             t.isToTimeShoot = true
-          }, t.rate, true)
+          }, t.rate, {isTimeOut: true})
         } else {
           if(t.targetIdList.length) {
             t.targetIdList = []
@@ -282,7 +288,7 @@ function makeEnemy() {
 /** 画敌人 */
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { name, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
+  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
   const ctx = gameConfigState.ctx
   ctx.save() // 保存画布
   // 翻转图片
@@ -290,8 +296,19 @@ function drawEnemy(index: number) {
     ctx.translate(w + x * 2, 0)
     ctx.scale(-1, 1); // 翻转画布
   }
-  ctx.drawImage(source.enemyImgSource[name].imgList[imgIndex], x, y, w, h) 
+  const imgItem = source.enemyImgSource[name]
+  // 处理需要绘画的敌人图片
+  const img = imgType === 'gif' ? (
+    imgItem.imgList![Math.floor(imgIndex / imgItem.imgList![0].delay)].img
+  ) : imgItem.img!
+  ctx.drawImage(img, x, y, w, h) 
   ctx.restore() // 还原画布
+  // 控制图片的索引
+  if(imgType === 'gif') {
+    if(imgIndex === imgItem.imgList!.length * imgItem.imgList![0].delay - 1) {
+      enemyList[index].imgIndex = 0
+    } else enemyList[index].imgIndex++
+  }
   // 绘画减速效果
   if(curSpeed !== speed) {
     if(slowType === 'twitch') {
@@ -354,12 +371,13 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   // 设置敌人的初始位置
-  const id = item.audioKey + randomStr('enemy')
-  const enemyItem: EnemyStateType = {...item, id}
+  const id = randomStr(item.audioKey)
+  const enemyItem: EnemyStateType = {...item, id, imgIndex: 0, curFloorI: 0, fpsNum: 0}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
+  enemyItem.imgIndex = 0
   enemyList.push(enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, enemyItem.id)
@@ -416,7 +434,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 }
 
 /** 召唤敌人的处理 */
-function callEnemy(newEnemy: EnemyType, i: number) {
+function callEnemy(newEnemy: EnemyStateType, i: number) {
   const { curFloorI, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = randomStr(`callenemy-${i}`)
@@ -428,6 +446,8 @@ function callEnemy(newEnemy: EnemyType, i: number) {
   newEnemy.hp.size *= size
   return {
     ...newEnemy,
+    imgIndex: 0,
+    fpsNum: 0,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
     y: y - newEnemy.h / 2
@@ -517,7 +537,7 @@ function handleSkill(index: number) {
     for(const enemy of enemyList) {
       const e_id = enemy.id
       enemy.hp.cur -= damage
-        if(enemy.hp.cur <= 0) {
+      if(enemy.hp.cur <= 0) {
         baseDataState.money += enemy.reward
         e_idList.push(e_id)
         // 遍历清除防御塔里的该攻击目标
@@ -590,7 +610,7 @@ function buildTower(tname: TowerName, p?: {x: number, y: number}) {
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: audioKey + Date.now(), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
   tower.r *= size 
   tower.speed *= size
@@ -936,7 +956,7 @@ function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
   keepInterval.set(bId, () => {
     const index = specialBullets.twitch.findIndex(b => b.id === bId)
     specialBullets.twitch.splice(index, 1)
-  }, t.poison!.bulletTime, true)
+  }, t.poison!.bulletTime, {isTimeOut: true})
 }
 /** 画特殊子弹 */
 function drawSpecialBullets() {
@@ -965,7 +985,7 @@ function triggerPoisonFun(eIdList: string[]) {
         startPoisonInterval(e_id, t)
         keepInterval.set(`${KeepIntervalKey.poisonFun}-${e_id}`, () => {
           enemy.poison!.isToTimePoison = true
-        }, 1000, true)
+        }, 1000, {isTimeOut: true})
       }
     }
   }
@@ -985,7 +1005,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
     keepInterval.set(`${KeepIntervalKey.twitchDelete}-${e_id}`, () => {
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`)
       enemy.poison = void 0
-    }, t.poison!.time, true)
+    }, t.poison!.time, {isTimeOut: true})
   }
 }
 
@@ -1123,7 +1143,7 @@ function startMoneyTimer() {
   keepInterval.set(KeepIntervalKey.startMoneyTimer, () => {
     gameSkillState.proMoney.isShow = true
     playAudio('create-money', 'End')
-  }, gameSkillState.proMoney.interval, true)
+  }, gameSkillState.proMoney.interval, {isTimeOut: true})
 }
 /** 点击了生产出来的金钱 */
 function proMoneyClick() {
@@ -1203,7 +1223,6 @@ function transRatio(v: number) {
         ></canvas>
         <TowerBuild 
           :tower-state="towerState"
-          :tower-list="towerList"
           :base-data-state="baseDataState"
           :size="gameConfigState.size"
           @build-tower="buildTower"
@@ -1212,17 +1231,23 @@ function transRatio(v: number) {
         <!-- 游戏底部技能区 -->
         <Skill :skillList="gameSkillState.skillList" :money="baseDataState.money" :isPause="baseDataState.isPause" @handleSkill="handleSkill" />
         <!-- 终点 -->
-        <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
-          <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
-          <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
-          <img v-show="gameSkillState.proMoney.isShow" class="money-icon" :src="imgSource.SunImg" alt="" @click="proMoneyClick">
-        </div>
+        <Terminal
+          :game-config-state="gameConfigState"
+          :game-skill-state="gameSkillState"
+          :base-data-state="baseDataState"
+          @proMoneyClick="proMoneyClick"
+        />
         <!-- 游戏开始和结束遮罩层 -->
         <StartAndEnd 
           :base-data-state="baseDataState" 
           :game-config-state="gameConfigState" 
           @begin-game="beginGame"
           @re-start="emit('reStart')"
+        />
+        <ProgressBar 
+          v-if="state.isProgressBar" 
+          :progress="Math.ceil(source.progress)"
+          @load-done="state.isProgressBar = false"
         />
       </div>
     </div>

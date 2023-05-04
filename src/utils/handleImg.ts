@@ -1,8 +1,9 @@
 import { CDN_URL } from '@/config';
-import SuperGif from 'libgif'
+import SuperGif from 'libgif';
+// import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
+import { loadGifToCanvas, SourceImgObj } from "lhh-utils";
 
-// CanvasImageSource
-/** 加载图片 imgUrl: 图片地址,   */
+/** 加载图片 */
 export function loadImage(imgUrl: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     try {
@@ -19,18 +20,17 @@ export function loadImage(imgUrl: string) {
 }
 
  /** 单张gif转静态图片 */
-export function gifToStaticImg(target: {type: string, imgSource: string}) {
-  return new Promise<HTMLImageElement[]>((resolve, reject) => {
+export function gifToStaticImgLibGif(target: {type: string, imgSource: string}) {
+  return new Promise<HTMLImageElement[]>(async (resolve, reject) => {
     try {
       const {type, imgSource} = target
       if(type !== 'gif') {
-        const newImg = new Image();
-        newImg.src = imgSource
+        const newImg = await loadImage(imgSource)
         resolve([newImg])
+        return
       }
       const gifImg = document.createElement('img');
       gifImg.src = imgSource
-      // gifImg.style.transform = 'rotate(90deg)';
       // 创建gif实例
       const rub = new SuperGif({ gif: gifImg } );
       rub.load(() => {
@@ -57,3 +57,32 @@ export const requireCDN = (url: string, prefix: string = 'legendTD') => {
 
 /** 加载图片 */
 export const requireImg = (url: string) => new URL(`../assets/img/${url}`, import.meta.url).href
+
+/** worker 加载图片 */
+export function loadImageWorker(imgUrl: string) {
+  return new Promise<ImageBitmap>((resolve, reject) => {
+    try {
+      fetch(imgUrl).then(response => response.blob())
+      .then(blob => {
+        createImageBitmap(blob).then(image => {
+          resolve(image)
+        })
+      })
+    } catch (error) {
+      console.log('loadImageWorker-error: ', error);
+      reject(error)
+    }
+  })
+}
+
+/** 单张gif转静态图片 */
+export function gifToStaticImgList(url: string, isWorker = false) {
+  return new Promise<(SourceImgObj)[]>((resolve, reject) => {
+    loadGifToCanvas(url, isWorker).then((list) => {
+      resolve(list)
+    }).catch((error: any) => {
+      console.log('gifToStaticImg-error: ', error);
+      reject(error)
+    })
+  })
+}

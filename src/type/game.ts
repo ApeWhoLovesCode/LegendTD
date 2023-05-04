@@ -56,10 +56,14 @@ export type EnemyStateType = {
   id: string
   /** 中毒 */
   poison?: EnemyPoison
-  /** 受到中毒伤害计时器 用于towerCanvas */
-  slowTimer?: NodeJS.Timeout
   /** 减速类型 */
   slowType?: TowerSlowType
+  /** 当前僵尸所在的索引 */
+  curFloorI: number
+  /** gif图遍历的帧数的索引 */
+  fpsNum: number
+  /** 当前绘画到的图片索引，用于gif图 */
+  imgIndex: number
 } & EnemyType
 
 /** 敌人数据 */
@@ -77,10 +81,6 @@ export type EnemyPoison = {
   damage: number
   /** 伤害等级 */
   level: number
-  /** 受到中毒伤害计时器 用于towerCanvas */
-  timer?: NodeJS.Timer
-  /** 中毒清除计时器 */
-  timeout?: NodeJS.Timeout
   /** 是否到时间允许继续中毒了 */
   isToTimePoison?: boolean
   /** 中毒触发函数 */
@@ -146,7 +146,15 @@ export type TowerState = {
   /** 塔防的位置 */
   building: {left: number, top: number, isShow: boolean}
   /** 塔防的攻击范围 */
-  buildingScope: {left: number, top: number, r: number, isShow: boolean, towerIndex: number}
+  buildingScope: BuildingScope
+}
+export type BuildingScope = {
+  left: number, 
+  top: number, 
+  r: number, 
+  isShow: boolean, 
+  towerIndex: number, 
+  saleMoney: number
 }
 
 /** 游戏音乐 */
@@ -199,6 +207,4 @@ export type SpecialBulletItem = TargetInfo & {
   id: string
   /** 塔防的id */
   tId: string
-  /** 子弹清除计时器 用于towerCanvas */
-  timer?: NodeJS.Timer
 }
