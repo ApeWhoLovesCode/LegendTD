@@ -791,7 +791,7 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0}
+  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, fpsNum: 0}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   // 设置敌人的初始位置
@@ -868,6 +868,7 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
   return {
     ...newEnemy,
     imgIndex: 0,
+    fpsNum: 0,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
     y: y - newEnemy.h / 2,

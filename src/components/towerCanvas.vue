@@ -590,7 +590,7 @@ function setEnemy(e: {i: number, level?: number}) {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, imgIndex: 0, curFloorI: 0}
+  const enemyItem: EnemyStateType = {...item, id, imgIndex: 0, curFloorI: 0, fpsNum: 0}
   const {x, y} = state.mapGridInfoItem
   const {w, h} = item
   enemyItem.x = x - w / 4
