@@ -25,7 +25,7 @@ onMounted(() => {
       <TowerCanvas 
         v-if="isOnload" 
         tname='icestar' 
-        :enemy-list="[{i: 1, level: 1}]"
+        :enemy-list="[{i: 1, level: 1},{i: 1, level: 1},{i: 1, level: 1}]"
       />
     </div>
   </div>
