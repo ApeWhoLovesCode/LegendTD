@@ -4,7 +4,9 @@ import { createTwoArray } from '@/utils/tools';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { AreaKeyType, AreaType } from './type';
-import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
+import { loadImage } from '@/utils/handleImg'
+import otherImgData from '@/dataSource/otherImgData';
+import { stat } from 'fs';
 
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
@@ -38,7 +40,14 @@ const state = reactive({
     y: 0,
     w: 80,
     h: 600,
-  }
+  },
+  floorImgList: [otherImgData.floor],
+  floorOnloadImgs: [] as HTMLImageElement[],
+})
+const mouseFloor = reactive({
+  x: 0,
+  y: 0,
+  img: '',
 })
 
 onMounted(() => {
@@ -53,17 +62,17 @@ onUnmounted(() => {
   window.removeEventListener('resize', getCanvasWrapInfoDebounce)
 })
 
-function init() {
+async function init() {
   state.ctx = canvasRef.value!.getContext("2d") as CanvasRenderingContext2D;
   getCanvasWrapInfo()
-  initData()
+  await initData()
   setTimeout(() => {
     startDraw()
   }, 0);
 }
 
-function initData() {
-
+async function initData() {
+  state.floorOnloadImgs = await Promise.all(state.floorImgList.map(img => loadImage(img)))
 }
 
 function startDraw() {
@@ -97,6 +106,19 @@ function drawLine() {
   }
 }
 
+function onClickFloor(e: MouseEvent, i: number) {
+  document.addEventListener("mousemove", onMouseMove);
+  mouseFloor.img = state.floorImgList[i]
+  mouseFloor.x = e.pageX - state.size / 4
+  mouseFloor.y = e.pageY - state.size / 4
+}
+function onMouseMove(e: MouseEvent) {
+  console.log('e: ', e);
+}
+function onRightClick(e: MouseEvent) {
+  document.removeEventListener("mousemove", onMouseMove);
+}
+
 const getCanvasWrapInfoDebounce = _.debounce(() => {
   getCanvasWrapInfo()
   setTimeout(() => {
@@ -128,16 +150,36 @@ function calcArea(area: AreaType) {
 
 <template>
   <div class='createMap'>
-    <div ref="canvasWrapRef" class="createMap-canvasWrap">
-      <canvas 
-        ref="canvasRef"
-        :width="state.canvasInfo.w"
-        :height="state.canvasInfo.h"
+    <div class="createMap-area" :style="{'--size': state.size / source.ratio + 'px'}">
+      <div class="floorWrap">
+        <div 
+          v-for="(floor, i) in state.floorImgList" 
+          :key="i" 
+          class="floor"
+        >
+          <img :src="floor" class="floorImg" @mousedown="onClickFloor($event, i)" @contextmenu.prevent="onRightClick">
+        </div>
+      </div>
+      <div ref="canvasWrapRef" class="createMap-canvasWrap">
+        <canvas 
+          ref="canvasRef"
+          :width="state.canvasInfo.w"
+          :height="state.canvasInfo.h"
+          :style="{
+            width: state.canvasInfo.w / source.ratio + 'px',
+            height: state.canvasInfo.h / source.ratio + 'px',
+          }"
+        ></canvas>
+      </div>
+      <div 
+        class="mouseFloor"
         :style="{
-          width: state.canvasInfo.w / source.ratio + 'px',
-          height: state.canvasInfo.h / source.ratio + 'px',
+          top: (mouseFloor.y || -999) + 'px',
+          left: (mouseFloor.x || -999) + 'px',
         }"
-      ></canvas>
+      >
+        <img :src="mouseFloor.img" class="mouseFloor-img">
+      </div>
     </div>
   </div>
 </template>
@@ -149,10 +191,27 @@ function calcArea(area: AreaType) {
   display: flex;
   justify-content: center;
   align-items: center;
-  &-canvasWrap {
-    width: 90vw;
-    height: 54vw;
-    border: 1px solid #ccc;
+  &-area {
+    @size: var(--size);
+    display: flex;
+    .floorWrap {
+      .floorImg {
+        width: @size;
+        height: @size;
+      }
+    }
+    .createMap-canvasWrap {
+      width: 90vw;
+      height: 54vw;
+      border: 1px solid #ccc;
+    }
+    .mouseFloor {
+      position: fixed;
+      &-img {
+        width: @size;
+        height: @size;
+      }
+    }
   }
 }
 </style>
