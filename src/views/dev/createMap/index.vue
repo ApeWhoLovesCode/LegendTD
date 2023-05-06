@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
-import { createTwoArray } from '@/utils/tools';
+import { checkInRect, createTwoArray } from '@/utils/tools';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { AreaKeyType, AreaType } from './type';
 import { loadImage } from '@/utils/handleImg'
 import otherImgData from '@/dataSource/otherImgData';
-import { stat } from 'fs';
+import { ElButton } from 'element-plus';
 
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
@@ -20,34 +20,26 @@ const state = reactive({
     /** 列数 20 */
     colNum: 20,
     /** 线的宽度 */
-    lineW: 6.25
+    lineW: 6.25,
+    /** 距离浏览器左边距离 */
+    left: 0,
+    /** 距离浏览器上边距离 */
+    top: 0,
   },
   size: 50,
   ctx: null as unknown as CanvasRenderingContext2D,
   animationFrame: 0,
-  /** 绘画地图区域 */
-  darwArea: {
-    x: 100,
-    y: 100,
-    w: 900,
-    h: 500,
-  },
   /** 格子信息 */
   gridArr: createTwoArray(12, 20, () => 0),
-  /** 地板区域 */
-  floorArea: {
-    x: 0,
-    y: 0,
-    w: 80,
-    h: 600,
-  },
   floorImgList: [otherImgData.floor],
   floorOnloadImgs: [] as HTMLImageElement[],
 })
 const mouseFloor = reactive({
   x: 0,
   y: 0,
-  img: '',
+  imgIndex: 0,
+  /** 是否允许绘画 */
+  isDraw: false,
 })
 
 onMounted(() => {
@@ -77,46 +69,86 @@ async function initData() {
 
 function startDraw() {
   drawLine()
-  drawFloorWrap()
-}
-
-function drawFloorWrap() {
-  const ctx = state.ctx
-  const {x, y, w, h} = state.floorArea
-  ctx.fillStyle = '#ebf2fe'
-  ctx.fillRect(x, y, w, h)
 }
 
 /** 画线 */
 function drawLine() {
   const {colNum, rowNum, lineW} = state.canvasInfo
-  const {x, y, w, h} = state.darwArea
+  const {w, h} = state.canvasInfo
   const size = state.size
   const ctx = state.ctx
-  const lineSpace = size
+  // 四周边框
+  ctx.lineWidth = lineW
+  ctx.strokeStyle = '#ddeafb'
+  ctx.strokeRect(lineW / 2, lineW / 2, w - lineW, h - lineW)
+  ctx.fillStyle = '#ddeafb'
   // 竖线
-  for(let i = 0; i <= colNum; i++) {
-    ctx.fillStyle = '#cff1d3'
-    ctx.fillRect(x - lineW + lineSpace * i, y - lineW, lineW, h + lineW)
+  for(let i = 1; i < colNum; i++) {
+    ctx.fillRect(size * i - lineW / 2, lineW, lineW, h + lineW)
   }
   // 横线
-  for(let i = 0; i <= rowNum; i++) {
-    ctx.fillStyle = '#cff1d3'
-    ctx.fillRect(x - lineW, y - lineW + lineSpace * i, w + lineW, lineW)
+  for(let i = 1; i < rowNum; i++) {
+    ctx.fillRect(lineW, size * i - lineW / 2, w + lineW, lineW)
   }
 }
 
 function onClickFloor(e: MouseEvent, i: number) {
   document.addEventListener("mousemove", onMouseMove);
-  mouseFloor.img = state.floorImgList[i]
-  mouseFloor.x = e.pageX - state.size / 4
-  mouseFloor.y = e.pageY - state.size / 4
+  mouseFloor.imgIndex = i
+  mouseFloor.x = e.clientX - state.size / 4
+  mouseFloor.y = e.clientY - state.size / 4
 }
 function onMouseMove(e: MouseEvent) {
-  console.log('e: ', e);
+  mouseFloor.x = e.clientX - state.size / 4
+  mouseFloor.y = e.clientY - state.size / 4
+  // 按住地板进行绘画
+  if(!mouseFloor.isDraw) { 
+    return
+  }
+  if(!isInCanvas(e)) {
+    onCancelDrawFloor()
+    return
+  }
+  onDrawFloor(e)
 }
-function onRightClick(e: MouseEvent) {
+/** 点击画地板 */
+function onMouseFloorClick(e: MouseEvent) {
+  if (e.button === 0) { // 左击
+    if(!isInCanvas(e)) return
+    mouseFloor.isDraw = true
+    onDrawFloor(e)
+  }
+}
+function onCancelDrawFloor() {
+  mouseFloor.isDraw = false
+}
+function onRightClick() {
   document.removeEventListener("mousemove", onMouseMove);
+  mouseFloor.x = 0
+  mouseFloor.y = 0
+}
+
+/** 在canvas中画地板 */
+function onDrawFloor(e: MouseEvent) {
+  const { left, top, lineW } = state.canvasInfo
+  const size = state.size / source.ratio
+  const row = Math.floor((e.clientY - top) / size)
+  const col = Math.floor((e.clientX - left) / size)
+  if(state.gridArr[row][col]) return
+  state.gridArr[row][col] = 1
+  const imgW = state.size - lineW
+  state.ctx.drawImage(state.floorOnloadImgs[mouseFloor.imgIndex], col * state.size + lineW / 2, row * state.size + lineW / 2, imgW, imgW)
+}
+/** 当前event是否在canvas中 */
+function isInCanvas(e: MouseEvent) {
+  const { left, top, w, h } = state.canvasInfo
+  return checkInRect({x: e.clientX, y: e.clientY}, {x: left, y: top, w: w / source.ratio, h: h / source.ratio})
+}
+function clearCanvas() {
+  state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
+  // 将二维数组中的值置为0
+  state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
+  startDraw()
 }
 
 const getCanvasWrapInfoDebounce = _.debounce(() => {
@@ -130,15 +162,11 @@ function getCanvasWrapInfo() {
   const height = (canvasWrapRef.value?.clientHeight ?? 0) * source.ratio
   state.canvasInfo.w = width
   state.canvasInfo.h = height
+  state.canvasInfo.left = canvasWrapRef.value?.offsetLeft ?? 0
+  state.canvasInfo.top = canvasWrapRef.value?.offsetTop ?? 0
   state.size = width / state.canvasInfo.colNum
-  state.canvasInfo.lineW = state.size / 8
-  const xy = state.size * 2
-  state.darwArea.x = xy
-  state.darwArea.y = xy
-  state.darwArea.w = width - xy
-  state.darwArea.h = height - xy
-  state.floorArea.w = xy - state.canvasInfo.lineW
-  state.floorArea.h = height
+  const lineW = state.size / 8
+  state.canvasInfo.lineW = lineW
 }
 function calcArea(area: AreaType) {
   Object.keys(area).forEach((key) => {
@@ -157,19 +185,24 @@ function calcArea(area: AreaType) {
           :key="i" 
           class="floor"
         >
-          <img :src="floor" class="floorImg" @mousedown="onClickFloor($event, i)" @contextmenu.prevent="onRightClick">
+          <img :src="floor" class="floorImg" @mousedown="onClickFloor($event, i)">
         </div>
       </div>
-      <div ref="canvasWrapRef" class="createMap-canvasWrap">
-        <canvas 
-          ref="canvasRef"
-          :width="state.canvasInfo.w"
-          :height="state.canvasInfo.h"
-          :style="{
-            width: state.canvasInfo.w / source.ratio + 'px',
-            height: state.canvasInfo.h / source.ratio + 'px',
-          }"
-        ></canvas>
+      <div class="right">
+        <div class="tools">
+          <ElButton @click="clearCanvas">清空画布</ElButton>
+        </div>
+        <div ref="canvasWrapRef" class="createMap-canvasWrap">
+          <canvas 
+            ref="canvasRef"
+            :width="state.canvasInfo.w"
+            :height="state.canvasInfo.h"
+            :style="{
+              width: state.canvasInfo.w / source.ratio + 'px',
+              height: state.canvasInfo.h / source.ratio + 'px',
+            }"
+          ></canvas>
+        </div>
       </div>
       <div 
         class="mouseFloor"
@@ -177,8 +210,11 @@ function calcArea(area: AreaType) {
           top: (mouseFloor.y || -999) + 'px',
           left: (mouseFloor.x || -999) + 'px',
         }"
+        @mousedown="onMouseFloorClick"
+        @mouseup="onCancelDrawFloor"
+        @contextmenu.prevent="onRightClick"
       >
-        <img :src="mouseFloor.img" class="mouseFloor-img">
+        <img :src="state.floorImgList[mouseFloor.imgIndex]" class="mouseFloor-img">
       </div>
     </div>
   </div>
@@ -200,6 +236,13 @@ function calcArea(area: AreaType) {
         height: @size;
       }
     }
+    .tools {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      background-color: #ddeafb;
+    }
     .createMap-canvasWrap {
       width: 90vw;
       height: 54vw;
@@ -210,6 +253,8 @@ function calcArea(area: AreaType) {
       &-img {
         width: @size;
         height: @size;
+        user-select: none;
+        -webkit-user-drag: none;
       }
     }
   }
