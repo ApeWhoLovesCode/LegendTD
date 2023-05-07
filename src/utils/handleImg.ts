@@ -1,6 +1,7 @@
 import { CDN_URL } from '@/config';
 import SuperGif from 'libgif';
 import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
+// import { loadGifToCanvas, SourceImgObj } from "lhh-utils";
 
 /** 加载图片 */
 export function loadImage(imgUrl: string) {
@@ -55,7 +56,9 @@ export const requireCDN = (url: string, prefix: string = 'legendTD') => {
 }
 
 /** 加载图片 */
-export const requireImg = (url: string) => new URL(`../assets/img/${url}`, import.meta.url).href
+export const requireImg = (url: string) => new URL(`@/assets/img/${url}`, import.meta.url).href
+
+export const requireImage = (url: string) => new URL(url, import.meta.url).href
 
 /** worker 加载图片 */
 export function loadImageWorker(imgUrl: string) {

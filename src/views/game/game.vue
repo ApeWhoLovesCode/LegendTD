@@ -23,7 +23,6 @@ import keepInterval, {KeepIntervalKey} from '@/utils/keepInterval'
 import levelData from '@/dataSource/levelData'
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData'
 import { useSourceStore } from '@/stores/source';
-import { EnemyType } from '@/dataSource/enemyData';
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from '@/type/game';
 import useDomRef from './tools/domRef';
 import { getAngle } from '@/utils/handleCircle';
@@ -299,16 +298,28 @@ function drawEnemy(index: number) {
   }
   const imgItem = source.enemyImgSource[name]
   // 处理需要绘画的敌人图片
-  const img = imgType === 'gif' ? (
-    imgItem.imgList![Math.floor(imgIndex / imgItem.imgList![0].delay)].img
-  ) : imgItem.img!
+  const img = imgType === 'gif' ? imgItem.imgList![imgIndex].img : imgItem.img!
   ctx.drawImage(img, x, y, w, h) 
   ctx.restore() // 还原画布
   // 控制图片的索引
   if(imgType === 'gif') {
-    if(imgIndex === imgItem.imgList!.length * imgItem.imgList![0].delay - 1) {
+    let delay = imgItem.imgList![0].delay
+    if(curSpeed !== speed) {
+      delay *= 2 - curSpeed / speed
+    }
+    // 控制每一帧图片的切换时机
+    if(curSpeed) {
+      if(enemyList[index].framesNum >= delay) {
+        enemyList[index].imgIndex++;
+        enemyList[index].framesNum = 0;
+      } else {
+        enemyList[index].framesNum++;
+      }
+    }
+    // 使图片索引回到第一帧
+    if(enemyList[index].imgIndex === imgItem.imgList!.length) {
       enemyList[index].imgIndex = 0
-    } else enemyList[index].imgIndex++
+    }
   }
   // 绘画减速效果
   if(curSpeed !== speed) {
@@ -326,7 +337,7 @@ function drawEnemy(index: number) {
       } else {
         ctx.save()
         ctx.globalAlpha = 0.9
-        ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 2, w / 2)
+        ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 3, w / 3)
         ctx.restore()
       }
     }
@@ -373,11 +384,12 @@ function setEnemy() {
   item.hp.size *= size
   // 设置敌人的初始位置
   const id = randomStr(item.audioKey)
-  const enemyItem: EnemyStateType = {...item, id}
+  const enemyItem: EnemyStateType = {...item, id, imgIndex: 0, curFloorI: 0, framesNum: 0}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
+  enemyItem.imgIndex = 0
   enemyList.push(enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, enemyItem.id)
@@ -434,7 +446,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
 }
 
 /** 召唤敌人的处理 */
-function callEnemy(newEnemy: EnemyType, i: number) {
+function callEnemy(newEnemy: EnemyStateType, i: number) {
   const { curFloorI, audioKey } = newEnemy
   const { x, y } = enemyState.movePath[curFloorI - 1]
   const id = randomStr(`callenemy-${i}`)
@@ -446,6 +458,8 @@ function callEnemy(newEnemy: EnemyType, i: number) {
   newEnemy.hp.size *= size
   return {
     ...newEnemy,
+    imgIndex: 0,
+    framesNum: 0,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
     y: y - newEnemy.h / 2

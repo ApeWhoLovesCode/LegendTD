@@ -10,9 +10,9 @@ const source = useSourceStore()
 const isOnload = ref(false)
 
 onMounted(() => {
-  // source.loadingAllImg().then(() => {
-  //   isOnload.value = true
-  // })
+  source.loadingAllImg().then(() => {
+    isOnload.value = true
+  })
 })
 
 </script>
@@ -21,11 +21,12 @@ onMounted(() => {
   <div class='test'>
     <UserBall />
     <div class="towerImg"> 
-      <!-- <TowerCanvas 
+      <!-- :enemy-list="[{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}]" -->
+      <TowerCanvas 
         v-if="isOnload" 
-        tname='lanbo' 
-        :enemy-list="[{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}]"
-      /> -->
+        tname='icestar' 
+        :enemy-list="[{i: 1, level: 1},{i: 1, level: 1},{i: 1, level: 1}]"
+      />
     </div>
   </div>
 </template>
