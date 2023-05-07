@@ -61,7 +61,7 @@ export type EnemyStateType = {
   /** 当前僵尸所在的索引 */
   curFloorI: number
   /** gif图遍历的帧数的索引 */
-  fpsNum: number
+  framesNum: number
   /** 当前绘画到的图片索引，用于gif图 */
   imgIndex: number
 } & EnemyType

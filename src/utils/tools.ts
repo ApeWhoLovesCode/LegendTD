@@ -13,6 +13,12 @@ export function randomNum(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
+/** 检查是否在矩形内 */
+export function checkInRect(t: {x: number, y: number}, rect: {x?: number, y?: number, w: number, h: number}) {
+  const rx = rect.x ?? 0, ry = rect.y ?? 0
+  return rx < t.x && t.x < rx + rect.w && ry < t.y && t.y < ry + rect.h
+}
+
 /** 根据概率生成敌人索引 */
 export function createProbNum(level: number) {
   const list = [
