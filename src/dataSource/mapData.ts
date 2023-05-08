@@ -3,6 +3,7 @@
  * 控制x y轴的方向 1:左 2:上 3:右 4:下
  */
 export default [
+  {4: 4, 8: 1, 11: 2},
   {
     29: 1, 33: 1, 37: 1, 49: 1, 69: 1,  
     3: 2, 7: 2, 47: 2, 51: 2, 57: 2,  
@@ -80,6 +81,7 @@ export default [
 
 /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
 const mapGridInfoList: MapGridInfo[] = [
+  {x: 0, y: 1, x_y: 3, num: 13},
   { x: 0, y: 5, x_y: 3, num: 72 },
   { x: 0, y: 1, x_y: 3, num: 83 },
   { x: 0, y: 11, x_y: 3, num: 79 },
@@ -106,27 +108,6 @@ export type GridInfo = {
 
 export type MapGridInfo = GridInfo & {num: number}
 
-/** 方向 1:左 2:下 3:右 4:上 */
-export type DirectionType = 1 | 2| 3 | 4
+/** 方向 1:左 2:上 3:右 4:下 */
+export type DirectionType = 1 | 2 | 3 | 4
   
-/* 
-刚开始的时候，switch判断写法
-switch (i) {
-  // 下
-  case 3: case 15: case 21: case 39: case 58: case 68: {
-    x_y = 4; break;
-  }
-  // 右
-  case 5: case 10: case 23: case 34: case 77: {
-    x_y = 3; break;
-  } 
-  // 上
-  case 8: case 29: case 51: case 62: case 74: case 79: {
-    x_y = 2; break;
-  } 
-  // 左
-  case 18: case 48: case 53: case 60: case 64: case 70: case 81: {
-    x_y = 1; break;
-  } 
-}
-*/

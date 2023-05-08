@@ -1,13 +1,14 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
-import { checkInRect, createTwoArray } from '@/utils/tools';
+import { checkInRect, createTwoArray, getDirection, getDirectionVal } from '@/utils/tools';
 import _ from 'lodash';
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { AreaKeyType, AreaType } from './type';
 import { loadImage } from '@/utils/handleImg'
 import otherImgData from '@/dataSource/otherImgData';
-import { ElButton, ElSpace } from 'element-plus';
-import EraserIcon from '@/assets/img/eraser.png'
+import { ElButton, ElMessage, ElSpace } from 'element-plus';
+import { EraserIcon, FlagIcon } from './imgSource'
+import type {DirectionType} from '@/dataSource/mapData'
 
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
@@ -30,12 +31,13 @@ const state = reactive({
   size: 50,
   ctx: null as unknown as CanvasRenderingContext2D,
   animationFrame: 0,
-  /** 格子信息 */
+  /** 格子信息 0:初始值 1:地板 -1:旗子 */
   gridArr: createTwoArray(12, 20, () => 0),
   floorImgList: [otherImgData.floor],
   floorOnloadImgs: [] as HTMLImageElement[],
+  flagOnloadImg: undefined as HTMLImageElement | undefined
 })
-const mouseFloor = reactive({
+const mouseImg = reactive({
   x: 0,
   y: 0,
   imgIndex: 0,
@@ -43,10 +45,18 @@ const mouseFloor = reactive({
   isDraw: false,
   /** 是否是橡皮 */
   isEraser: false,
+  /** 是否是起点 */
+  isFlag: false,
+})
+/** 起点 */
+const startFlag = reactive({
+  isShow: false,
+  row: 0,
+  col: 0,
 })
 
 const mouseIcons = computed(() => {
-  return [...state.floorImgList, EraserIcon][mouseFloor.imgIndex]
+  return [...state.floorImgList, FlagIcon, EraserIcon][mouseImg.imgIndex]
 })
 
 onMounted(() => {
@@ -72,12 +82,150 @@ async function init() {
 
 async function initData() {
   state.floorOnloadImgs = await Promise.all(state.floorImgList.map(img => loadImage(img)))
+  state.flagOnloadImg = await loadImage(FlagIcon)
+  state.gridArr[1][1] = 1
+  state.gridArr[1][2] = 1
+  state.gridArr[1][3] = 1
+  state.gridArr[1][4] = 1
+  state.gridArr[2][4] = 1
+  state.gridArr[3][4] = 1
+  state.gridArr[4][4] = 1
+  state.gridArr[5][4] = 1
+  state.gridArr[5][3] = 1
+  state.gridArr[5][2] = 1
+  state.gridArr[5][1] = 1
+  state.gridArr[4][1] = 1
+  state.gridArr[3][1] = 1
+  startFlag.isShow = true
+  startFlag.row = 1
+  startFlag.col = 0
 }
 
 function startDraw() {
+  state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
   drawLine()
+  drawAllGrid()
+  drawFlag()
 }
 
+function onClickFloor(e: MouseEvent, i: number) {
+  document.addEventListener("mousemove", onMouseMove);
+  mouseImg.imgIndex = i
+  mouseImg.x = e.clientX - state.size / 4
+  mouseImg.y = e.clientY - state.size / 4
+}
+function onMouseMove(e: MouseEvent) {
+  mouseImg.x = e.clientX - state.size / 4
+  mouseImg.y = e.clientY - state.size / 4
+  // 按住地板进行绘画
+  if(!mouseImg.isDraw) { 
+    return
+  }
+  if(!isInCanvas(e)) {
+    onMouseUp()
+    return
+  }
+  onDrawMouseImg(e)
+}
+/** 点击画地板 */
+function onMouseFloorClick(e: MouseEvent) {
+  if(e.button === 0) { // 左击
+    if(!isInCanvas(e)) return
+    mouseImg.isDraw = true
+    onDrawMouseImg(e)
+  }
+}
+function onMouseUp() {
+  mouseImg.isDraw = false
+}
+function onRightClick() {
+  document.removeEventListener("mousemove", onMouseMove);
+  mouseImg.x = 0
+  mouseImg.y = 0
+  mouseImg.isEraser = false
+  mouseImg.isFlag = false
+}
+/** 点击橡皮擦 */
+function onEraserClick(e: MouseEvent) {
+  mouseImg.isEraser = true
+  onClickFloor(e, state.floorImgList.length + 1)
+}
+/** 点击旗子 */
+function onFlagClick(e: MouseEvent) {
+  mouseImg.isFlag = true
+  onClickFloor(e, state.floorImgList.length)
+}
+/** 在canvas中画鼠标拖拽的图片 */
+function onDrawMouseImg(e: MouseEvent) {
+  const { left, top } = state.canvasInfo
+  const size = state.size / source.ratio
+  const row = Math.floor((e.clientY - top) / size)
+  const col = Math.floor((e.clientX - left) / size)
+  if(mouseImg.isFlag) { // 画旗子
+    if(state.gridArr[row][col]) return
+    if(startFlag.isShow) {
+      const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
+      state.ctx.clearRect(x, y, gridW, gridW)
+      state.gridArr[startFlag.row][startFlag.col] = 0
+    }
+    startFlag.isShow = true
+    startFlag.row = row
+    startFlag.col = col
+    state.gridArr[row][col] = -1
+    drawFlag()
+    return
+  }
+  // 该位置的橡皮擦或地板已经不需要操作了
+  if(!state.gridArr[row][col] === mouseImg.isEraser) {
+    return
+  }
+  state.gridArr[row][col] = mouseImg.isEraser ? 0 : 1
+  const {x, y, gridW} = getGridInside(col, row)
+  if(mouseImg.isEraser) {
+    state.ctx.clearRect(x, y, gridW, gridW)
+  } else {
+    state.ctx.drawImage(state.floorOnloadImgs[mouseImg.imgIndex], x, y, gridW, gridW)
+  }
+}
+/** 获取格子内部的信息，不包括边框 */
+function getGridInside(col: number, row: number) {
+  const {lineW} = state.canvasInfo
+  return {
+    gridW: state.size - lineW,
+    x: col * state.size + lineW / 2,
+    y: row * state.size + lineW / 2,
+  }
+}
+
+/** 导出数据 */
+function exportData() {
+  if(!startFlag.isShow) return ElMessage.warning('请选择旗子作为敌人起点~')
+  const floorTotal = state.gridArr.reduce((pre, cur) => {
+    cur.forEach(v => pre +=v)
+    return pre
+  }, 0)
+  if(!floorTotal) return ElMessage.warning('当前没有地板~')
+  const res: {[key in number]: DirectionType} = {} 
+  let row = startFlag.row, col = startFlag.col;
+  let xy: DirectionType | undefined = getDirection(state.gridArr, row, col)
+  const mapInfoItem = {x: col, y: row, x_y: xy, num: floorTotal}
+  if(!xy) return ElMessage.warning('旗子附近没有地板~')
+  for(let i = 1; i < floorTotal - 1; i++) {
+    const item = getDirectionVal(state.gridArr, row, col, xy!)
+    row = item.row
+    col = item.col
+    const _xy = getDirection(state.gridArr, row, col, xy);
+    if(!_xy) return ElMessage.warning('请将所有地板格子相连~')
+    if(_xy !== xy) {
+      xy = _xy
+      res[i] = _xy
+    }
+  }
+  console.log(res);
+  console.log(mapInfoItem);
+}
+
+/** ------ 绘画 ------ */
 /** 画线 */
 function drawLine() {
   const {colNum, rowNum, lineW} = state.canvasInfo
@@ -98,76 +246,35 @@ function drawLine() {
     ctx.fillRect(lineW, size * i - lineW / 2, w + lineW, lineW)
   }
 }
+/** 根据值绘画所有的格子 */
+function drawAllGrid() {
+  const {rowNum, colNum} = state.canvasInfo
+  for(let i = 0; i < rowNum; i++) {
+    for(let j = 0; j < colNum; j++) {
+      if(state.gridArr[i][j]) {
+        const {x, y, gridW} = getGridInside(j, i)
+        state.ctx.drawImage(state.floorOnloadImgs[mouseImg.imgIndex], x, y, gridW, gridW)
+      }
+    }
+  }
+}
+function drawFlag() {
+  if(startFlag.isShow) {
+    const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
+    state.ctx.drawImage(state.flagOnloadImg!, x, y, gridW, gridW)
+  }
+}
+/** ------ 绘画 end ------ */
 
-function onClickFloor(e: MouseEvent, i: number) {
-  document.addEventListener("mousemove", onMouseMove);
-  mouseFloor.imgIndex = i
-  mouseFloor.x = e.clientX - state.size / 4
-  mouseFloor.y = e.clientY - state.size / 4
-}
-function onMouseMove(e: MouseEvent) {
-  mouseFloor.x = e.clientX - state.size / 4
-  mouseFloor.y = e.clientY - state.size / 4
-  // 按住地板进行绘画
-  if(!mouseFloor.isDraw) { 
-    return
-  }
-  if(!isInCanvas(e)) {
-    onCancelDrawFloor()
-    return
-  }
-  onDrawFloor(e)
-}
-/** 点击画地板 */
-function onMouseFloorClick(e: MouseEvent) {
-  if(e.button === 0) { // 左击
-    if(!isInCanvas(e)) return
-    mouseFloor.isDraw = true
-    onDrawFloor(e)
-  }
-}
-function onCancelDrawFloor() {
-  mouseFloor.isDraw = false
-}
-function onRightClick() {
-  document.removeEventListener("mousemove", onMouseMove);
-  mouseFloor.x = 0
-  mouseFloor.y = 0
-}
-/** 点击橡皮擦 */
-function onEraserClick(e: MouseEvent) {
-  onClickFloor(e, state.floorImgList.length)
-  mouseFloor.isEraser = true
-}
-
-/** 在canvas中画地板 */
-function onDrawFloor(e: MouseEvent) {
-  const { left, top, lineW } = state.canvasInfo
-  const size = state.size / source.ratio
-  const row = Math.floor((e.clientY - top) / size)
-  const col = Math.floor((e.clientX - left) / size)
-  // 该位置的橡皮擦或地板已经不需要操作了
-  if(!state.gridArr[row][col] === mouseFloor.isEraser) {
-    return
-  }
-  state.gridArr[row][col] = mouseFloor.isEraser ? 0 : 1
-  const imgW = state.size - lineW
-  const x = col * state.size + lineW / 2, y = row * state.size + lineW / 2
-  if(mouseFloor.isEraser) {
-    state.ctx.clearRect(x, y, imgW, imgW)
-  } else {
-    state.ctx.drawImage(state.floorOnloadImgs[mouseFloor.imgIndex], x, y, imgW, imgW)
-  }
-}
 /** 当前event是否在canvas中 */
 function isInCanvas(e: MouseEvent) {
   const { left, top, w, h } = state.canvasInfo
   return checkInRect({x: e.clientX, y: e.clientY}, {x: left, y: top, w: w / source.ratio, h: h / source.ratio})
 }
 function clearCanvas() {
-  state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
   // 将二维数组中的值置为0
   state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
+  startFlag.isShow = false
   startDraw()
 }
 
@@ -197,8 +304,11 @@ function calcArea(area: AreaType) {
 </script>
 
 <template>
-  <div class='createMap'>
-    <div class="createMap-area" :style="{'--size': state.size / source.ratio + 'px'}">
+  <div class='createMap' :style="{'--size': state.size / source.ratio + 'px'}">
+    <div class="header">
+      <ElButton @click="exportData">导出数据</ElButton>
+    </div>
+    <div class="createMap-area">
       <div class="floorWrap">
         <div 
           v-for="(floor, i) in state.floorImgList" 
@@ -210,9 +320,16 @@ function calcArea(area: AreaType) {
       </div>
       <div class="right">
         <ElSpace class="tools">
-          <ElButton @click="clearCanvas">清空画布</ElButton>
-          <div class="eraserWrap" @click="onEraserClick">
-            <img :src="EraserIcon" alt="" class="eraserIcon">
+          <ElSpace class="toolsLeft">
+            <div class="iconWrap" @click="onFlagClick">
+              <img :src="FlagIcon" alt="" class="flagIcon">
+            </div>
+            <div class="iconWrap" @click="onEraserClick">
+              <img :src="EraserIcon" alt="" class="eraserIcon">
+            </div>
+          </ElSpace>
+          <div class="toolsRight">
+            <ElButton @click="clearCanvas">清空画布</ElButton>
           </div>
         </ElSpace>
         <div ref="canvasWrapRef" class="createMap-canvasWrap">
@@ -228,16 +345,16 @@ function calcArea(area: AreaType) {
         </div>
       </div>
       <div 
-        class="mouseFloor"
+        class="mouseImg"
         :style="{
-          top: (mouseFloor.y || -999) + 'px',
-          left: (mouseFloor.x || -999) + 'px',
+          top: (mouseImg.y || -999) + 'px',
+          left: (mouseImg.x || -999) + 'px',
         }"
         @mousedown="onMouseFloorClick"
-        @mouseup="onCancelDrawFloor"
+        @mouseup="onMouseUp"
         @contextmenu.prevent="onRightClick"
       >
-        <img :src="mouseIcons" class="mouseFloor-img">
+        <img :src="mouseIcons" class="mouseImg-img">
       </div>
     </div>
   </div>
@@ -245,15 +362,25 @@ function calcArea(area: AreaType) {
 
 <style lang='less' scoped>
 .createMap {
+  @size: var(--size);
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  .header {
+    position: fixed;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    padding: 12px;
+  }
   &-area {
-    @size: var(--size);
     display: flex;
     .floorWrap {
+      user-select: none;
+      border: 1px solid #ccc;
+      padding: 12px;
       .floorImg {
         width: @size;
         height: @size;
@@ -263,16 +390,31 @@ function calcArea(area: AreaType) {
       height: 60px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 0 20px;
       background-color: #ddeafb;
-      .eraserWrap {
+      &Left {
+        display: flex;
+        align-items: center;
+      }
+      &Right {
+
+      }
+      .iconWrap {
         padding: 5px 10px;
-        background-color: rgba(255, 255, 255, .3);
+        background-color: rgba(255, 255, 255, .4);
         border-radius: 6px;
+        user-select: none;
         &:hover {
+          cursor: pointer;
+          transform: scale(1.1);
           background-color: rgba(255, 255, 255, .5);
         }
         .eraserIcon { 
+          width: 25px;
+          height: 25px;
+        }
+        .flagIcon {
           width: 25px;
           height: 25px;
         }
@@ -283,7 +425,7 @@ function calcArea(area: AreaType) {
       height: 54vw;
       border: 1px solid #ccc;
     }
-    .mouseFloor {
+    .mouseImg {
       position: fixed;
       &-img {
         width: @size;
