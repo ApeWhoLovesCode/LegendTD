@@ -663,7 +663,7 @@ function makeEnemy() {
 
 function drawEnemy(index: number) {
   if(!enemyList[index]) return
-  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType } = enemyList[index]
+  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType, ...enemy } = enemyList[index]
   const ctx = gameConfigState.ctx
   // --- 绘画敌人图片 ---
   ctx.save() // 保存画布
@@ -733,6 +733,18 @@ function drawEnemy(index: number) {
       }
     }
     ctx.restore()
+  }
+  // --- 画兔子回血效果 ---
+  if(name === 'rabbish-2') {
+    const {animation} = enemy.skill!
+    if(animation!.cur !== animation!.sum) {
+      enemy.skill!.animation!.cur++
+      ctx.save()
+      const globalAlphaVal = Math.min(animation!.cur, animation!.sum - animation!.cur)
+      ctx.globalAlpha = globalAlphaVal / 20
+      gameConfigState.ctx.drawImage(source.othOnloadImg.poison!, x - w / 4, y - w / 4, w * 1.5, w * 1.5)
+      ctx.restore()
+    }
   }
   if(hp.cur === hp.sum) return
   // --- 绘画生命值 ---
@@ -815,53 +827,77 @@ function setEnemy() {
   onWorkerPostFn('createAudio', {audioKey, id})
 }
 
-/** 设置敌人技能 */
-function setEnemySkill(enemyName: string, e_id: string) {
-  const e_i = enemyList.findIndex(e => e.id === e_id)
-  if(!enemyList[e_i] || !enemyList[e_i].skill) return
-  const {curFloorI: _curFloorI, id, hp} = enemyList[e_i]
-  let volume = 1
-  // 舞王僵尸技能
-  if(enemyName === '舞王') {
-    const total = baseDataState.floorTile.num - 1
-    for(let i = 0; i < 4; i++) {
-      const newEnemy = _.cloneDeep(source.enemySource[12])
-      switch (i) {
-        case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
-        case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
-        case 2: newEnemy.curFloorI = limitRange(_curFloorI + 1, 1, total); break;
-        case 3: newEnemy.curFloorI = limitRange(_curFloorI + 2, 1, total); break;
-      }
-      enemyList.push(callEnemy(newEnemy, i))
-    }
-  } else if(enemyName === '弗利萨') {
-    const total = baseDataState.floorTile.num - 1
-    for(let i = 0; i < 2; i++) {
-      const newEnemy = _.cloneDeep(source.enemySource[13])
-      switch (i) {
-        case 0: newEnemy.curFloorI = limitRange(_curFloorI - 2, 1, total); break;
-        case 1: newEnemy.curFloorI = limitRange(_curFloorI - 1, 1, total); break;
-      }
-      enemyList.push(callEnemy(newEnemy, i))
-      volume = 0.7
-    }
-  } else if(enemyName === '坤坤') {
-    const newHp = hp.cur + 200
-    enemyList[e_i].hp.cur = limitRange(newHp, newHp, hp.sum)
-    volume = 0.5
-  }
-  onWorkerPostFn('playDomAudio', {id, volume})
-}
-
 /** 处理敌人技能 */
 function handleEnemySkill(enemyName: string, e_id: string) {
   const e_i = enemyList.findIndex(e => e.id === e_id)
   if(!enemyList[e_i].skill) return
-  // 有技能的敌人
-  const {time} = enemyList[e_i].skill!
-  keepInterval.set(e_id, () => {
-    setEnemySkill(enemyName, e_id)
-  }, time)
+  let skillFn: ((e_id: string) => void) | undefined
+  switch (enemyName) {
+    case '舞王': skillFn = enemySkillDance; break;
+    case '弗利萨': skillFn = enemySkillFulisha; break;
+    case '坤坤': skillFn = enemySkillKunkun; break;
+    case 'rabbish-2': skillFn = enemySkillRabbish2; break;
+  };
+  if(skillFn) { // 有技能的敌人
+    keepInterval.set(e_id, () => {
+      skillFn!(e_id)
+    }, enemyList[e_i].skill!.time)
+  }
+}
+/** 舞王技能 */
+function enemySkillDance(e_id: string) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  const {curFloorI} = enemy
+  const total = baseDataState.floorTile.num - 1
+  for(let i = 0; i < 4; i++) {
+    const newEnemy = _.cloneDeep(source.enemySource[12])
+    switch (i) {
+      case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
+      case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
+      case 2: newEnemy.curFloorI = limitRange(curFloorI + 1, 1, total); break;
+      case 3: newEnemy.curFloorI = limitRange(curFloorI + 2, 1, total); break;
+    }
+    enemyList.push(callEnemy(newEnemy, i))
+  }
+  onWorkerPostFn('playDomAudio', {id: e_id, volume: 1})
+}
+/** 弗利萨技能 */
+function enemySkillFulisha(e_id: string) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  const {curFloorI} = enemy
+  const total = baseDataState.floorTile.num - 1
+  for(let i = 0; i < 2; i++) {
+    const newEnemy = _.cloneDeep(source.enemySource[13])
+    switch (i) {
+      case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
+      case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
+    }
+    enemyList.push(callEnemy(newEnemy, i))
+  }
+  onWorkerPostFn('playDomAudio', {id: e_id, volume: 0.7})
+}
+/** 坤坤技能 */
+function enemySkillKunkun(e_id: string) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  const {hp} = enemy
+  const newHp = hp.cur + 200
+  enemy.hp.cur = limitRange(newHp, newHp, hp.sum)
+  onWorkerPostFn('playDomAudio', {id: e_id, volume: 0.5})
+}
+/** 2号兔子技能 */
+function enemySkillRabbish2(e_id: string) {
+  const enemy = enemyList.find(e => e.id === e_id)
+  if(!enemy) return
+  // 兔子和隔壁一格内的怪全部回5%的血
+  enemyList.forEach(e => {
+    if(Math.abs(enemy.curFloorI - e.curFloorI) <= 1) {
+      e.hp.cur = Math.min(e.hp.cur + e.hp.sum * 0.05, e.hp.sum) 
+    }
+  })
+  enemy.skill!.animation!.cur = 0
 }
 
 /** 召唤敌人的处理 */
@@ -1077,7 +1113,7 @@ function buildTower({x, y, tname}: {
   if(baseDataState.money < money) return
   addMoney(-money)
   if(isDevTestMode) {
-    ret.damage = 0.01
+    ret.damage /= 10
   }
   const size = gameConfigState.size
   // 处理多个相同塔防的id值

@@ -83,22 +83,6 @@ async function init() {
 async function initData() {
   state.floorOnloadImgs = await Promise.all(state.floorImgList.map(img => loadImage(img)))
   state.flagOnloadImg = await loadImage(FlagIcon)
-  state.gridArr[1][1] = 1
-  state.gridArr[1][2] = 1
-  state.gridArr[1][3] = 1
-  state.gridArr[1][4] = 1
-  state.gridArr[2][4] = 1
-  state.gridArr[3][4] = 1
-  state.gridArr[4][4] = 1
-  state.gridArr[5][4] = 1
-  state.gridArr[5][3] = 1
-  state.gridArr[5][2] = 1
-  state.gridArr[5][1] = 1
-  state.gridArr[4][1] = 1
-  state.gridArr[3][1] = 1
-  startFlag.isShow = true
-  startFlag.row = 1
-  startFlag.col = 0
 }
 
 function startDraw() {
@@ -251,9 +235,9 @@ function drawAllGrid() {
   const {rowNum, colNum} = state.canvasInfo
   for(let i = 0; i < rowNum; i++) {
     for(let j = 0; j < colNum; j++) {
-      if(state.gridArr[i][j]) {
+      if(state.gridArr[i][j] > 0) {
         const {x, y, gridW} = getGridInside(j, i)
-        state.ctx.drawImage(state.floorOnloadImgs[mouseImg.imgIndex], x, y, gridW, gridW)
+        state.ctx.drawImage(state.floorOnloadImgs[state.gridArr[i][j] - 1], x, y, gridW, gridW)
       }
     }
   }
