@@ -4,7 +4,7 @@ import { reactive } from "vue"
 export default function useGameConfig() {
   const gameConfigState = reactive<GameConfigType>({
     // canvas 默认大小
-    defaultCanvas: {w: 1050, h: 600},
+    defaultCanvas: {w: 1000, h: 600},
     /** 一格的大小 */
     size: 50,
     // canvas 对象
