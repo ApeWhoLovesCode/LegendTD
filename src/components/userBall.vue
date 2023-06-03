@@ -100,7 +100,7 @@ const onBallSleep = () => {
   clearBallSleep()
   ballTimer.value = setTimeout(() => {
     status.value = 0
-  }, 5000);
+  }, 3000);
 }
 
 const clearBallSleep = () => {
@@ -110,9 +110,9 @@ const clearBallSleep = () => {
   }
 }
 
-onMounted(() => onBallSleep())
+onMounted(onBallSleep)
 
-onBeforeUnmount(() => clearBallSleep())
+onBeforeUnmount(clearBallSleep)
 
 </script>
 
@@ -123,7 +123,12 @@ onBeforeUnmount(() => clearBallSleep())
     @on-offset-change="status = 0"
     @on-magnetic="onMagnetic"
   >
-    <div class="ball-wrap" :class="{'ball-mobile': source.isMobile}">
+    <div 
+      class="ball-wrap" 
+      :class="{'ball-mobile': source.isMobile}" 
+      @mouseenter="clearBallSleep"
+      @mouseleave="onBallSleep"
+    >
       <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? requireCDN('user.png')" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
         <div class="ball-item-content" @click="selectTowerVisible = true">塔防选择</div>

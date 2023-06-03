@@ -34,6 +34,11 @@ const routes = [
     name: 'createMap',
     component: () => import('../views/dev/createMap/index.vue') 
   },
+  {
+    path: '/teamfight-tactics',
+    name: 'Teamfight Tactics',
+    component: () => import('../views/teamfightTactics/index.vue') 
+  },
 ]
 
 const router = createRouter({

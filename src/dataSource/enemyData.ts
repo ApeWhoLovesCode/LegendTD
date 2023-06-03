@@ -23,7 +23,7 @@ const enemyArr: EnemyType[] = [
   {name: '小鬼僵尸', x: 0, y: 0, w: 1.5, h: 1.5, isForward: true, isFlip: false,  curSpeed: 0.06, speed: 0.06, reward: 5, hp: {cur: 10, sum: 10, size: 0.16},       audioKey: 'pvz-little', imgType: 'gif', imgSource: _requireCDN('zombies_11_move.gif'), level: 1},
   {name: '坤坤',     x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: false,  curSpeed: 0.04, speed: 0.04, reward: 160, hp: {cur: 800, sum: 800, size: 0.16},     skill: {time: 12000}, audioKey: 'kunkun', imgType: 'gif', imgSource: _requireCDN('kunkun.gif'), level: 1},
   {name: 'rabbish',     x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.04, speed: 0.04, reward: 50, hp: {cur: 300, sum: 300, size: 0.16},     audioKey: 'rabbish', imgType: 'gif', imgSource: _requireCDN('rabbish_1.gif'), level: 1},
-  {name: 'rabbish-2',   x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.04, speed: 0.04, reward: 80, hp: {cur: 500, sum: 500, size: 0.16},     audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), level: 1},
+  {name: 'rabbish-2',   x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.04, speed: 0.04, reward: 100, hp: {cur: 400, sum: 400, size: 0.16},   skill: {time: 3000, animation: {cur: 80, sum: 80}},  audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), level: 1},
 ]
 export default enemyArr
 
@@ -56,6 +56,11 @@ export type EnemyType = {
   skill?: {
     /** 技能cd */
     time: number
+    /** 技能动画播放 */
+    animation?: {
+      cur: number
+      sum: number
+    }
   }
   /** 音频播放的key值 */
   audioKey: string
