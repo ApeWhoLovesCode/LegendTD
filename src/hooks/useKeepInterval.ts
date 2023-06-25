@@ -13,7 +13,7 @@ export default function useKeepInterval() {
    * @param intervalTime 间隔时间 
    * @param p KeepIntervalSetParams
    */
-  function set(key: string, fn?: () => void, intervalTime = 1000, {isTimeOut = false, isCover}: KeepIntervalSetParams = {}) {
+  function set(key: string, fn?: () => void, intervalTime = 0, {isTimeOut = false, isCover}: KeepIntervalSetParams = {}) {
     stopTime(key)
     if((!timerMap.has(key) || isCover) && fn) {
       timerMap.set(key, {

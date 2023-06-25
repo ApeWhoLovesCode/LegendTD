@@ -2,9 +2,9 @@ import { requireCDN } from "@/utils/handleImg";
 const  _requireCDN = (url: string) => requireCDN(url, 'tower')
 
 
+
 /**
  * 塔防数据
- * name:名称, money:花费, r:攻击半径, damage:伤害, targetNum:攻击目标数量, rate:攻击速率(n毫秒/次, import.meta.url).href, speed:子弹速度, slow:{num:减速倍数,time:减速时间}  bSize: 子弹大小, img:塔防图片, bulletImg:子弹图片
  */
 const towerObj: TowerDataObj = {
   'icestar': { name: 'icestar',  money: 200, saleMoney: 100, r: 3, damage: 1, targetNum: 1, rate: 900, speed: 0.12, slow: {num: 2, time: 5000, type: 'slow'}, bSize: {w:0.6,h:0.6},   audioKey: 'slow-star', img: _requireCDN('tower_slow.png'), bulletImg: _requireCDN('bullet-star.png')},
@@ -52,10 +52,13 @@ export type TowerType = {
   addDamage?: number
   /** 最多攻击目标 */
   targetNum: number
-  /** 攻击范围 */
+  /** 攻击速率(n毫秒/次 */
   rate: number
+  /** 子弹速度 */
   speed: number
+  /** 子弹大小 */
   bSize: BulletSize
+  /** 塔防音频的key */
   audioKey: string
   /** 游戏图片 */
   img: string
