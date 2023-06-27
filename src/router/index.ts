@@ -6,20 +6,20 @@ const routes = [
     name: 'index',
     component: () => import('../views/index.vue') 
   },
-  {
-    path: '/gameVue',
-    redirect: '/gameVue/1'
-  },
-  {
-    path: '/gameVue/:id',
-    name: 'gameVue',
-    component: () => import('../views/game/index.vue') 
-  },
-  {
-    path: '/test',
-    name: 'test',
-    component: () => import('../views/test/index.vue') 
-  },
+  // {
+  //   path: '/gameVue',
+  //   redirect: '/gameVue/1'
+  // },
+  // {
+  //   path: '/gameVue/:id',
+  //   name: 'gameVue',
+  //   component: () => import('../views/game/index.vue') 
+  // },
+  // {
+  //   path: '/test',
+  //   name: 'test',
+  //   component: () => import('../views/test/index.vue') 
+  // },
   {
     path: '/game',
     redirect: '/game/1'
@@ -34,11 +34,11 @@ const routes = [
     name: 'createMap',
     component: () => import('../views/dev/createMap/index.vue') 
   },
-  {
-    path: '/teamfight-tactics',
-    name: 'Teamfight Tactics',
-    component: () => import('../views/teamfightTactics/index.vue') 
-  },
+  // {
+  //   path: '/teamfight-tactics',
+  //   name: 'Teamfight Tactics',
+  //   component: () => import('../views/teamfightTactics/index.vue') 
+  // },
 ]
 
 const router = createRouter({
