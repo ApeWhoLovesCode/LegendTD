@@ -131,7 +131,7 @@ onBeforeUnmount(clearBallSleep)
     >
       <img class="avatar" :src="userInfoStore.userInfo?.avatar ?? requireCDN('user.png')" alt="">
       <div class="ball-item" :style="ballItemStyle(0)">
-        <div class="ball-item-content" @click="selectTowerVisible = true">塔防选择</div>
+        <div class="ball-item-content" @click="() => {if(source.progress >= 100) {selectTowerVisible = true}}">塔防选择</div>
       </div>
       <div class="ball-item" :style="ballItemStyle(1)">
         <div class="ball-item-content" @click="rankListVisible = true">排行榜</div>

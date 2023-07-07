@@ -192,8 +192,8 @@ function exportData() {
   const res: {[key in number]: DirectionType} = {} 
   let row = startFlag.row, col = startFlag.col;
   let xy: DirectionType | undefined = getDirection(state.gridArr, row, col)
-  const mapInfoItem = {x: col, y: row, x_y: xy, num: floorTotal}
   if(!xy) return ElMessage.warning('旗子附近没有地板~')
+  const mapInfoItem = {x: col, y: row, x_y: xy, num: floorTotal}
   for(let i = 1; i < floorTotal - 1; i++) {
     const item = getDirectionVal(state.gridArr, row, col, xy!)
     row = item.row
@@ -223,12 +223,16 @@ function drawLine() {
   ctx.fillStyle = '#ddeafb'
   // 竖线
   for(let i = 1; i < colNum; i++) {
-    ctx.fillRect(size * i - lineW / 2, lineW, lineW, h + lineW)
+    ctx.fillRect(size * i - lineW / 2, lineW, lineW, h)
   }
   // 横线
   for(let i = 1; i < rowNum; i++) {
-    ctx.fillRect(lineW, size * i - lineW / 2, w + lineW, lineW)
+    ctx.fillRect(lineW, size * i - lineW / 2, w, lineW)
   }
+  ctx.fillStyle = '#b4d4fa'
+  // 竖的中线
+  ctx.fillRect(size * (colNum / 2) - lineW / 2, lineW, lineW, h - lineW * 2)
+  ctx.fillRect(lineW, size * (rowNum / 2) - lineW / 2, w - lineW * 2, lineW)
 }
 /** 根据值绘画所有的格子 */
 function drawAllGrid() {

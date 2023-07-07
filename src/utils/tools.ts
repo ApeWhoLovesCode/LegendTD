@@ -102,9 +102,9 @@ export function createTwoArray<T>(rowNum: number, colNum: number, cb: (i: number
 /** 从二维数组中获取方向 */
 export function getDirection(arr: Array<any[]>, row: number, col: number, xy?: DirectionType) {
   if(arr[row][col - 1] && xy !== 3) return 1;
-  else if(arr[row - 1][col] && xy !== 4) return 2;
+  else if(arr[row - 1]?.[col] && xy !== 4) return 2;
   else if(arr[row][col + 1] && xy !== 1) return 3;
-  else if(arr[row + 1][col] && xy !== 2) return 4;
+  else if(arr[row + 1]?.[col] && xy !== 2) return 4;
 }
 /** 根据方向值返回二维数组的值和新的row col */
 export function getDirectionVal(arr: Array<any[]>, row: number, col: number, v: DirectionType) {
