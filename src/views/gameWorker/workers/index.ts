@@ -4,7 +4,7 @@ import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
 import { TargetCircleInfo, baseDataState, checkValInCircle, initAllGrid } from "./tools/baseData";
-import { enemyList, enemyState, slowEnemy } from './tools/enemy'
+import { enemyMap, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
@@ -45,7 +45,7 @@ const gameSkillState = {
   // 底部技能栏
   skillList: JSON.parse(JSON.stringify(skillData)),
 }
-const towerList: TowerStateType[] = []
+const towerMap: Map<string, TowerStateType> = new Map()
 /** 控制等级的切换 */
 let isLevelLock = false
 /** 是否是开发测试模式 */
@@ -158,11 +158,11 @@ function startDraw() {
   drawFloorTile()
   drawTower()
   // 循环静态图片数组画敌人形成gif效果
-  for(let index = 0; index < enemyList.length; index++) {
-    // 当敌人已经到达终点，后面就不执行了
-    if(moveEnemy(index)) break
-    drawEnemy(index)
-  }
+  enemyMap.forEach(enemy => {
+    // 当敌人已经到达终点，就不用绘画了
+    if(moveEnemy(enemy)) return
+    drawEnemy(enemy)
+  })
   checkEnemyAndTower()
   handleBulletMove()
   drawSpecialBullets()
@@ -172,7 +172,7 @@ function startDraw() {
 function watchEnemyList() {
   if(isLevelLock) return
   // 敌人已经清空
-  if(!enemyList.length && allEnemyIn() && baseDataState.hp) {
+  if(!enemyMap.size && allEnemyIn() && baseDataState.hp) {
     baseDataState.level++
     isLevelLock = true
     onLevelChange()
@@ -211,9 +211,8 @@ function onLevelChange() {
 
 /** 处理敌人的移动，进入塔防的范围 */
 function checkEnemyAndTower() {
-  if(!enemyList.length) return
-  for(let t_i in towerList) {
-    const t = towerList[t_i]
+  if(!enemyMap.size) return
+  towerMap.forEach(t => {
     if(t.name === 'huonan') {
       const targetIdList = enterAttackScopeList(t)
       if(targetIdList) t.targetIdList = targetIdList
@@ -226,7 +225,7 @@ function checkEnemyAndTower() {
         // 进入攻击范围，开始射击 
         if(eIdList?.length) {
           t.isToTimeShoot = false
-          shootBullet(eIdList, +t_i)
+          shootBullet(eIdList, t)
           keepInterval.set(`${KeepIntervalKey.towerShoot}-${t.id}`, () => {
             t.isToTimeShoot = true
           }, t.rate, {isTimeOut: true})
@@ -237,7 +236,7 @@ function checkEnemyAndTower() {
         }
       }
     }
-  }
+  })
   for(const bItem of specialBullets.twitch) {
     // r = w / 2 除2.5是为了让敌人和子弹的接触范围缩小
     const eIdList = enterAttackScopeList({x: bItem.x, y: bItem.y, r: bItem.w / 2.5, size: bItem.w})
@@ -247,17 +246,16 @@ function checkEnemyAndTower() {
   }
 }
 
-/** 发射子弹  enemy:敌人id数组，t_i:塔索引 */
-function shootBullet(eIdList: string[], t_i: number) {
-  const t = towerList[t_i]
+/** 发射子弹 */
+function shootBullet(eIdList: string[], t: TowerStateType) {
   for(const e_id of eIdList) {
-    const enemy = enemyList.find(e => e.id === e_id)
+    const enemy = enemyMap.get(e_id)
     if(!enemy) break
     const size_2 = gameConfigState.size / 2
     const {x, y, w, h} = enemy
     // 敌人中心坐标
     const _x = x + w / 2, _y = y + h / 2
-    const {x: t_x, y: t_y, speed, name, id, isThrough, bulletInitDeg } = towerList[t_i]
+    const {x: t_x, y: t_y, speed, name, id, isThrough, bulletInitDeg } = t
     // 子弹初始坐标
     const begin = {x: t_x + size_2, y: t_y + size_2}
     // 两坐标间的差值
@@ -305,15 +303,14 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 /** 处理子弹的移动 */
 function handleBulletMove() {
   const e_idList: string[] = []
-  for(let t_i = 0; t_i < towerList.length; t_i++) {
-    const t = towerList[t_i]
+  towerMap.forEach(t => {
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
       const {w, h} = t.bSize
       // 当前塔防的当前子弹
       const bItem = t.bulletArr[b_i]
       let {x, y, addX, addY, e_id} = bItem
       // 重新计算子弹离敌人的距离
-      const b_e_distance = bulletEnemyDistance(e_id, +t_i, bItem.x, bItem.y)
+      const b_e_distance = bulletEnemyDistance(e_id, t, bItem.x, bItem.y)
       if(b_e_distance) {
         const {addX: _addX, addY: _addY, x_y} = b_e_distance
         addX = _addX, addY = _addY
@@ -344,17 +341,17 @@ function handleBulletMove() {
         }
       }
       // 清除回收子弹
-      if(t.name === 'delaiwen' && bItem.isRecycling && checkBulletInEnemyOrTower({x,y,w,h}, towerList[t_i].id, true)) {
+      if(t.name === 'delaiwen' && bItem.isRecycling && checkBulletInEnemyOrTower({x,y,w,h}, t.id, true)) {
         t.bulletArr.splice(b_i, 1)
       }
     }
     if(t.isBulleting) { // 有需要额外的子弹才绘画
-      drawTowerBullet(t_i)
+      drawTowerBullet(t)
     }
     if(t.name === 'huonan') { // 处理火男子弹
       handleFireBullet(t)
     }
-  }
+  })
   if(e_idList?.length) { // 消灭敌人
     removeEnemy(e_idList)
   }
@@ -408,7 +405,7 @@ function handleBulletAndEnemy(t: TowerStateType, b_i: number, e_id: string, e_id
 }
 /** 处理子弹伤害敌人 */
 function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   let hp = enemy.hp.cur - t.damage
   if(t.name === 'delaiwen' && (hp * 10 <= enemy.hp.sum)) { // 德莱文处决少于10%生命的敌人
@@ -445,8 +442,7 @@ function damageTheEnemy(enemy: EnemyStateType, damage: number) {
   }
 }
 /** 画塔防的特殊子弹 */
-function drawTowerBullet(t_i: number) {
-  const t = towerList[t_i]
+function drawTowerBullet(t: TowerStateType) {
   const {w, h} = t.bSize
   // 当前塔防的当前子弹
   const ctx = gameConfigState.ctx
@@ -470,7 +466,7 @@ function drawTowerBullet(t_i: number) {
 
 /** 处理火男火焰 */
 function handleFireBullet(t: TowerStateType) {
-  const enemy = enemyList.find(e => e.id === t.targetIdList[0])
+  const enemy = enemyMap.get(t.targetIdList[0])
   if(!enemy) return
   damageTheEnemy(enemy, t.damage)
   if(t.damage < t.preDamage! * 3) {
@@ -561,7 +557,7 @@ function drawSpecialBullets() {
 function triggerPoisonFun(eIdList: string[]) {
   const t = towerArr['twitch']
   for(const e_id of eIdList) {
-    const enemy = enemyList.find(e => e.id === e_id) 
+    const enemy = enemyMap.get(e_id)
     if(!enemy) return
     if(!enemy.poison) {
       enemy.poison = {level: 0, damage: t.damage, isToTimePoison: true}
@@ -579,7 +575,7 @@ function triggerPoisonFun(eIdList: string[]) {
 }
 /** 开启中毒计时器 */
 function startPoisonInterval(e_id: string, t: TowerType) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(enemy) {
     const ePoison = enemy.poison!
     if(ePoison.level < 5) ePoison.level++
@@ -601,17 +597,17 @@ function startPoisonInterval(e_id: string, t: TowerType) {
  * 返回 x,y方向需要增加的值, distance: 子弹和敌人的距离, x_y: 塔和敌人的距离
  */
 function bulletEnemyDistance(
-  e_id: string, t_i: number, bx: number, by: number
+  e_id: string, tower: TowerStateType, bx: number, by: number
 ) {
   // 敌人已经死了 | 能穿透的子弹 | 老鼠 ,不用覆盖之前的值了 
-  if(towerList[t_i].isThrough || towerList[t_i].name === 'twitch') return
-  const enemy = enemyList.find(e => e.id === e_id)
+  if(tower.isThrough || tower.name === 'twitch') return
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   const size_2 = gameConfigState.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
-  const { speed,  x: tx, y: ty } = towerList[t_i]
+  const { speed,  x: tx, y: ty } = tower
   // 两坐标间的差值
   const diff = {x: _x - bx, y: _y - by}
   // 子弹和敌人的距离
@@ -626,7 +622,7 @@ function bulletEnemyDistance(
 /** 处理穿透性子弹攻击的下一个敌人 */
 function handleThroughBulletEid(bItem: TargetInfo & {attactIdSet: Set<string>}) {
   const {x, y, w, h, attactIdSet} = bItem
-  for(const eItem of enemyList) {
+  for(const eItem of enemyMap.values()) {
     if(!attactIdSet.has(eItem.id) && checkBulletInEnemyOrTower({x,y,w,h}, eItem.id)) {
       return eItem.id
     }
@@ -661,9 +657,8 @@ function makeEnemy() {
   }, baseDataState.intervalTime)
 }
 
-function drawEnemy(index: number) {
-  if(!enemyList[index]) return
-  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType, ...enemy } = enemyList[index]
+function drawEnemy(enemy: EnemyStateType) {
+  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType, ..._enemy } = enemy
   const ctx = gameConfigState.ctx
   // --- 绘画敌人图片 ---
   ctx.save() // 保存画布
@@ -685,16 +680,16 @@ function drawEnemy(index: number) {
     }
     // 控制每一帧图片的切换时机
     if(curSpeed) {
-      if(enemyList[index].framesNum >= delay) {
-        enemyList[index].imgIndex++;
-        enemyList[index].framesNum = 0;
+      if(enemy.framesNum >= delay) {
+        enemy.imgIndex++;
+        enemy.framesNum = 0;
       } else {
-        enemyList[index].framesNum++;
+        enemy.framesNum++;
       }
     }
     // 使图片索引回到第一帧
-    if(enemyList[index].imgIndex === imgItem.imgList!.length) {
-      enemyList[index].imgIndex = 0
+    if(enemy.imgIndex === imgItem.imgList!.length) {
+      enemy.imgIndex = 0
     }
   }
   // --- 绘画减速效果 ---
@@ -736,9 +731,9 @@ function drawEnemy(index: number) {
   }
   // --- 画兔子回血效果 ---
   if(name === 'rabbish-2') {
-    const {animation} = enemy.skill!
+    const {animation} = _enemy.skill!
     if(animation!.cur !== animation!.sum) {
-      enemy.skill!.animation!.cur++
+      _enemy.skill!.animation!.cur++
       ctx.save()
       const globalAlphaVal = Math.min(animation!.cur, animation!.sum - animation!.cur)
       ctx.globalAlpha = globalAlphaVal / 20
@@ -821,7 +816,7 @@ function setEnemy() {
   // 设置敌人的初始位置
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
-  enemyList.push(enemyItem)
+  enemyMap.set(enemyItem.id, enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, id)
   onWorkerPostFn('createAudio', {audioKey, id})
@@ -829,8 +824,8 @@ function setEnemy() {
 
 /** 处理敌人技能 */
 function handleEnemySkill(enemyName: string, e_id: string) {
-  const e_i = enemyList.findIndex(e => e.id === e_id)
-  if(!enemyList[e_i].skill) return
+  const enemy = enemyMap.get(e_id)!
+  if(!enemy.skill) return
   let skillFn: ((e_id: string) => void) | undefined
   switch (enemyName) {
     case '舞王': skillFn = enemySkillDance; break;
@@ -841,12 +836,12 @@ function handleEnemySkill(enemyName: string, e_id: string) {
   if(skillFn) { // 有技能的敌人
     keepInterval.set(e_id, () => {
       skillFn!(e_id)
-    }, enemyList[e_i].skill!.time)
+    }, enemy.skill!.time)
   }
 }
 /** 舞王技能 */
 function enemySkillDance(e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   const {curFloorI} = enemy
   const total = baseDataState.floorTile.num - 1
@@ -858,13 +853,14 @@ function enemySkillDance(e_id: string) {
       case 2: newEnemy.curFloorI = limitRange(curFloorI + 1, 1, total); break;
       case 3: newEnemy.curFloorI = limitRange(curFloorI + 2, 1, total); break;
     }
-    enemyList.push(callEnemy(newEnemy, i))
+    const callEnemyItem = callEnemy(newEnemy, i)
+    enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
   onWorkerPostFn('playDomAudio', {id: e_id, volume: 1})
 }
 /** 弗利萨技能 */
 function enemySkillFulisha(e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   const {curFloorI} = enemy
   const total = baseDataState.floorTile.num - 1
@@ -874,13 +870,14 @@ function enemySkillFulisha(e_id: string) {
       case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
       case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
     }
-    enemyList.push(callEnemy(newEnemy, i))
+    const callEnemyItem = callEnemy(newEnemy, i)
+    enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
   onWorkerPostFn('playDomAudio', {id: e_id, volume: 0.7})
 }
 /** 坤坤技能 */
 function enemySkillKunkun(e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   const {hp} = enemy
   const newHp = hp.cur + 200
@@ -889,10 +886,10 @@ function enemySkillKunkun(e_id: string) {
 }
 /** 2号兔子技能 */
 function enemySkillRabbish2(e_id: string) {
-  const enemy = enemyList.find(e => e.id === e_id)
+  const enemy = enemyMap.get(e_id)
   if(!enemy) return
   // 兔子和隔壁一格内的怪全部回5%的血
-  enemyList.forEach(e => {
+  enemyMap.forEach(e => {
     if(Math.abs(enemy.curFloorI - e.curFloorI) <= 1) {
       e.hp.cur = Math.min(e.hp.cur + e.hp.sum * 0.05, e.hp.sum) 
     }
@@ -926,33 +923,25 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
 /** 消灭敌人 */
 function removeEnemy(e_idList: string[]) {
   if(!e_idList.length) return
-  const eiList = Array.from(e_idList.reduce((pre, id) => {
-    const e_i = enemyList.findIndex(e => e.id === id)
-    if(e_i !== -1) pre.add(e_i)
-    return pre
-  }, new Set() as Set<number>))
-  eiList.sort((a, b) => b - a)
-  // 这里会有执行时机的问题
   try {
-    for(const e_i of eiList) {
-      const e_id = enemyList[e_i].id
+    for(const e_id of e_idList) {
       keepInterval.delete(`${KeepIntervalKey.slow}-${e_id}`) // 清除减速持续时间定时器
       keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`) // 清除中毒持续时间定时器
       keepInterval.delete(`${KeepIntervalKey.twitchDelete}-${e_id}`)
       keepInterval.delete(`${KeepIntervalKey.poisonFun}-${e_id}`)
-      if(enemyList[e_i].skill) {
+      if(enemyMap.get(e_id)?.skill) {
         keepInterval.delete(e_id)
       }
       // 清除穿透子弹攻击过的目标id
-      for(const t of towerList) {
+      towerMap.forEach(t => {
         if(t.isThrough) {
           for(const b of t.bulletArr) {
             b.attactIdSet?.delete(e_id) 
           }
         }
-      }
+      })
       // removeAudio(e_id)
-      enemyList.splice(e_i, 1)
+      enemyMap.delete(e_id)
     }
   } catch (error) {
     console.log('error: ', error);
@@ -973,8 +962,8 @@ function onGameOver() {
 }
 
 /** 敌人移动 */
-function moveEnemy(index: number) {
-  const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemyList[index]
+function moveEnemy(enemy: EnemyStateType) {
+  const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemy
   // 敌人到达终点
   if(curFloorI === baseDataState.floorTile.num - 1) {
     removeEnemy([id])
@@ -986,26 +975,26 @@ function moveEnemy(index: number) {
   const _x = x - w / 4, _y = y - h / 2
   switch (x_y) {
     case 1: {
-      enemyList[index].x -= curSpeed;
+      enemy.x -= curSpeed;
       if(isForward === isFlip) {
-        enemyList[index].isForward = !isForward
+        enemy.isForward = !isForward
       }
       break;
     }
-    case 2: enemyList[index].y -= curSpeed; break;
+    case 2: enemy.y -= curSpeed; break;
     case 3: {
-      enemyList[index].x += curSpeed;
+      enemy.x += curSpeed;
       if(!isForward === isFlip) {
-        enemyList[index].isForward = !isForward
+        enemy.isForward = !isForward
       }
       break;
     } 
-    case 4: enemyList[index].y += curSpeed; break;
+    case 4: enemy.y += curSpeed; break;
   }
-  const { x: eX, y: eY } = enemyList[index]
+  const { x: eX, y: eY } = enemy
   // 敌人到达下一个格子
   if((eX >= _x && eX <= _x + speed) && (eY >= _y && eY <= _y + speed)) {
-    enemyList[index].curFloorI++
+    enemy.curFloorI++
   }
 }
 
@@ -1015,9 +1004,9 @@ function drawTower(item?: TowerStateType) {
   if(item) {
     gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
   } else {
-    for(const t of towerList) {
+    towerMap.forEach(t => {
       gameConfigState.ctx.drawImage(t.onloadImg, t.x, t.y, size, size)
-    }
+    })
   }
 }
 
@@ -1056,7 +1045,7 @@ function checkThroughBullet(bItem: TargetInfo) {
 }
 /** 判断敌人中心是否在子弹中 即击中敌人 */
 function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower?: boolean) {
-  const target = !isTower ? enemyList.find(e => e.id === id) : towerList.find(t => t.id === id)
+  const target = !isTower ? enemyMap.get(id) : towerMap.get(id)
   if(!target) return
   const size = gameConfigState.size
   const {x:ex, y:ey, w:ew = size, h:eh = size} = target as TargetInfo
@@ -1067,12 +1056,12 @@ function checkBulletInEnemyOrTower({x, y, w, h}: TargetInfo, id: string, isTower
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  const arr = enemyList.reduce((pre, enemy) => {
+  const arr: {curFloorI: number, id: string}[] = []
+  enemyMap.forEach(enemy => {
     if(checkValInCircle(enemy, target)) {
-      pre.push({curFloorI: enemy.curFloorI, id: enemy.id})
+      arr.push({curFloorI: enemy.curFloorI, id: enemy.id})
     }
-    return pre
-  }, [] as {curFloorI: number, id: string}[])
+  })
   if(!arr.length) return
   arr.sort((a, b) => b.curFloorI - a.curFloorI)
   if(target.targetNum) {
@@ -1094,10 +1083,19 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
   // 已经有地板或者有建筑了
   if(String(gridVal).includes('t')) {
     // 当前点击的是哪个塔防
-    const towerIndex = towerList.findIndex(item => item.x === left && item.y === top)
-    const {r, saleMoney} = towerList[towerIndex]
-    // 展示攻击范围
-    onWorkerPostFn('handlerTower', {isShow: true, left, top, r, towerIndex, saleMoney})
+    let towerId = ''
+    for(const item of towerMap.values()) {
+      if(item.x === left && item.y === top) {
+        towerId = item.id
+      }
+    }
+    const tower = towerMap.get(towerId)
+    if(tower) {
+      // 展示攻击范围
+      onWorkerPostFn('handlerTower', {
+        isShow: true, left, top, r: tower.r, towerId, saleMoney: tower.saleMoney
+      })
+    }
   }
   if(gridVal) {
     return
@@ -1138,7 +1136,7 @@ function buildTower({x, y, tname}: {
     tower.thickness = tower.bSize.w
     tower.preDamage = tower.damage
   }
-  towerList.push(tower)
+  towerMap.set(tower.id, tower)
   // 用于标记是哪个塔防 10 + index
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
   drawTower(tower)
@@ -1149,14 +1147,16 @@ function buildTower({x, y, tname}: {
 }
 
 /** 售卖防御塔 */
-function saleTower(index: number) {
+function saleTower(towerId: string) {
   const size = gameConfigState.size
-  const {x, y, saleMoney, id} = towerList[index]
+  const tower = towerMap.get(towerId)!
+  if(!tower) return
+  const {x, y, saleMoney, id} = tower
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
   addMoney(saleMoney)
   keepInterval.delete(`towerShoot-${id}`)
-  towerList.splice(index, 1)
+  towerMap.delete(towerId)
   onWorkerPostFn('saleTowerCallback', id)
 }
 
@@ -1165,22 +1165,21 @@ function handleSkill(index: number) {
   const { name, money, damage } = gameSkillState.skillList[index]
   addMoney(-money)
   if(name !== '礼物') {
-    const e_idList = []
-    for(const enemy of enemyList) {
-      const e_id = enemy.id
+    const e_idList: string[] = []
+    enemyMap.forEach(enemy => {
       enemy.hp.cur -= damage
       if(enemy.hp.cur <= 0) {
         addMoney(enemy.reward)
-        e_idList.push(e_id)
+        e_idList.push(enemy.id)
         // 遍历清除防御塔里的该攻击目标
-        for(const t of towerList) {
-          t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
-        }
+        towerMap.forEach(t => {
+          t.targetIdList.splice(t.targetIdList.findIndex(item => item === enemy.id), 1)
+        })
       }
       if(name === "肉弹冲击") {
-        slowEnemy(e_id, {num: 0, time: 6000, type: 'vertigo'})
+        slowEnemy(enemy.id, {num: 0, time: 6000, type: 'vertigo'})
       }
-    }
+    })
     removeEnemy(e_idList)
   } else {
     addMoney(randomNum(1, 100))
@@ -1202,7 +1201,7 @@ function onWorkerPostFn(fnName: VueFnName, param?: any) {
 function testBuildTowers() {
   if(!isDevTestMode) return
   addMoney(999999)
-  enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,11,11,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
+  enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
   const size = gameConfigState.size
   testBuildData.forEach(item => {
     item.x *= size

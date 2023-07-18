@@ -153,7 +153,7 @@ export type BuildingScope = {
   top: number, 
   r: number, 
   isShow: boolean, 
-  towerIndex: number, 
+  towerId: string, 
   saleMoney: number
 }
 

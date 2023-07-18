@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed } from 'vue';
 import { useSourceStore } from '@/stores/source';
-import { GameBaseData, TowerState, TowerStateType } from '@/type/game';
+import { GameBaseData, TowerState } from '@/type/game';
 import imgSource from '@/dataSource/imgSource';
 import { useUserInfoStore } from '@/stores/userInfo';
 import { TowerName } from '@/dataSource/towerData';
@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   (event: 'buildTower', tname: TowerName) : void
-  (event: 'saleTower', index: number) : void
+  (event: 'saleTower', towerId: string) : void
 }>()
 
 // 全局资源
@@ -102,7 +102,7 @@ function transRatio(v: number) {
     </div>
     <!-- 塔防的攻击范围 -->
     <div v-show="towerState.buildingScope.isShow" class="building-scope" :style="buildingScopeStyle">
-      <span class="sale-wrap" @click="emit('saleTower', towerState.buildingScope.towerIndex)" :style="saleTowerStyle">
+      <span class="sale-wrap" @click="emit('saleTower', towerState.buildingScope.towerId)" :style="saleTowerStyle">
         <span class="iconfont icon-ashbin"></span>
         <span class="sale-num">{{ towerState.buildingScope?.saleMoney }}</span>
       </span>
