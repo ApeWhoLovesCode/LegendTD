@@ -216,8 +216,8 @@ function buildTower(tname: TowerName) {
 function buildTowerCallback(p: {towerId: string, audioKey: string}) {
   createAudio(`${p.audioKey}-choose`, p.towerId)
 }
-function saleTower(index: number) {
-  onWorkerPostFn('saleTower', index)
+function saleTower(towerId: string) {
+  onWorkerPostFn('saleTower', towerId)
 }
 function saleTowerCallback(id: string) {
   removeAudio(id)
@@ -238,7 +238,7 @@ function handleSkill(index: number) {
     if(gameSkillState.skillList[index].curTime <= 0) {
       keepInterval.delete(`${KeepIntervalKey.skill}-${name}`)
     }
-  })
+  }, 1000)
   onWorkerPostFn('handleSkill', index)
 }
 

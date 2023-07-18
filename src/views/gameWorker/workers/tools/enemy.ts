@@ -3,7 +3,7 @@ import { EnemyState, EnemyStateType } from "@/type/game"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
 
-const enemyList: EnemyStateType[] = []
+const enemyMap: Map<string, EnemyStateType> = new Map()
 const enemyState: EnemyState = {
   levelEnemy: [],
   createdEnemyNum: 0,
@@ -13,8 +13,8 @@ const enemyState: EnemyState = {
 
 /** 减速敌人 t_slow: {num: 减速倍速(当为0时无法动), time: 持续时间} */
 function slowEnemy(e_id: string, t_slow: TowerSlow) {
-  const e_i = enemyList.findIndex(e => e.id === e_id)
-  const { speed, curSpeed } = enemyList[e_i]
+  const enemyItem = enemyMap.get(e_id)!
+  const { speed, curSpeed } = enemyItem
   // 当前已经被眩晕了不能减速了
   if(curSpeed === 0) return
   const newSpeed = t_slow.num ? speed / t_slow.num : t_slow.num
@@ -22,22 +22,22 @@ function slowEnemy(e_id: string, t_slow: TowerSlow) {
   if(newSpeed <= curSpeed) {
     // 重新设置恢复速度定时器
     keepInterval.set(`${KeepIntervalKey.slow}-${e_id}`, () => {
-      const newE_i = enemyList.findIndex(e => e.id === e_id)
-      if(enemyList[newE_i]) {
-        enemyList[newE_i].curSpeed = enemyList[newE_i].speed
-        enemyList[newE_i].slowType = void 0
+      const enemyItem = enemyMap.get(e_id)
+      if(enemyItem) {
+        enemyItem.curSpeed = enemyItem.speed
+        enemyItem.slowType = void 0
       }
     }, t_slow.time, {isTimeOut: true})
   }
   // 减速敌人
   if(newSpeed < curSpeed) {
-    enemyList[e_i].curSpeed = newSpeed
-    enemyList[e_i].slowType = t_slow.type
+    enemyItem.curSpeed = newSpeed
+    enemyItem.slowType = t_slow.type
   }
 }
 
 export {
-  enemyList,
+  enemyMap,
   enemyState,
   slowEnemy,
 }
