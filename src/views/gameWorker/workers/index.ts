@@ -3,12 +3,12 @@ import { getScreenFps, limitRange, powAndSqrt, randomNum, randomNumList, waitTim
 import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
-import { TargetCircleInfo, baseDataState, checkValInCircle, initAllGrid } from "./tools/baseData";
-import { enemyMap, enemyState, slowEnemy } from './tools/enemy'
+import { TargetCircleInfo, baseDataState, calculateDistance, canvasInfo, checkValInCircle, gameConfigState, initAllGrid } from "./tools/baseData";
+import { drawEnemyHp, drawEnemyImg, drawEnemyLevel, drawEnemyPoison, drawEnemySkill, drawEnemySlow, enemyMap, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
-import { ENEMY_MAX_LEVEL, enemyHpColors } from "@/dataSource/enemyData";
+import { ENEMY_MAX_LEVEL } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
 import { getAngle } from "@/utils/handleCircle";
@@ -18,25 +18,14 @@ import { VueFnName, WorkerFnName } from "./type/worker";
 import skillData from "@/dataSource/skillData";
 import testBuildData from "./tools/testBuild";
 import { range } from "@/utils/format";
+import { drawLinearGradientRoundRect } from "./tools/canvas";
+import { getEndXy } from "./tools/compute";
 
 const source = sourceInstance.state
 const setting = {
   isHighRefreshScreen: false
 }
-const canvasInfo = {
-  offscreen: void 0 as unknown as OffscreenCanvas,
-  width: 0,
-  height: 0,
-}
 
-const gameConfigState = {
-  /** 一格的大小 */
-  size: 50,
-  // requestAnimationFrame api的保存对象
-  animationFrame: 0,
-  // 得到 canvas 的 2d 上下文
-  ctx: null as unknown as CanvasRenderingContext2D,
-}
 const gameSkillState = {
   // 生产的金钱
   proMoney: {isShow: false, interval: 10000, money: 25},
@@ -157,16 +146,12 @@ function startDraw() {
   gameConfigState.ctx.clearRect(0, 0, canvasInfo.offscreen.width, canvasInfo.offscreen.height);
   drawFloorTile()
   drawTower()
-  // 循环静态图片数组画敌人形成gif效果
-  enemyMap.forEach(enemy => {
-    // 当敌人已经到达终点，就不用绘画了
-    if(moveEnemy(enemy)) return
-    drawEnemy(enemy)
-  })
+  drawEnemyMap()
   checkEnemyAndTower()
   handleBulletMove()
   drawSpecialBullets()
   watchEnemyList()
+  watchEnemySkill()
 }
 
 function watchEnemyList() {
@@ -177,6 +162,17 @@ function watchEnemyList() {
     isLevelLock = true
     onLevelChange()
   }
+}
+
+function watchEnemySkill() {
+  enemyMap.forEach(enemy => {
+    if(enemy.name === 'godzilla') {
+      const animation = enemy.skill!.animation
+      if(animation && animation.cur < animation.sum) {
+        enemyGodzillaRemoveTower(enemy)
+      }
+    }
+  })
 }
 
 function onLevelChange() {
@@ -470,7 +466,7 @@ function handleFireBullet(t: TowerStateType) {
   if(!enemy) return
   damageTheEnemy(enemy, t.damage)
   if(t.damage < t.preDamage! * 3) {
-    t.thickness! = Math.min(t.thickness! + 0.025, gameConfigState.size / 3)
+    t.thickness! = Math.min(t.thickness! + 0.025, gameConfigState.size / 2)
     t.damage += 0.001
   }
   if(t.targetIdList[0]) {
@@ -489,43 +485,22 @@ function drawFireBullet(t: TowerStateType, enemy: EnemyStateType) {
   const {thickness = 1, x, y} = t
   const size = gameConfigState.size
   const {x: ex, y: ey, w, h} = enemy
-  const ctx = gameConfigState.ctx!
-  const _x = x + size / 2, _y = y + size / 2, _ex = ex + w / 2, _ey = ey + h / 2
-  const deg = getAngle({x: _x, y: _y}, {x: _ex, y: _ey})
-  // 敌人和塔防间的距离
-  const xy = powAndSqrt(_ex - _x, _ey - _y)
-  ctx.save()
-  ctx.translate(_x, _y)
-  ctx.rotate(deg * Math.PI / 180)
-  ctx.translate(-_x, -_y)
-  const newY = _y - (thickness - t.bSize.w) / 2
-  // 设置渐变色
-  if(ctx.createLinearGradient) {
-    const linearGradient = ctx.createLinearGradient(_x, newY, _x, newY + thickness)
-    linearGradient.addColorStop(0, '#de5332');
-    linearGradient.addColorStop(0.4, '#f3c105');
-    linearGradient.addColorStop(0.5, '#ffc800');
-    linearGradient.addColorStop(0.6, '#f3c105');
-    linearGradient.addColorStop(1, '#de5332'); 
-    ctx.strokeStyle = linearGradient
-    ctx.fillStyle = linearGradient
-  } else {
-    ctx.strokeStyle = '#de5332'
-    ctx.fillStyle = '#f3c105'
-  }
-  ctx.beginPath()
-  if((ctx as any).roundRect) {
-    (ctx as any).roundRect(_x, newY, xy, thickness, size / 2)
-  } else {
-    ctx.moveTo(_x + thickness / 2, newY)
-    ctx.arcTo(_x + xy, newY, _x + xy, newY + thickness, thickness / 2)
-    ctx.arcTo(_x + xy, newY + thickness, _x, newY + thickness, thickness / 2)
-    ctx.arcTo(_x, newY + thickness, _x, newY, thickness / 2)
-    ctx.arcTo(_x, newY, _x + xy, newY, thickness / 2)
-  }
-  ctx.fill()
-  ctx.stroke()
-  ctx.restore()
+  drawLinearGradientRoundRect({
+    ctx: gameConfigState.ctx!,
+    thickness, 
+    thicknessPre: t.bSize.w,
+    x: x + size / 2, 
+    y: y + size / 2, 
+    tx: ex + w / 2, 
+    ty: ey + h / 2, 
+    linearGradient: [
+      {value: 0, color: '#de5332'},
+      {value: 0.4, color: '#f3c105'},
+      {value: 0.5, color: '#ffc800'},
+      {value: 0.6, color: '#f3c105'},
+      {value: 1, color: '#de5332'},
+    ]
+  })
 }
 /** 特殊子弹击中目标 */
 function handleSpecialBullets(t: TowerStateType, bItem: BulletType) {
@@ -657,140 +632,24 @@ function makeEnemy() {
   }, baseDataState.intervalTime)
 }
 
+/** 绘画所有的敌人 */
+function drawEnemyMap() {
+  // 循环静态图片数组画敌人形成gif效果
+  enemyMap.forEach(enemy => {
+    // 当敌人已经到达终点，就不用绘画了
+    if(moveEnemy(enemy)) return
+    drawEnemy(enemy)
+  })
+}
+/** 绘画敌人 */
 function drawEnemy(enemy: EnemyStateType) {
-  const { name, imgType, x, y, w, h, imgIndex, hp, curSpeed, isForward, speed, poison, slowType, ..._enemy } = enemy
-  const ctx = gameConfigState.ctx
-  // --- 绘画敌人图片 ---
-  ctx.save() // 保存画布
-  // 翻转图片
-  if(!isForward) { 
-    ctx.translate(w + x * 2, 0)
-    ctx.scale(-1, 1); // 翻转画布
-  }
-  const imgItem = source.enemyImgSource[name]
-  // 处理需要绘画的敌人图片
-  const img = imgType === 'gif' ? imgItem.imgList![imgIndex].img : imgItem.img!
-  ctx.drawImage(img, x, y, w, h) 
-  ctx.restore() // 还原画布
-  // 控制图片的索引
-  if(imgType === 'gif') {
-    let delay = imgItem.imgList![0].delay
-    if(curSpeed !== speed) {
-      delay *= 2 - curSpeed / speed
-    }
-    // 控制每一帧图片的切换时机
-    if(curSpeed) {
-      if(enemy.framesNum >= delay) {
-        enemy.imgIndex++;
-        enemy.framesNum = 0;
-      } else {
-        enemy.framesNum++;
-      }
-    }
-    // 使图片索引回到第一帧
-    if(enemy.imgIndex === imgItem.imgList!.length) {
-      enemy.imgIndex = 0
-    }
-  }
-  // --- 绘画减速效果 ---
-  if(curSpeed !== speed) {
-    if(slowType === 'twitch') {
-      ctx.save()
-      ctx.globalAlpha = 0.5
-      ctx.drawImage(source.othOnloadImg.snowPoison!, x + w / 4, y + h / 3, w / 2, w / 2)
-      ctx.restore()
-    } else {
-      if(curSpeed === 0) {
-        ctx.save()
-        ctx.globalAlpha = 0.9
-        ctx.drawImage(source.othOnloadImg.snowVertigo!, x + w / 4, y + h / 3, w / 2, w / 2)
-        ctx.restore()
-      } else {
-        ctx.save()
-        ctx.globalAlpha = 0.9
-        ctx.drawImage(source.othOnloadImg.snow!, x + w / 4, y + h / 3, w / 3, w / 3)
-        ctx.restore()
-      }
-    }
-  }
-  // --- 画中毒效果 ---
-  if(poison) {
-    ctx.save()
-    ctx.globalAlpha = 0.9
-    if(poison.level === 5) {
-      ctx.drawImage(source.othOnloadImg.poison!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
-    } else {
-      let arr = [3 * w / 8, w / 4, w / 8, 0]
-      let poisonX = x + arr[poison.level - 1]
-      for(let i = 0; i < poison.level; i++) {
-        ctx.drawImage(source.othOnloadImg.poison!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
-        poisonX += w / 4
-      }
-    }
-    ctx.restore()
-  }
-  // --- 画兔子回血效果 ---
-  if(name === 'rabbish-2') {
-    const {animation} = _enemy.skill!
-    if(animation!.cur !== animation!.sum) {
-      _enemy.skill!.animation!.cur++
-      ctx.save()
-      const globalAlphaVal = Math.min(animation!.cur, animation!.sum - animation!.cur)
-      ctx.globalAlpha = globalAlphaVal / 20
-      gameConfigState.ctx.drawImage(source.othOnloadImg.poison!, x - w / 4, y - w / 4, w * 1.5, w * 1.5)
-      ctx.restore()
-    }
-  }
-  if(hp.cur === hp.sum) return
-  // --- 绘画生命值 ---
-  const w_2 = w - hp.size
-  // 每一条血条的生命值
-  const oneHp = hp.sum / hp.level!
-  const colorI = Math.ceil(hp.cur / oneHp)
-  // 血条背景色
-  ctx.fillStyle = enemyHpColors[colorI - 1]
-  ctx.fillRect(x, y - hp.size, w_2, hp.size)
-  // 血条颜色
-  ctx.fillStyle = enemyHpColors[colorI]
-  ctx.fillRect(x, y - hp.size, w_2 * (hp.cur - (colorI - 1) * oneHp) / oneHp, hp.size)
-  // 画边框
-  ctx.beginPath();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "#cff1d3"; //边框颜色
-  ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
-  ctx.stroke();
-  // --- 绘画星级 ---
-  if(hp.level! < 10) {
-    const levelSize = hp.size
-    const moonN = Math.floor(hp.level! / 3)
-    const starN = Math.floor(hp.level! % 3)
-    let levelX = x - levelSize * 2, levelY = y - levelSize
-    if(starN + moonN === 1) {
-      ctx.drawImage(source.othOnloadImg[starN ? 'star' : 'moon']!, levelX, levelY, levelSize, levelSize)
-    } else if(starN + moonN === 2) {
-      levelX -= levelSize
-      for(let i = 0; i < 2; i++) {
-        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
-        levelX += levelSize
-      }
-    } else if(starN + moonN === 3) {
-      for(let i = 0; i < 3; i++) {
-        if(i === 0) {levelX -= levelSize / 2; levelY -= levelSize / 2;}
-        else if(i === 1) {levelX -= levelSize / 2; levelY += levelSize;}
-        else if(i === 2) levelX += levelSize;
-        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
-      }
-    } else if(starN + moonN === 4) {
-      for(let i = 0; i < 4; i++) {
-        if(i === 0) {levelX -= levelSize; levelY -= levelSize / 2;}
-        else if(i === 1 || i === 3) levelX += levelSize;
-        else if(i === 2) {levelX -= levelSize; levelY += levelSize;}
-        ctx.drawImage(source.othOnloadImg[moonN > i ? 'moon' : 'star']!, levelX, levelY, levelSize, levelSize)
-      }
-    }
-  } else {
-    ctx.drawImage(source.othOnloadImg.sun!, x - hp.size * 2, y - hp.size * 3 / 2, hp.size * 2, hp.size * 2)
-  }
+  drawEnemyImg(enemy)
+  drawEnemySlow(enemy)
+  drawEnemyPoison(enemy)
+  drawEnemySkill(enemy)
+  if(enemy.hp.cur === enemy.hp.sum) return
+  drawEnemyHp(enemy)
+  drawEnemyLevel(enemy)
 }
 
 /** 生成敌人 */
@@ -804,7 +663,6 @@ function setEnemy() {
   item.hp.size *= size
   const id = randomStr(item.audioKey)
   const level = item.level + addEnemyLevel()
-  // const level = 10
   item.hp.cur = item.hp.sum * (level + 1) / 2 
   item.hp.level = level
   if(level > 1) {
@@ -816,6 +674,12 @@ function setEnemy() {
   // 设置敌人的初始位置
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
+  if(enemyItem.name === 'godzilla') {
+    enemyItem.skill!.direction = {
+      x: 0,
+      y: 0
+    }
+  }
   enemyMap.set(enemyItem.id, enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, id)
@@ -828,10 +692,11 @@ function handleEnemySkill(enemyName: string, e_id: string) {
   if(!enemy.skill) return
   let skillFn: ((e_id: string) => void) | undefined
   switch (enemyName) {
-    case '舞王': skillFn = enemySkillDance; break;
-    case '弗利萨': skillFn = enemySkillFulisha; break;
-    case '坤坤': skillFn = enemySkillKunkun; break;
+    case 'zombies-dance': skillFn = enemySkillDance; break;
+    case 'fulisha': skillFn = enemySkillFulisha; break;
+    case 'kunkun': skillFn = enemySkillKunkun; break;
     case 'rabbish-2': skillFn = enemySkillRabbish2; break;
+    case 'godzilla': skillFn = enemySkillGodzilla; break;
   };
   if(skillFn) { // 有技能的敌人
     keepInterval.set(e_id, () => {
@@ -895,6 +760,36 @@ function enemySkillRabbish2(e_id: string) {
     }
   })
   enemy.skill!.animation!.cur = 0
+}
+/** 哥斯拉技能 */
+function enemySkillGodzilla(e_id: string) {
+  if(!towerMap.size) return
+  const enemy = enemyMap.get(e_id)
+  if(!enemy) return
+  const x = enemy.x + enemy.w / 2, y = enemy.y + enemy.h / 2;
+  const tartget = {distance: Infinity, id: ''}
+  towerMap.forEach(t => {
+    const distance = calculateDistance({x, y}, t.x, t.y)
+    if(distance < tartget.distance) {
+      tartget.distance = distance
+      tartget.id = t.id
+    }
+  })
+  const {x: towerX, y: towerY} = towerMap.get(tartget.id)!
+  const size = gameConfigState.size
+  const end = getEndXy({x, y, tx: towerX + size / 2, ty: towerY + size / 2, endX: canvasInfo.offscreen.width, endY: canvasInfo.offscreen.height})
+  enemy.skill!.direction = {
+    x: end.x,
+    y: end.y
+  }
+  enemy.skill!.animation!.cur = 0
+  slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
+}
+/** 哥斯拉释放技能中，清除塔防 */
+function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
+  towerMap.forEach(t => {
+    
+  })
 }
 
 /** 召唤敌人的处理 */

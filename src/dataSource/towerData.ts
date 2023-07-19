@@ -1,4 +1,5 @@
 import { requireCDN } from "@/utils/handleImg";
+import { type } from "os";
 const  _requireCDN = (url: string) => requireCDN(url, 'tower')
 
 
@@ -89,7 +90,7 @@ export type TowerSlow = {
   /** 减速类型 */
   type: TowerSlowType
 }
-export type TowerSlowType = 'slow' | 'twitch' | 'vertigo'
+export type TowerSlowType = 'slow' | 'twitch' | 'vertigo' | 'stop'
 
 /** 持续伤害比如中毒等 */
 export type TowerPoison = {
