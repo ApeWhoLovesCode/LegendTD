@@ -11,7 +11,7 @@ import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
 import { ENEMY_MAX_LEVEL } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
-import { getAngle } from "@/utils/handleCircle";
+import { getAngle, isLineInRect, lineIntersectsRect } from "@/utils/handleCircle";
 import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
 import levelData from "@/dataSource/levelData";
 import { VueFnName, WorkerFnName } from "./type/worker";
@@ -674,12 +674,6 @@ function setEnemy() {
   // 设置敌人的初始位置
   enemyItem.x = x - w / 4
   enemyItem.y = y - h / 2
-  if(enemyItem.name === 'godzilla') {
-    enemyItem.skill!.direction = {
-      x: 0,
-      y: 0
-    }
-  }
   enemyMap.set(enemyItem.id, enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, id)
@@ -778,17 +772,33 @@ function enemySkillGodzilla(e_id: string) {
   const {x: towerX, y: towerY} = towerMap.get(tartget.id)!
   const size = gameConfigState.size
   const end = getEndXy({x, y, tx: towerX + size / 2, ty: towerY + size / 2, endX: canvasInfo.offscreen.width, endY: canvasInfo.offscreen.height})
+  const k = (end.y - y) / (end.x - x) // 斜率
+  const b = y - k *  x // 截距
   enemy.skill!.direction = {
     x: end.x,
-    y: end.y
+    y: end.y,
+    k,
+    b,
   }
   enemy.skill!.animation!.cur = 0
   slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
 }
 /** 哥斯拉释放技能中，清除塔防 */
 function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
+  const {x, y, k, b} = enemy.skill!.direction!
+  const ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h / 2
+  const size = gameConfigState.size
   towerMap.forEach(t => {
-    
+    // const isIn = [b - size / 2, b, b + size / 2].some(bValue => (
+    //   // 这里的 y1 = t.y + size; x2 = t.x + size 是因为需要翻转坐标轴到左上角和右下角
+    //   isLineInRect({k, b: bValue, x1: t.x, y1: t.y + size, x2: t.x + size, y2: t.y})
+    // ))
+    const isIn = isLineInRect({k, b, x1: t.x, y1: t.y + size, x2: t.x + size, y2: t.y})
+    // const isIn = lineIntersectsRect(
+    //   {x1: ex, y1: ey, x2: x, y2: y},
+    //   {x: t.x, y: t.y, w: size, h: size}
+    // )
+    console.log(t.name, isIn);
   })
 }
 

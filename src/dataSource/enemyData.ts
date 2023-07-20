@@ -66,6 +66,10 @@ export type EnemyType = {
     direction?: {
       x: number
       y: number
+      /** y = kx + b 的斜率 */
+      k: number
+      /** y轴截距 */
+      b: number
     } 
   }
   /** 音频播放的key值 */
