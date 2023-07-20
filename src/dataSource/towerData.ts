@@ -1,4 +1,5 @@
 import { requireCDN } from "@/utils/handleImg";
+import { type } from "os";
 const  _requireCDN = (url: string) => requireCDN(url, 'tower')
 
 
@@ -15,7 +16,7 @@ const towerObj: TowerDataObj = {
   'ez': { name: 'ez',       money: 600, saleMoney: 300, r: 4.5, damage: 3, targetNum: 1, rate: 1200, speed: 0.16, bSize: {w:2,h:2}, isThrough: true, bulletInitDeg: 170, audioKey: 'ez', img: _requireCDN('ez.png'), bulletImg: _requireCDN('bullet-ez.png'), cover: _requireCDN('ez-cover.png')},
   'lanbo': { name: 'lanbo',    money: 800, saleMoney: 400, r: 4, damage: 2, targetNum: 999, rate: 1600, speed: 0.1, bSize: {w:1,h:1}, audioKey: 'lanbo', img: _requireCDN('lanbo.png'), bulletImg: _requireCDN('bullet-blisters.png'), cover: _requireCDN('lanbo-cover.png')},
   'aixi': { name: 'aixi',     money: 700, saleMoney: 350, r: 4, damage: 1, targetNum: 9, rate: 1200, speed: 0.12, slow: {num: 2, time: 5000, type: 'slow'}, bSize: {w:0.4,h:0.4}, bulletInitDeg: 20, audioKey: 'aixi', img: _requireCDN('aixi.png'), bulletImg: _requireCDN('bullet2.png'), cover: _requireCDN('aixi-cover.png')},
-  'delaiwen': { name: 'delaiwen', money: 1000, saleMoney: 500, r: 4, damage: 4, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: _requireCDN('delaiwen.png'), bulletImg: _requireCDN('bullet-delaiwen.png'), cover: _requireCDN('delaiwen-cover.png')},
+  'delaiwen': { name: 'delaiwen', money: 1200, saleMoney: 600, r: 4, damage: 4, targetNum: 2, rate: 2000, speed: 0.14, bSize: {w:1,h:1}, isThrough: true, isCharging: false, bulletInitDeg: 170, audioKey: 'delaiwen', img: _requireCDN('delaiwen.png'), bulletImg: _requireCDN('bullet-delaiwen.png'), cover: _requireCDN('delaiwen-cover.png')},
   'huonan': { name: 'huonan',   money: 900, saleMoney: 450, r: 4, damage: 0.1, targetNum: 1, rate: 100, speed: 0.14, bSize: {w:0.1,h:0.1}, audioKey: 'huonan', img: _requireCDN('huonan.png'), bulletImg: _requireCDN('bullet2.png'), cover: _requireCDN('huonan-cover.png')},
   'twitch': { name: 'twitch',   money: 1000, saleMoney: 500, r: 3, damage: 1, addDamage: 1, targetNum: 1, rate: 5000, speed: 0.14, slow: {num: 3, time: 1500, type: 'twitch'}, poison: {damage: 0.5, time: 5000, bulletTime: 6000}, bSize: {w:0.5,h:0.5}, audioKey: 'twitch', isSaveBullet: true, img: _requireCDN('twitch.png'), bulletImg: _requireCDN('bullet-twitch.png'), cover: _requireCDN('twitch-cover.png')},
 }
@@ -89,7 +90,7 @@ export type TowerSlow = {
   /** 减速类型 */
   type: TowerSlowType
 }
-export type TowerSlowType = 'slow' | 'twitch' | 'vertigo'
+export type TowerSlowType = 'slow' | 'twitch' | 'vertigo' | 'stop'
 
 /** 持续伤害比如中毒等 */
 export type TowerPoison = {

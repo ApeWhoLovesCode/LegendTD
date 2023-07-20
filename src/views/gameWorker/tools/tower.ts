@@ -5,7 +5,7 @@ import { reactive } from "vue";
 export default function useTower() {
   const towerState = reactive<TowerState>({
     building: { left: 0, top: 0, isShow: false },
-    buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerIndex: 0, saleMoney: 0}
+    buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerId: '', saleMoney: 0}
   })
 
   function showTowerBuilding(e: {left: number, top: number}) {

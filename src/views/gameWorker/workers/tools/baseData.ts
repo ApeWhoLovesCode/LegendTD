@@ -11,11 +11,24 @@ const baseDataState = {
   // 生命值
   hp: 10,
   // 金钱
-  money: 5000,
+  money: 500000,
   // 敌人生成间隔时间
   intervalTime: 900,
   // 当前关卡地图信息
   mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
+}
+
+const gameConfigState = {
+  /** 一格的大小 */
+  size: 50,
+  // requestAnimationFrame api的保存对象
+  animationFrame: 0,
+  // 得到 canvas 的 2d 上下文
+  ctx: null as unknown as CanvasRenderingContext2D,
+}
+
+const canvasInfo = {
+  offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
 /** 初始化所有格子 */
@@ -40,11 +53,11 @@ function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
     calculateDistance(target, x + w, y + h),
     calculateDistance(target, x , y + h),
   ]
-  return angleList.some(item => item <= target.r)
+  return angleList.some(item => item <= target.r!)
 }
 
 /** 计算点到圆心的距离之间的距离 */
-function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
+export function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
   const {x: _x, y: _y, size} = target
   const size_2 = (size ?? baseDataState.gridInfo.size) / 2
   return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
@@ -52,6 +65,8 @@ function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
 
 export {
   baseDataState,
+  gameConfigState,
+  canvasInfo,
   initAllGrid,
   checkValInCircle,
 }
@@ -60,7 +75,7 @@ export type TargetCircleInfo = {
   x: number
   y: number
   /** 半径 */
-  r: number
+  r?: number
   /** 目标的大小 */
   size?: number
   /** 目标的数量 */
