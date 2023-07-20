@@ -38,7 +38,11 @@ const cardStyle = computed(() => {
   <div 
     :class="`${classPrefix}-cardWrap`" 
     :style="cardStyle" 
-    @click="provideState?.isClick && emit('onClick', index)"
+    @click="() => {
+      if(provideState?.isClick) {
+        emit('onClick', props.index)
+      }
+    }"
   >
     <slot></slot>
   </div>

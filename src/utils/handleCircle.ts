@@ -43,16 +43,30 @@ export type IsLineInRectParams = {
   y1: number
   x2: number
   y2: number
+  line: LineSegment
+}
+type LineSegment = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
 }
 /**
  * 判断线是否与矩形相交；
  * 直线方程: y = kx + b；
  * 矩形的左上角点(x1, y1)和右下角点(x2, y2)
+ * @params line: 代表是线段
  */
-export const isLineInRect = ({ k, b, x1, y1, x2, y2 }: IsLineInRectParams) => {
-  // 判断直线是否与矩形的边界相交
-  if (k === undefined) {
+export const isLineInRect = ({ k, b, x1, y1, x2, y2, line }: IsLineInRectParams) => {
+  // 当所有的点都不在线段的范围内，就为false
+  const pointList = [{x: x1, y: y1}, {x: x2, y: y1}, {x: x1, y: y2}, {x: x2, y: y2}]
+  if(!pointList.some(p => checkPointInLine(p, line))) {
+    return false
+  }
+  if (k === 0) { // 水平
     return y1 <= b && b <= y2;
+  } else if (k === Infinity) { // 垂直
+    return x1 <= line.x1 && line.x1 <= x2;
   } else {
     // 计算直线与矩形的四条边的交点
     const xLeft = (y1 - b) / k;
@@ -60,51 +74,19 @@ export const isLineInRect = ({ k, b, x1, y1, x2, y2 }: IsLineInRectParams) => {
     const yTop = k * x1 + b;
     const yBottom = k * x2 + b;
     // 判断交点是否在矩形的边界内
-    return (x1 <= xLeft && xLeft <= x2 && y1 <= yTop && yTop <= y2) ||
-      (x1 <= xRight && xRight <= x2 && y1 <= yBottom && yBottom <= y2) ||
-      (x1 <= xLeft && xLeft <= x2 && y1 <= yBottom && yBottom <= y2) ||
-      (x1 <= xRight && xRight <= x2 && y1 <= yTop && yTop <= y2);
+    return (
+      (x1 <= xLeft && xLeft <= x2) || 
+      (x1 <= xRight && xRight <= x2) || 
+      (y1 <= yTop && yTop <= y2) ||
+      (y1 <= yBottom && yBottom <= y2)
+    )
   }
 }
-
-type LineType = {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+function checkPointInLine(point: {x: number, y: number}, line: LineSegment) {
+  const valX = checkMinMax(line.x1, line.x2)
+  const valY = checkMinMax(line.y1, line.y2)
+  return (valX.min <= point.x && point.x <= valX.max) && (valY.min <= point.y && point.y <= valY.max)
 }
-type RectType = {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-export function lineIntersectsRect(line: LineType, rect: RectType) {
-  // 矩形的四个边
-  var edges = [
-    { x1: rect.x, y1: rect.y, x2: rect.x + rect.w, y2: rect.y }, // 上边
-    { x1: rect.x, y1: rect.y, x2: rect.x, y2: rect.y + rect.h }, // 左边
-    { x1: rect.x + rect.w, y1: rect.y, x2: rect.x + rect.w, y2: rect.y + rect.h }, // 右边
-    { x1: rect.x, y1: rect.y + rect.h, x2: rect.x + rect.w, y2: rect.y + rect.h } // 下边
-  ];
-  for (var i = 0; i < edges.length; i++) {
-    if (lineIntersectsLine(line, edges[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function lineIntersectsLine(line1: LineType, line2: LineType) {
-  var a1 = line1.y2 - line1.y1;
-  var b1 = line1.x1 - line1.x2;
-  var c1 = a1 * line1.x1 + b1 * line1.y1;
-
-  var a2 = line2.y2 - line2.y1;
-  var b2 = line2.x1 - line2.x2;
-  var c2 = a2 * line2.x1 + b2 * line2.y1;
-
-  var delta = a1 * b2 - a2 * b1;
-
-  return delta != 0;
+function checkMinMax(v1: number, v2: number) {
+  return {min: Math.min(v1, v2), max: Math.max(v1, v2)}
 }

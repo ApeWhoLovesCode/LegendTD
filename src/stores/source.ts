@@ -63,7 +63,7 @@ export const useSourceStore = defineStore('source', {
         this.handleEnemyImg(), 
         this.handleTowerImg(),
       ]).then(() => {
-        this.$state.progress = range(this.$state.progress, 0, 100)
+        this.$state.progress = 100
       })
     },
     async handleEnemyImg() {

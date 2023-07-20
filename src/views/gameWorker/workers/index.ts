@@ -11,7 +11,7 @@ import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
 import { ENEMY_MAX_LEVEL } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
-import { getAngle, isLineInRect, lineIntersectsRect } from "@/utils/handleCircle";
+import { getAngle, isLineInRect } from "@/utils/handleCircle";
 import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
 import levelData from "@/dataSource/levelData";
 import { VueFnName, WorkerFnName } from "./type/worker";
@@ -789,16 +789,24 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
   const ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h / 2
   const size = gameConfigState.size
   towerMap.forEach(t => {
-    // const isIn = [b - size / 2, b, b + size / 2].some(bValue => (
-    //   // 这里的 y1 = t.y + size; x2 = t.x + size 是因为需要翻转坐标轴到左上角和右下角
-    //   isLineInRect({k, b: bValue, x1: t.x, y1: t.y + size, x2: t.x + size, y2: t.y})
-    // ))
-    const isIn = isLineInRect({k, b, x1: t.x, y1: t.y + size, x2: t.x + size, y2: t.y})
-    // const isIn = lineIntersectsRect(
-    //   {x1: ex, y1: ey, x2: x, y2: y},
-    //   {x: t.x, y: t.y, w: size, h: size}
-    // )
-    console.log(t.name, isIn);
+    const isIn = [b - size / 2, b, b + size / 2].some(bValue => (
+      // 这里的 y1 = t.y + size; x2 = t.x + size 是因为需要翻转坐标轴到左上角和右下角
+      isLineInRect({
+        k, b: bValue, 
+        x1: t.x, 
+        y1: t.y, 
+        x2: t.x + size, 
+        y2: t.y + size, 
+        line: {x1: ex, y1: ey, x2: x, y2: y}
+      })
+    ))
+    // console.log(t.name, isIn);
+    if(isIn) {
+      if(Date.now() - t.thp.time > 1500) {
+        t.thp.time = Date.now()
+        t.thp.n++
+      }
+    }
   })
 }
 
@@ -908,9 +916,19 @@ function drawTower(item?: TowerStateType) {
   const size = gameConfigState.size
   if(item) {
     gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
+    if(item.thp.n) {
+      gameConfigState.ctx.fillStyle = '#ff687b'
+      gameConfigState.ctx.font = `${size / 2}px 宋体`
+      gameConfigState.ctx.fillText(item.thp.n, item.x + size / 2, item.y + size / 2)
+    }
   } else {
     towerMap.forEach(t => {
       gameConfigState.ctx.drawImage(t.onloadImg, t.x, t.y, size, size)
+      if(t.thp.n) {
+        gameConfigState.ctx.fillStyle = '#ff687b'
+        gameConfigState.ctx.font = `${size / 2}px 宋体`
+        gameConfigState.ctx.fillText(t.thp.n, t.x + size / 2, t.y + size / 2)
+      }
     })
   }
 }
@@ -1023,6 +1041,7 @@ function buildTower({x, y, tname}: {
   const tower: TowerStateType = {
     ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
+  tower.thp = {n: 0, time: 0}
   tower.r *= size 
   tower.speed *= size
   tower.bSize.w *= size
@@ -1106,7 +1125,8 @@ function onWorkerPostFn(fnName: VueFnName, param?: any) {
 function testBuildTowers() {
   if(!isDevTestMode) return
   addMoney(999999)
-  enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
+  // enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
+  enemyState.levelEnemy = [17]
   const size = gameConfigState.size
   testBuildData.forEach(item => {
     item.x *= size
