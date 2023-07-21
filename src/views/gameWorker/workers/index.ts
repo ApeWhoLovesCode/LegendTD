@@ -3,7 +3,7 @@ import { getScreenFps, limitRange, powAndSqrt, randomNum, randomNumList, waitTim
 import sourceInstance from '@/stores/sourceInstance'
 import { BulletType, EnemyStateType, SpecialBulletItem, TargetInfo, TowerStateType } from "@/type/game";
 
-import { TargetCircleInfo, baseDataState, calculateDistance, canvasInfo, checkValInCircle, gameConfigState, initAllGrid } from "./tools/baseData";
+import { TargetCircleInfo, baseDataState, canvasInfo, checkValInCircle, gameConfigState, initAllGrid } from "./tools/baseData";
 import { drawEnemyHp, drawEnemyImg, drawEnemyLevel, drawEnemyPoison, drawEnemySkill, drawEnemySlow, enemyMap, enemyState, slowEnemy } from './tools/enemy'
 import { specialBullets } from './tools/specialBullets'
 
@@ -71,7 +71,7 @@ addEventListener('message', e => {
       buildTower(data.event); break;
     }
     case 'saleTower': {
-      saleTower(data.event); break;
+      removeTower(data.event); break;
     }
     case 'handleSkill': {
       handleSkill(data.event); break;
@@ -145,7 +145,7 @@ function startAnimationLockFrame() {
 function startDraw() {
   gameConfigState.ctx.clearRect(0, 0, canvasInfo.offscreen.width, canvasInfo.offscreen.height);
   drawFloorTile()
-  drawTower()
+  drawTowerMap()
   drawEnemyMap()
   checkEnemyAndTower()
   handleBulletMove()
@@ -760,17 +760,17 @@ function enemySkillGodzilla(e_id: string) {
   if(!towerMap.size) return
   const enemy = enemyMap.get(e_id)
   if(!enemy) return
+  const size = gameConfigState.size
   const x = enemy.x + enemy.w / 2, y = enemy.y + enemy.h / 2;
   const tartget = {distance: Infinity, id: ''}
   towerMap.forEach(t => {
-    const distance = calculateDistance({x, y}, t.x, t.y)
+    const distance = powAndSqrt(x - t.x + size / 2, y - t.y + size / 2)
     if(distance < tartget.distance) {
       tartget.distance = distance
       tartget.id = t.id
     }
   })
   const {x: towerX, y: towerY} = towerMap.get(tartget.id)!
-  const size = gameConfigState.size
   const end = getEndXy({x, y, tx: towerX + size / 2, ty: towerY + size / 2, endX: canvasInfo.offscreen.width, endY: canvasInfo.offscreen.height})
   const k = (end.y - y) / (end.x - x) // 斜率
   const b = y - k *  x // 截距
@@ -789,25 +789,36 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
   const ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h / 2
   const size = gameConfigState.size
   towerMap.forEach(t => {
-    const isIn = [b - size / 2, b, b + size / 2].some(bValue => (
-      // 这里的 y1 = t.y + size; x2 = t.x + size 是因为需要翻转坐标轴到左上角和右下角
+    const isIn = [-size / 2, 0, size / 2].some(addVal => (
       isLineInRect({
-        k, b: bValue, 
+        k, b: b + addVal, 
         x1: t.x, 
         y1: t.y, 
         x2: t.x + size, 
         y2: t.y + size, 
-        line: {x1: ex, y1: ey, x2: x, y2: y}
+        line: {x1: ex, y1: ey + addVal, x2: x, y2: y + addVal}
       })
     ))
     // console.log(t.name, isIn);
     if(isIn) {
-      if(Date.now() - t.thp.time > 1500) {
-        t.thp.time = Date.now()
-        t.thp.n++
+      if(!t.hp.isShow) {
+        t.hp.isShow = true
+        damageTower(t)
+      } else {
+        // 200毫秒掉一次血，这里暂停卡bug的话，当继续游戏时就会触发伤害
+        if(Date.now() - t.hp.injuryTime! > 200) {
+          damageTower(t)
+        }
       }
     }
   })
+}
+function damageTower(t: TowerStateType) {
+  t.hp.injuryTime = Date.now()
+  t.hp.cur--
+  if(t.hp.cur <= 0) {
+    removeTower(t.id, false)
+  }
 }
 
 /** 召唤敌人的处理 */
@@ -911,25 +922,21 @@ function moveEnemy(enemy: EnemyStateType) {
   }
 }
 
+function drawTowerMap() {
+  towerMap.forEach(t => {
+    drawTower(t)
+  })
+}
 /** 画塔防 */
-function drawTower(item?: TowerStateType) {
+function drawTower(tower: TowerStateType) {
   const size = gameConfigState.size
-  if(item) {
-    gameConfigState.ctx.drawImage(item.onloadImg, item.x, item.y, size, size)
-    if(item.thp.n) {
-      gameConfigState.ctx.fillStyle = '#ff687b'
-      gameConfigState.ctx.font = `${size / 2}px 宋体`
-      gameConfigState.ctx.fillText(item.thp.n, item.x + size / 2, item.y + size / 2)
-    }
+  gameConfigState.ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
+  if(tower.hp.isShow && tower.hp.injuryTime! + 1500 > Date.now()) {
+    gameConfigState.ctx.fillStyle = '#ff687b'
+    gameConfigState.ctx.font = `${size / 2}px 宋体`
+    gameConfigState.ctx.fillText(tower.hp.cur + '', tower.x + size / 2, tower.y + size / 2)
   } else {
-    towerMap.forEach(t => {
-      gameConfigState.ctx.drawImage(t.onloadImg, t.x, t.y, size, size)
-      if(t.thp.n) {
-        gameConfigState.ctx.fillStyle = '#ff687b'
-        gameConfigState.ctx.font = `${size / 2}px 宋体`
-        gameConfigState.ctx.fillText(t.thp.n, t.x + size / 2, t.y + size / 2)
-      }
-    })
+    tower.hp.isShow = false
   }
 }
 
@@ -1041,11 +1048,11 @@ function buildTower({x, y, tname}: {
   const tower: TowerStateType = {
     ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
   }
-  tower.thp = {n: 0, time: 0}
   tower.r *= size 
   tower.speed *= size
   tower.bSize.w *= size
   tower.bSize.h *= size
+  tower.hp.injuryTime = 0
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
     tower.isToTimeShoot = true
@@ -1071,14 +1078,16 @@ function buildTower({x, y, tname}: {
 }
 
 /** 售卖防御塔 */
-function saleTower(towerId: string) {
+function removeTower(towerId: string, isSale = true) {
   const size = gameConfigState.size
   const tower = towerMap.get(towerId)!
   if(!tower) return
   const {x, y, saleMoney, id} = tower
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
-  addMoney(saleMoney)
+  if(isSale) {
+    addMoney(saleMoney)
+  }
   keepInterval.delete(`towerShoot-${id}`)
   towerMap.delete(towerId)
   onWorkerPostFn('saleTowerCallback', id)

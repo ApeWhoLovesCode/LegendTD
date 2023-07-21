@@ -5,7 +5,7 @@ const baseDataState = {
   // 地板：大小 数量
   floorTile: {size: 50, num: 83},
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] as (string | number)[][] },
+  gridInfo: { x_num: 21, y_num: 12, arr: [] as (string | number)[][] },
   // 等级
   level: 0,
   // 生命值
@@ -56,10 +56,10 @@ function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
   return angleList.some(item => item <= target.r!)
 }
 
-/** 计算点到圆心的距离之间的距离 */
+/** 计算点到圆心之间的距离 */
 export function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
   const {x: _x, y: _y, size} = target
-  const size_2 = (size ?? baseDataState.gridInfo.size) / 2
+  const size_2 = (size ?? gameConfigState.size) / 2
   return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
 }
 

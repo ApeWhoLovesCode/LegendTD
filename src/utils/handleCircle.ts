@@ -58,9 +58,9 @@ type LineSegment = {
  * @params line: 代表是线段
  */
 export const isLineInRect = ({ k, b, x1, y1, x2, y2, line }: IsLineInRectParams) => {
-  // 当所有的点都不在线段的范围内，就为false
-  const pointList = [{x: x1, y: y1}, {x: x2, y: y1}, {x: x1, y: y2}, {x: x2, y: y2}]
-  if(!pointList.some(p => checkPointInLine(p, line))) {
+  // 检查线和点是否有相交
+  const points = {x1, y1, x2, y2}
+  if(!(checkPointsInLine(points, line) || checkLineInPoints(points, line))) {
     return false
   }
   if (k === 0) { // 水平
@@ -82,10 +82,27 @@ export const isLineInRect = ({ k, b, x1, y1, x2, y2, line }: IsLineInRectParams)
     )
   }
 }
-function checkPointInLine(point: {x: number, y: number}, line: LineSegment) {
+/** 检查点在两线之间 */
+function checkPointsInLine(points: LineSegment, line: LineSegment) {
   const valX = checkMinMax(line.x1, line.x2)
   const valY = checkMinMax(line.y1, line.y2)
-  return (valX.min <= point.x && point.x <= valX.max) && (valY.min <= point.y && point.y <= valY.max)
+  return (
+    (valX.min <= points.x1 && points.x1 <= valX.max) && (valY.min <= points.y1 && points.y1 <= valY.max) ||
+    (valX.min <= points.x2 && points.x2 <= valX.max) && (valY.min <= points.y1 && points.y1 <= valY.max) ||
+    (valX.min <= points.x2 && points.x2 <= valX.max) && (valY.min <= points.y2 && points.y2 <= valY.max) ||
+    (valX.min <= points.x1 && points.x1 <= valX.max) && (valY.min <= points.y2 && points.y2 <= valY.max)
+  )
+}
+/** 检查线在两点之间 */
+function checkLineInPoints(line: LineSegment, points: LineSegment) {
+  const valX = checkMinMax(points.x1, points.x2)
+  const valY = checkMinMax(points.y1, points.y2)
+  return (
+    valX.min <= line.x1 && line.x1 <= valX.max || 
+    valX.min <= line.x2 && line.x2 <= valX.max || 
+    valY.min <= line.y1 && line.y1 <= valY.max || 
+    valY.min <= line.y2 && line.y2 <= valY.max
+  )
 }
 function checkMinMax(v1: number, v2: number) {
   return {min: Math.min(v1, v2), max: Math.max(v1, v2)}
