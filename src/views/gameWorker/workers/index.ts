@@ -20,6 +20,7 @@ import testBuildData from "./tools/testBuild";
 import { range } from "@/utils/format";
 import { drawLinearGradientRoundRect } from "./tools/canvas";
 import { getEndXy } from "./tools/compute";
+import { towerMap, drawTowerMap, drawTower } from "./tools/tower";
 
 const source = sourceInstance.state
 const setting = {
@@ -34,7 +35,7 @@ const gameSkillState = {
   // 底部技能栏
   skillList: JSON.parse(JSON.stringify(skillData)),
 }
-const towerMap: Map<string, TowerStateType> = new Map()
+
 /** 控制等级的切换 */
 let isLevelLock = false
 /** 是否是开发测试模式 */
@@ -919,24 +920,6 @@ function moveEnemy(enemy: EnemyStateType) {
   // 敌人到达下一个格子
   if((eX >= _x && eX <= _x + speed) && (eY >= _y && eY <= _y + speed)) {
     enemy.curFloorI++
-  }
-}
-
-function drawTowerMap() {
-  towerMap.forEach(t => {
-    drawTower(t)
-  })
-}
-/** 画塔防 */
-function drawTower(tower: TowerStateType) {
-  const size = gameConfigState.size
-  gameConfigState.ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
-  if(tower.hp.isShow && tower.hp.injuryTime! + 1500 > Date.now()) {
-    gameConfigState.ctx.fillStyle = '#ff687b'
-    gameConfigState.ctx.font = `${size / 2}px 宋体`
-    gameConfigState.ctx.fillText(tower.hp.cur + '', tower.x + size / 2, tower.y + size / 2)
-  } else {
-    tower.hp.isShow = false
   }
 }
 
