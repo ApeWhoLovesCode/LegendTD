@@ -21,7 +21,7 @@ export default function useBaseData() {
     // 生命值
     hp: 10,
     // 金钱
-    money: 500000,
+    money: 5000,
     // 敌人生成间隔时间
     intervalTime: 900,
     // 当前关卡地图信息

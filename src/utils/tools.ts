@@ -27,11 +27,12 @@ export function createProbNum(level: number) {
     0, 6, 7, 8, 9, 10, 8,
     15,   // 舞王
     10, 14, 13, 
-    20,   // 弗利萨
+    17,   // 弗利萨
     0, 0, 
-    17,   // 坤坤
+    16,   // 坤坤
     13,
     15,
+    18, // 哥斯拉
   ]
   const powN = Math.sqrt(Math.sqrt(level))
   let sum = 0
@@ -54,7 +55,8 @@ export function createProbNum(level: number) {
 export const randomNumList = (level: number) => {
   const arr = []
   // 等值是: 16
-  const len = Math.floor(Math.pow(Math.sqrt(level), Math.sqrt(Math.sqrt(level))) * 12 / level)
+  const levelVal = Math.pow(Math.sqrt(level), Math.sqrt(Math.sqrt(level)))
+  const len = 5 + Math.floor(levelVal * Math.min(level, 10) / level)
   for(let i = 0; i < len; i++) {
     arr.push(createProbNum(level))
   }

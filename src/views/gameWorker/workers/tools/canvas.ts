@@ -11,6 +11,7 @@ type LinearGradientRoundRectParams = {
   thicknessPre: number
   linearGradient: {value: number, color: string}[]
 }
+/** 绘画渐变色 */
 export function drawLinearGradientRoundRect({
   ctx, x, y, tx, ty, thickness, thicknessPre, linearGradient: linearGradientArr
 }: LinearGradientRoundRectParams) {

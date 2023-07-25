@@ -11,7 +11,7 @@ import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval";
 import { ENEMY_MAX_LEVEL } from "@/dataSource/enemyData";
 import _ from "lodash";
 import { randomStr } from "@/utils/random";
-import { getAngle, isLineInRect } from "@/utils/handleCircle";
+import { getAngle, getPointsCos, isLineInRect } from "@/utils/handleCircle";
 import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
 import levelData from "@/dataSource/levelData";
 import { VueFnName, WorkerFnName } from "./type/worker";
@@ -781,27 +781,34 @@ function enemySkillGodzilla(e_id: string) {
     k,
     b,
   }
+  enemy.skill!.towerIds = []
   enemy.skill!.animation!.cur = 0
+  towerMap.forEach(t => {
+    const cosVal = getPointsCos({x, y}, {x: t.x + size / 2, y: t.y + size / 2})
+    const addB = Math.abs(cosVal * size) / 2
+    const isIn = [-addB, 0, addB].some(addVal => (
+      isLineInRect({
+        k, 
+        b: b + addVal, 
+        points: {
+          x1: t.x, 
+          y1: t.y, 
+          x2: t.x + size, 
+          y2: t.y + size, 
+        },
+        line: {x1: x, y1: y + addVal, x2: end.x, y2: end.y + addVal}
+      })
+    ))
+    if(isIn) {
+      enemy.skill!.towerIds!.push(t.id)
+    }
+  })
   slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
 }
 /** 哥斯拉释放技能中，清除塔防 */
 function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
-  const {x, y, k, b} = enemy.skill!.direction!
-  const ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h / 2
-  const size = gameConfigState.size
   towerMap.forEach(t => {
-    const isIn = [-size / 2, 0, size / 2].some(addVal => (
-      isLineInRect({
-        k, b: b + addVal, 
-        x1: t.x, 
-        y1: t.y, 
-        x2: t.x + size, 
-        y2: t.y + size, 
-        line: {x1: ex, y1: ey + addVal, x2: x, y2: y + addVal}
-      })
-    ))
-    // console.log(t.name, isIn);
-    if(isIn) {
+    if(enemy.skill!.towerIds?.includes(t.id)) {
       if(!t.hp.isShow) {
         t.hp.isShow = true
         damageTower(t)
@@ -816,7 +823,7 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
 }
 function damageTower(t: TowerStateType) {
   t.hp.injuryTime = Date.now()
-  t.hp.cur--
+  t.hp.cur -= 1
   if(t.hp.cur <= 0) {
     removeTower(t.id, false)
   }
@@ -1117,9 +1124,10 @@ function onWorkerPostFn(fnName: VueFnName, param?: any) {
 function testBuildTowers() {
   if(!isDevTestMode) return
   addMoney(999999)
-  // enemyState.levelEnemy = [11,0,14,11,11,7,9,9,7,7,9,16,11,11,7,16,7,10,7,7,7,11,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,14,11,11]
+  // enemyState.levelEnemy = [11,0,14,11,17,7,9,9,7,7,9,16,17,11,11,7,16,7,10,7,7,7,17,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,17,11,11]
   enemyState.levelEnemy = [17]
   const size = gameConfigState.size
+  // const testBuildData = [{x: 3, y: 0, tname: 'delaiwen'},{x: 3, y: 1, tname: 'jin'},{x: 3, y: 2, tname: 'lanbo'},{x: 4, y: 4, tname: 'ejiate'},{x: 5, y: 4, tname: 'huonan'}]
   testBuildData.forEach(item => {
     item.x *= size
     item.y *= size
