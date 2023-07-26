@@ -319,11 +319,6 @@ function onKeyDown() {
   };
 }
 
-/** 清晰度转化 */
-function transRatio(v: number) {
-  return v / source.ratio
-}
-
 function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
   workerRef.value?.postMessage({fnName, event})
 }

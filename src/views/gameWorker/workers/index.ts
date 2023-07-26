@@ -1,5 +1,5 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
-import { getScreenFps, waitTime } from "@/utils/tools";
+import { getScreenFps } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
 import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
@@ -55,9 +55,6 @@ addEventListener('message', e => {
 })
 
 async function init() {
-  getScreenFps().then(fps => {
-    setting.isHighRefreshScreen = fps > 65
-  })
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   })
@@ -65,16 +62,12 @@ async function init() {
   if(isInfinite()) {
     addMoney(999999)
   }
-  const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
-  item.x *= gameConfigState.size
-  item.y *= gameConfigState.size
-  baseDataState.mapGridInfoItem = item
-  baseDataState.floorTile.num = baseDataState.mapGridInfoItem.num
   initAllGrid()
   initMovePath()
   onLevelChange()
   source.isGameInit = true
-  waitTime(800).then(() => {
+  getScreenFps().then(fps => {
+    setting.isHighRefreshScreen = fps > 65
     onWorkerPostFn('onWorkerReady')
     startDraw()
     testBuildTowers()
@@ -131,6 +124,11 @@ function drawFloorTile() {
 
 /** 初始化行动轨迹 */
 function initMovePath() {
+  const item = JSON.parse(JSON.stringify(mapGridInfoList[source.mapLevel]))
+  item.x *= gameConfigState.size
+  item.y *= gameConfigState.size
+  baseDataState.mapGridInfoItem = item
+  baseDataState.floorTile.num = baseDataState.mapGridInfoItem.num
   const size = gameConfigState.size
   // 刚开始就右移了，所以该初始格不会算上去
   const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(baseDataState.mapGridInfoItem))

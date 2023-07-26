@@ -135,8 +135,7 @@ function handleBulletAndEnemy(t: TowerStateType, b_i: number, e_id: string, e_id
     && !(t.isThrough && bItem.attactIdSet?.has(e_id))
   )
   if(isInTarget) {
-    // 穿透性子弹击中敌人
-    if(t.isThrough) {
+    if(t.isThrough) { // 穿透性子弹击中敌人
       bItem.attactIdSet?.add(e_id)
     } else { // 清除子弹
       t.bulletArr.splice(b_i, 1)
