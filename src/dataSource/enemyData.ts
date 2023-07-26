@@ -24,7 +24,7 @@ const enemyArr: EnemyType[] = [
   {name: 'kunkun',     x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: false,  curSpeed: 0.04, speed: 0.04, reward: 160, hp: {cur: 800, sum: 800, size: 0.16},     skill: {time: 12000}, audioKey: 'kunkun', imgType: 'gif', imgSource: _requireCDN('kunkun.gif'), level: 1},
   {name: 'rabbish',     x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.04, speed: 0.04, reward: 50, hp: {cur: 300, sum: 300, size: 0.16},     audioKey: 'rabbish', imgType: 'gif', imgSource: _requireCDN('rabbish_1.gif'), level: 1},
   {name: 'rabbish-2',   x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.04, speed: 0.04, reward: 100, hp: {cur: 400, sum: 400, size: 0.16},   skill: {time: 3000, animation: {cur: 80, sum: 80}},  audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), level: 1},
-  {name: 'godzilla',   x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400, size: 0.16}, skill: {time: 3000, animation: {cur: 50, sum: 50}}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), level: 1},
+  {name: 'godzilla',   x: 0, y: 0, w: 1.8, h: 1.8, isForward: false, isFlip: true,  curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400, size: 0.16}, skill: {time: 8000, animation: {cur: 50, sum: 50}}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), level: 1},
 ]
 export default enemyArr
 

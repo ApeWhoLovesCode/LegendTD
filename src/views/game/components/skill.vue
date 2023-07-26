@@ -19,7 +19,7 @@
         </ElTooltip>
       </span>
     </div>
-    <!-- 技能: 肉弹冲击 -->
+    <!-- 技能: 炸弹 -->
     <div v-if="skillList[0].isShow" class="skill-boom"></div>
     <!-- 技能: 肉弹冲击 -->
     <img v-if="skillList[1].isShow" class="skill-rush" :src="requireCDN('meat-rush.png')" alt="">
