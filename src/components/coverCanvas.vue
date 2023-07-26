@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData';
 import { useSourceStore } from '@/stores/source';
+import { loadImage, requireCDN } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
@@ -49,7 +50,7 @@ function getCanvasWH() {
   const height = (dom?.clientHeight ?? 0) * source.ratio
   state.canvasInfo.w = width
   state.canvasInfo.h = height
-  state.size = width / 21
+  state.size = width / 20
 }
 
 /** 初始化行动轨迹 */
@@ -81,11 +82,14 @@ function initMovePath() {
 }
 
 /** 画地板 */
-function drawFloorTile() {
-  if(!source.othOnloadImg?.floor) return
+async function drawFloorTile() {
+  let floor = source.othOnloadImg?.floor
+  if(!floor) {
+    floor = await loadImage(requireCDN('floor-tile.png'))
+  }
   state.ctx?.clearRect(0, 0, state.size, state.size)
   for(let f of state.movePath) {
-    state.ctx?.drawImage(source.othOnloadImg.floor!, f.x, f.y, state.size, state.size)
+    state.ctx?.drawImage(floor, f.x, f.y, state.size, state.size)
   }
 }
 

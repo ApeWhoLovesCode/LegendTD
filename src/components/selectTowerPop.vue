@@ -113,7 +113,7 @@ onMounted(() => {
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
-        :list="towerList" 
+        :list-length="towerList.length" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >
@@ -252,7 +252,7 @@ onMounted(() => {
       position: relative;
       box-sizing: border-box;
       width: calc(9 * @gridSize + 32px);
-      height: calc(7 * @gridSize + 140px);
+      height: calc(7 * @gridSize + 160px);
       border: 2px solid @yellow;
       background-color: @black;
       padding: 16px;

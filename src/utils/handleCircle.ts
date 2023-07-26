@@ -4,16 +4,28 @@
  *  const deg_30 = 180 * Math.asin(1 / 2) / Math.PI  // 30 求 角度
  */
 
-/** 传入两个坐标，返回角度 */
-export const toAngle = (start: Location, end: Location) => {
+import { powAndSqrt } from "./tools";
+
+/** 传入两个坐标，返回弧度 */
+export const getPointsRadian = (start: Location, end: Location) => {
   const _x = end.x - start.x, _y = end.y - start.y;
-  return 360 * Math.atan(_y / _x) / (2 * Math.PI)
+  return Math.atan(_y / _x)
 }
+/** 传入两个坐标，返回sin值 */
+export const getPointsSin = (start: Location, end: Location) => {
+  return Math.sin(getPointsRadian(start, end))
+}
+/** 传入两个坐标，返回cos值 */
+export const getPointsCos = (start: Location, end: Location) => {
+  return Math.cos(getPointsRadian(start, end))
+}
+/** 弧度转角度 */
+export const radianToAngle = (v: number) => v * Math.PI / 180
 
 /** 传入两个坐标，以坐标系顺时针的形势返回角度 */
 export const getAngle = (start: Location, end: Location) => {
   const x = end.x - start.x, y = end.y - start.y;
-  const deg = 180 * Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI;
+  const deg = 180 * Math.acos(x / Math.sqrt(x * x + y * y)) / Math.PI;
   return y < 0 ? 360 - deg : deg;
 }
 
@@ -26,7 +38,7 @@ export const getLineAngle = (line: number, oblique: number) => {
 
 /** 根据传入的(x或y)和半径r 求另一个xy */
 export const circleEquation = (xy: number, r: number) => {
-  const isReduce = r > xy ? -1 : 1 
+  const isReduce = r > xy ? -1 : 1
   return r + isReduce * Math.sqrt(Math.abs(r * r - xy * xy))
 }
 

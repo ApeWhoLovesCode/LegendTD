@@ -65,7 +65,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
   >
     <div class="selectLevelPop-area">
       <ScrollCircle 
-        :list="levelData" 
+        :list-length="levelData.length" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >

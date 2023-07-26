@@ -1,11 +1,28 @@
 import { EnemyStateType } from "@/type/game";
-import { powAndSqrt } from "@/utils/tools";
+import { powAndSqrt, randomNumList } from "@/utils/tools";
+import { VueFnName } from "../type/worker";
+import keepInterval from "@/utils/keepInterval";
+import sourceInstance from "@/stores/sourceInstance";
+import { enemyState, makeEnemy } from "./enemy";
+import levelData from "@/dataSource/levelData";
+import mapData from "@/dataSource/mapData";
+
+const source = sourceInstance.state
+
+const setting = {
+  /** 是否是高刷屏 */
+  isHighRefreshScreen: false,
+  /** 控制等级的切换 */
+  isLevelLock: false,
+  /** 是否是开发测试模式 */
+  isDevTestMode: false,
+}
 
 const baseDataState = {
   // 地板：大小 数量
   floorTile: {size: 50, num: 83},
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 21, y_num: 12, size: 50, arr: [] as (string | number)[][] },
+  gridInfo: { x_num: 21, y_num: 12, arr: [] as (string | number)[][] },
   // 等级
   level: 0,
   // 生命值
@@ -17,6 +34,22 @@ const baseDataState = {
   // 当前关卡地图信息
   mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
 }
+
+const gameConfigState = {
+  /** 一格的大小 */
+  size: 50,
+  // requestAnimationFrame api的保存对象
+  animationFrame: 0,
+  // 得到 canvas 的 2d 上下文
+  ctx: null as unknown as CanvasRenderingContext2D,
+}
+
+const canvasInfo = {
+  offscreen: void 0 as unknown as OffscreenCanvas,
+}
+
+/** 是否是无限火力模式 */
+const isInfinite = () => source.mapLevel === mapData.length - 1
 
 /** 初始化所有格子 */
 function initAllGrid() {
@@ -31,6 +64,36 @@ function initAllGrid() {
   baseDataState.gridInfo.arr = arr
 }
 
+function onLevelChange() {
+  const val = baseDataState.level
+  setTimeout(() => {
+    enemyState.createdEnemyNum = 0
+    // 处理地图关卡中的敌人数据
+    let enemyDataArr: Array<number[]> | undefined
+    for(let i = 0; i < source.mapLevel; i++) { 
+      if(levelData[source.mapLevel]?.enemyArr) {
+        enemyDataArr = levelData[source.mapLevel].enemyArr
+        break
+      }
+    }
+    if(!enemyDataArr) {
+      enemyDataArr = levelData[0].enemyArr
+    }
+    // 获取地图关卡中的敌人数据
+    if(val < enemyDataArr.length && !isInfinite()) {
+      enemyState.levelEnemy = enemyDataArr[val]
+    } else {
+      const levelNum = val + (isInfinite() ? 5 : 0)
+      enemyState.levelEnemy = randomNumList(levelNum)
+    }
+    if(val) {
+      addMoney((val + 1) * Math.round(10))
+      makeEnemy()
+    }
+    onWorkerPostFn('onLevelChange', val)
+  }, 500);
+}
+
 /** 判断值是否在圆内 */
 function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
   const {x, y, w, h} = enemy
@@ -40,27 +103,57 @@ function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
     calculateDistance(target, x + w, y + h),
     calculateDistance(target, x , y + h),
   ]
-  return angleList.some(item => item <= target.r)
+  return angleList.some(item => item <= target.r!)
 }
 
-/** 计算点到圆心的距离之间的距离 */
+/** 计算点到圆心之间的距离 */
 function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
   const {x: _x, y: _y, size} = target
-  const size_2 = (size ?? baseDataState.gridInfo.size) / 2
+  const size_2 = (size ?? gameConfigState.size) / 2
   return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
 }
 
+function onReduceHp(hp: number) {
+  baseDataState.hp = Math.max(0, baseDataState.hp - hp)
+  onWorkerPostFn('onHpChange', baseDataState.hp)
+  if(!baseDataState.hp) {
+    onGameOver()
+  }
+}
+function onGameOver() {
+  keepInterval.clear()
+  cancelAnimationFrame(gameConfigState.animationFrame)
+}
+/** 改变金钱 */
+function addMoney(money: number) {
+  baseDataState.money += money
+  onWorkerPostFn('addMoney', money)
+}
+function onWorkerPostFn(fnName: VueFnName, param?: any) {
+  postMessage({fnName, param})
+}
+
 export {
+  source,
+  setting,
   baseDataState,
+  gameConfigState,
+  canvasInfo,
+  isInfinite,
   initAllGrid,
+  onLevelChange,
   checkValInCircle,
+  calculateDistance,
+  onReduceHp,
+  onWorkerPostFn,
+  addMoney,
 }
 
 export type TargetCircleInfo = {
   x: number
   y: number
   /** 半径 */
-  r: number
+  r?: number
   /** 目标的大小 */
   size?: number
   /** 目标的数量 */

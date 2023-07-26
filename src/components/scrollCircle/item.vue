@@ -2,6 +2,7 @@
 import { inject, computed } from "vue";
 import { classPrefix, provideKey } from "./provide";
 import { ScrollCircleProvide } from "./type";
+import { getCardDegXY } from "./utils";
 
 type ScrollRotateItemProps = {
   /** 当前item的索引 */
@@ -17,14 +18,12 @@ const emit = defineEmits<{
 const provideState = inject<ScrollCircleProvide>(provideKey)
 
 const cardStyle = computed(() => {
-  const {cardDeg = 1, circleR = 1, isVertical, isClockwise} = provideState as ScrollCircleProvide 
-  const initDeg = isVertical ? 90 : 0
-  const deg = initDeg + cardDeg * props.index
-  let n = isClockwise ? -1 : 1
-  n *= isVertical ? -1 : 1
-  const top = circleR * (1 - Math.cos(deg * Math.PI / 180))
-  const left = circleR * (1 - n * Math.sin(deg * Math.PI / 180))
-  const rotate = initDeg - n * deg
+  const {circleR, cardDeg, isVertical, centerPoint, isFlipDirection} = provideState as ScrollCircleProvide 
+  const {initDeg, nx, ny, isAddDeg} = getCardDegXY({centerPoint, isFlipDirection, isVertical})
+  const deg = initDeg + cardDeg * props.index;
+  const top = circleR * (1 - ny * Math.cos((deg * Math.PI) / 180));
+  const left = circleR * (1 - nx * Math.sin((deg * Math.PI) / 180));
+  const rotate = initDeg - nx * ny * deg + (isAddDeg ? 180 : 0);
   return {
     top: `${top}px`,
     left: `${left}px`,
@@ -38,7 +37,11 @@ const cardStyle = computed(() => {
   <div 
     :class="`${classPrefix}-cardWrap`" 
     :style="cardStyle" 
-    @click="provideState?.isClick && emit('onClick', index)"
+    @click="() => {
+      if(provideState?.isClick) {
+        emit('onClick', props.index)
+      }
+    }"
   >
     <slot></slot>
   </div>

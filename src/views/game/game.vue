@@ -414,9 +414,9 @@ function handleEnemySkill(enemyName: string, e_id: string) {
   if(!enemyList[e_i].skill) return
   let skillFn: ((e_id: string) => void) | undefined
   switch (enemyName) {
-    case '舞王': skillFn = enemySkillDance; break;
-    case '弗利萨': skillFn = enemySkillFulisha; break;
-    case '坤坤': skillFn = enemySkillKunkun; break;
+    case 'zombies-dance': skillFn = enemySkillDance; break;
+    case 'fulisha': skillFn = enemySkillFulisha; break;
+    case 'kunkun': skillFn = enemySkillKunkun; break;
     case 'rabbish-2': skillFn = enemySkillRabbish2; break;
   };
   if(skillFn) { // 有技能的敌人
@@ -698,8 +698,9 @@ function drawTower(item?: TowerStateType) {
   }
 }
 /** 售卖防御塔 */
-function saleTower(index: number) {
+function saleTower(towerId: string) {
   const size = gameConfigState.size
+  const index = towerList.findIndex(t => t.id === towerId)
   const {x, y, saleMoney, id} = towerList[index]
   gameConfigState.ctx.clearRect(x, y, size, size);
   baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
