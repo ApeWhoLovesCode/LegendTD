@@ -131,22 +131,24 @@ function drawEnemySkill(enemy: EnemyStateType) {
   const ctx = gameConfigState.ctx
   const othOnloadImg = sourceInstance.state.othOnloadImg
   if(name === 'rabbish-2') { // 画兔子回血效果
-    const {animation} = skill!
-    if(animation!.cur !== animation!.sum) {
-      skill!.animation!.cur++
-      ctx.save()
-      const globalAlphaVal = Math.min(animation!.cur, animation!.sum - animation!.cur)
-      ctx.globalAlpha = globalAlphaVal / 20
-      ctx.drawImage(othOnloadImg.poison!, x - w / 4, y - w / 4, w * 1.5, w * 1.5)
-      ctx.restore()
-    }
+    const {cur, sum} = skill!.animation!
+    if(cur === sum) return
+    skill!.animation!.cur++
+    ctx.save()
+    const globalAlphaVal = Math.min(cur, sum - cur)
+    ctx.globalAlpha = globalAlphaVal / 20
+    const scale = 1 + cur / sum
+    ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
+    ctx.scale(scale, scale)
+    ctx.drawImage(othOnloadImg.returnBlood!, x, y, w, w)
+    ctx.restore()
   } else if(name === 'godzilla') { // 画哥斯拉原子吐息
-    const {animation} = skill!
-    if(animation!.cur === animation!.sum) return
+    const {cur, sum} = skill!.animation!
+    if(cur === sum) return
     skill!.animation!.cur++
     const t = enemy.skill!.direction!
     const size = gameConfigState.size
-    const thickness = ((animation!.cur + animation!.sum) / (animation!.sum * 2)) * size
+    const thickness = ((cur + sum) / (sum * 2)) * size
     drawLinearGradientRoundRect({
       ctx, thickness, thicknessPre: 0,
       x: x + w / 2, y: y + h / 2, tx: t.x, ty: t.y,

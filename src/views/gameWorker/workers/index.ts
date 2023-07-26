@@ -854,29 +854,24 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
 
 /** 消灭敌人 */
 function removeEnemy(e_idList: string[]) {
-  if(!e_idList.length) return
-  try {
-    for(const e_id of e_idList) {
-      keepInterval.delete(`${KeepIntervalKey.slow}-${e_id}`) // 清除减速持续时间定时器
-      keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`) // 清除中毒持续时间定时器
-      keepInterval.delete(`${KeepIntervalKey.twitchDelete}-${e_id}`)
-      keepInterval.delete(`${KeepIntervalKey.poisonFun}-${e_id}`)
-      if(enemyMap.get(e_id)?.skill) {
-        keepInterval.delete(e_id)
-      }
-      // 清除穿透子弹攻击过的目标id
-      towerMap.forEach(t => {
-        if(t.isThrough) {
-          for(const b of t.bulletArr) {
-            b.attactIdSet?.delete(e_id) 
-          }
-        }
-      })
-      // removeAudio(e_id)
-      enemyMap.delete(e_id)
+  for(const e_id of e_idList) {
+    keepInterval.delete(`${KeepIntervalKey.slow}-${e_id}`) // 清除减速持续时间定时器
+    keepInterval.delete(`${KeepIntervalKey.twitch}-${e_id}`) // 清除中毒持续时间定时器
+    keepInterval.delete(`${KeepIntervalKey.twitchDelete}-${e_id}`)
+    keepInterval.delete(`${KeepIntervalKey.poisonFun}-${e_id}`)
+    if(enemyMap.get(e_id)?.skill) {
+      keepInterval.delete(e_id)
     }
-  } catch (error) {
-    console.log('error: ', error);
+    // 清除穿透子弹攻击过的目标id
+    towerMap.forEach(t => {
+      if(t.isThrough) {
+        for(const b of t.bulletArr) {
+          b.attactIdSet?.delete(e_id) 
+        }
+      }
+    })
+    // removeAudio(e_id)
+    enemyMap.delete(e_id)
   }
 }
 
