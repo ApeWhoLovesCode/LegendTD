@@ -1,6 +1,4 @@
 import { CDN_URL } from '@/config';
-import SuperGif from 'libgif';
-// import loadGifToCanvas, { SourceImgObj } from "./worker-libgif"
 import { loadGifToCanvas, SourceImgObj } from "lhh-utils";
 
 /** 加载图片 */
@@ -12,37 +10,6 @@ export function loadImage(imgUrl: string) {
       tempImg.onload = function () {
         resolve(tempImg)
       };
-    } catch (error) {
-      console.log('error: ', error);
-      reject(error)
-    }
-  })
-}
-
- /** 单张gif转静态图片 */
-export function gifToStaticImgLibGif(target: {type: string, imgSource: string}) {
-  return new Promise<HTMLImageElement[]>(async (resolve, reject) => {
-    try {
-      const {type, imgSource} = target
-      if(type !== 'gif') {
-        const newImg = await loadImage(imgSource)
-        resolve([newImg])
-        return
-      }
-      const gifImg = document.createElement('img');
-      gifImg.src = imgSource
-      // 创建gif实例
-      const rub = new SuperGif({ gif: gifImg } );
-      rub.load(() => {
-        const imgList = [];
-        for (let i = 1; i <= rub.get_length(); i++) {
-          // 遍历gif实例的每一帧
-          rub.move_to(i);
-          const imgUrl = rub.get_canvas()
-          imgList.push(imgUrl)
-        }
-        resolve(imgList)
-      });
     } catch (error) {
       console.log('error: ', error);
       reject(error)

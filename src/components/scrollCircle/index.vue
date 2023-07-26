@@ -214,7 +214,7 @@ const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   let _duration = 600;
   let deg = rotateDeg.value;
   const changeDeg = deg - touchInfo.preDeg
-  const {time} = touchInfo
+  const time = Date.now() - touchInfo.time
   // 触摸的角度大于10度，并且触摸时间小于250ms，则触摸距离和时间旋转更多
   if (Math.abs(changeDeg) > 10 && time < 250) {
     const IncreaseVal = time / 250; // 增加角度变化
