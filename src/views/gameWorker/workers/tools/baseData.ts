@@ -1,5 +1,22 @@
 import { EnemyStateType } from "@/type/game";
-import { powAndSqrt } from "@/utils/tools";
+import { powAndSqrt, randomNumList } from "@/utils/tools";
+import { VueFnName } from "../type/worker";
+import keepInterval from "@/utils/keepInterval";
+import sourceInstance from "@/stores/sourceInstance";
+import { enemyState, makeEnemy } from "./enemy";
+import levelData from "@/dataSource/levelData";
+import mapData from "@/dataSource/mapData";
+
+const source = sourceInstance.state
+
+const setting = {
+  /** 是否是高刷屏 */
+  isHighRefreshScreen: false,
+  /** 控制等级的切换 */
+  isLevelLock: false,
+  /** 是否是开发测试模式 */
+  isDevTestMode: false,
+}
 
 const baseDataState = {
   // 地板：大小 数量
@@ -31,6 +48,9 @@ const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
+/** 是否是无限火力模式 */
+const isInfinite = () => source.mapLevel === mapData.length - 1
+
 /** 初始化所有格子 */
 function initAllGrid() {
   const { x_num, y_num } = baseDataState.gridInfo
@@ -42,6 +62,36 @@ function initAllGrid() {
     }
   }
   baseDataState.gridInfo.arr = arr
+}
+
+function onLevelChange() {
+  const val = baseDataState.level
+  setTimeout(() => {
+    enemyState.createdEnemyNum = 0
+    // 处理地图关卡中的敌人数据
+    let enemyDataArr: Array<number[]> | undefined
+    for(let i = 0; i < source.mapLevel; i++) { 
+      if(levelData[source.mapLevel]?.enemyArr) {
+        enemyDataArr = levelData[source.mapLevel].enemyArr
+        break
+      }
+    }
+    if(!enemyDataArr) {
+      enemyDataArr = levelData[0].enemyArr
+    }
+    // 获取地图关卡中的敌人数据
+    if(val < enemyDataArr.length && !isInfinite()) {
+      enemyState.levelEnemy = enemyDataArr[val]
+    } else {
+      const levelNum = val + (isInfinite() ? 5 : 0)
+      enemyState.levelEnemy = randomNumList(levelNum)
+    }
+    if(val) {
+      addMoney((val + 1) * Math.round(10))
+      makeEnemy()
+    }
+    onWorkerPostFn('onLevelChange', val)
+  }, 500);
 }
 
 /** 判断值是否在圆内 */
@@ -57,18 +107,46 @@ function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
 }
 
 /** 计算点到圆心之间的距离 */
-export function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
+function calculateDistance(target: TargetCircleInfo, x: number, y: number) {
   const {x: _x, y: _y, size} = target
   const size_2 = (size ?? gameConfigState.size) / 2
   return powAndSqrt(_x + size_2 - x, _y + size_2 - y)
 }
 
+function onReduceHp(hp: number) {
+  baseDataState.hp = Math.max(0, baseDataState.hp - hp)
+  onWorkerPostFn('onHpChange', baseDataState.hp)
+  if(!baseDataState.hp) {
+    onGameOver()
+  }
+}
+function onGameOver() {
+  keepInterval.clear()
+  cancelAnimationFrame(gameConfigState.animationFrame)
+}
+/** 改变金钱 */
+function addMoney(money: number) {
+  baseDataState.money += money
+  onWorkerPostFn('addMoney', money)
+}
+function onWorkerPostFn(fnName: VueFnName, param?: any) {
+  postMessage({fnName, param})
+}
+
 export {
+  source,
+  setting,
   baseDataState,
   gameConfigState,
   canvasInfo,
+  isInfinite,
   initAllGrid,
+  onLevelChange,
   checkValInCircle,
+  calculateDistance,
+  onReduceHp,
+  onWorkerPostFn,
+  addMoney,
 }
 
 export type TargetCircleInfo = {
