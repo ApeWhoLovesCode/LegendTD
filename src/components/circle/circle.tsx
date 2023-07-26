@@ -1,4 +1,4 @@
-import colorVar from '@/utils/style/var';
+import colorVar from '@/style/var';
 import { range } from '@/utils/format';
 import { isObj } from '@/utils/validate';
 import { defineComponent, ExtractPropTypes, onMounted, onUnmounted, reactive, ref, watch } from 'vue';

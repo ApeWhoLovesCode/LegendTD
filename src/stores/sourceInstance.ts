@@ -50,7 +50,7 @@ class SourceClass {
         fn(this.state.progress)
       }),
     ]).then(() => {
-      this.state.progress = range(this.state.progress, 0, 100)
+      this.state.progress = 100
       fn(this.state.progress)
       return this.state.progress
     })

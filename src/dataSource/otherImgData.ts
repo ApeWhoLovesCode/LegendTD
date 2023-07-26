@@ -20,6 +20,8 @@ const otherImgData = {
   moon: requireCDN('moon.png'),
   /** 太阳 */
   sun: requireCDN('sun.png'),
+  /** 回血 */
+  returnBlood: requireCDN('return-blood.png'),
 }
 
 export default otherImgData

@@ -216,8 +216,8 @@ function buildTower(tname: TowerName) {
 function buildTowerCallback(p: {towerId: string, audioKey: string}) {
   createAudio(`${p.audioKey}-choose`, p.towerId)
 }
-function saleTower(index: number) {
-  onWorkerPostFn('saleTower', index)
+function saleTower(towerId: string) {
+  onWorkerPostFn('saleTower', towerId)
 }
 function saleTowerCallback(id: string) {
   removeAudio(id)
@@ -238,7 +238,7 @@ function handleSkill(index: number) {
     if(gameSkillState.skillList[index].curTime <= 0) {
       keepInterval.delete(`${KeepIntervalKey.skill}-${name}`)
     }
-  })
+  }, 1000)
   onWorkerPostFn('handleSkill', index)
 }
 
@@ -317,11 +317,6 @@ function onKeyDown() {
       } 
     }
   };
-}
-
-/** 清晰度转化 */
-function transRatio(v: number) {
-  return v / source.ratio
 }
 
 function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
@@ -428,7 +423,7 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
     top: 0;
     width: 0;
     height: 0;
-    box-shadow: 0 0 500px 1000px rgba(0, 0, 0, .4);
+    box-shadow: 0 0 500px 1000px rgba(0, 0, 0, .6);
   }
 }
 @media screen and (orientation: portrait) {

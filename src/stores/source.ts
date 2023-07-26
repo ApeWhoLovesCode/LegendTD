@@ -2,7 +2,6 @@ import enemyData from '@/dataSource/enemyData'
 import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
 import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
-import { range } from '@/utils/format'
 import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
 import { SourceImgObj } from '@/utils/worker-libgif'
 import _ from 'lodash'
@@ -63,7 +62,7 @@ export const useSourceStore = defineStore('source', {
         this.handleEnemyImg(), 
         this.handleTowerImg(),
       ]).then(() => {
-        this.$state.progress = range(this.$state.progress, 0, 100)
+        this.$state.progress = 100
       })
     },
     async handleEnemyImg() {

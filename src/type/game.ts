@@ -95,10 +95,8 @@ export type BulletType = {
   addX: number
   /** 往目标方向增加的 y */
   addY: number
-  /** 当前距离 */
-  xy: number
   /** 子弹和敌人的距离 */
-  x_y: number
+  xy: number
   /** 目标id */
   e_id: string
   /** 当前攻击的id集合 */
@@ -153,7 +151,7 @@ export type BuildingScope = {
   top: number, 
   r: number, 
   isShow: boolean, 
-  towerIndex: number, 
+  towerId: string, 
   saleMoney: number
 }
 

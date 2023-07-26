@@ -37,3 +37,5 @@ addEventListener('message', e => {
 function init() {
 
 }
+
+export default {}

@@ -58,7 +58,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 <template>
   <div class='page-index'>
     <ScrollCircle 
-      :list="levelData" 
+      :list-length="levelData.length" 
       @on-page-change="onPageChange"
     >
       <ScrollCircleItem 
