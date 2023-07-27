@@ -83,8 +83,12 @@ function onLevelChange() {
     if(level < enemyDataArr.length && !isInfinite()) {
       enemyState.levelEnemy = enemyDataArr[level]
     } else {
-      const levelNum = level + (isInfinite() ? 5 : 0)
-      enemyState.levelEnemy = randomNumList(levelNum)
+      if(isInfinite()) {
+        // 无限火力 第一关 每个怪兽都遍历生成一次
+        enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
+      } else {
+        enemyState.levelEnemy = randomNumList(level)
+      }
     }
     if(level) {
       addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))

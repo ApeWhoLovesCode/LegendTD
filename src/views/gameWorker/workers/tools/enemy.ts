@@ -4,7 +4,7 @@ import sourceInstance from "@/stores/sourceInstance"
 import { EnemyState, EnemyStateType } from "@/type/game"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
-import { addMoney, baseDataState, canvasInfo, gameConfigState, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
+import { addMoney, baseDataState, canvasInfo, gameConfigState, isInfinite, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
 import { drawLinearGradientRoundRect } from "./canvas"
 import { damageTower, towerMap } from "./tower"
 import { randomStr } from "@/utils/random"
@@ -22,7 +22,9 @@ const enemyState: EnemyState = {
 }
 
 /** 随着关卡增加敌人等级提升 */
-const addEnemyLevel = () => range(Math.ceil((baseDataState.level + 1 - 20) / 5), 0, ENEMY_MAX_LEVEL)
+const addEnemyLevel = () => range(Math.ceil(
+  (baseDataState.level + 1 - (isInfinite() ? 5 : 20)) / 5
+), 0, ENEMY_MAX_LEVEL)
 
 function allEnemyIn() {
   return enemyState.createdEnemyNum === enemyState.levelEnemy.length
