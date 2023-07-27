@@ -43,15 +43,12 @@
 <script setup lang="ts">
 import { useSourceStore } from '@/stores/source';
 import { ElTooltip, ElMessageBox } from 'element-plus';
+import { nextTick, reactive, watch } from 'vue';
 
-defineProps({
+const props = defineProps({
   money: {
     type: Number,
     default: 0,
-  },
-  addMoney: {
-    type: Object,
-    default: () => {}
   },
   level: {
     type: Number,
@@ -73,6 +70,26 @@ const emit = defineEmits<{
 }>()
 
 const source = useSourceStore()
+
+const addMoney = reactive({
+  num: '', 
+  timer: null as NodeJS.Timer | null, 
+  time: 1000
+})
+
+// 监听增加的钱
+watch(() => props.money, (newVal, oldVal) => {
+  addMoney.num = ''
+  clearTimeout(addMoney.timer!)
+  addMoney.timer = null
+  nextTick(() => {
+    const val = newVal - oldVal
+    addMoney.num = (val >= 0 ? '+' : '') + val
+    addMoney.timer = setTimeout(() => {
+      addMoney.num = ''
+    }, addMoney.time);
+  })
+})
 
 const reStart = () => {
   ElMessageBox.confirm(
@@ -140,7 +157,8 @@ const reStart = () => {
       .add-money {
         position: absolute;
         top: 50%;
-        transform: translateY(-50%);
+        right: 0;
+        transform: translate(100%, -50%);
         font-size: calc(@fontSize * 0.9);
         color: @theme3;
         font-weight: bold;
@@ -150,15 +168,15 @@ const reStart = () => {
       }
       @keyframes add-money {
         0% {
-          right: calc(@size * -0.6);
+          transform: translate(calc(@size * 0.2 + 100%), -50%);
           opacity: 0;
         }
         50% {
-          right: calc(@size * -0.7);
+          transform: translate(calc(@size * 0.3 + 100%), -50%);
           opacity: 1;
         }
         100% {
-          right: calc(@size * -0.8);
+          transform: translate(calc(@size * 0.4 + 100%), -50%);
           opacity: 0;
         }
       }

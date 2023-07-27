@@ -282,14 +282,14 @@ const _onScrollEnd = (deg: number, _duration: number) => {
       width: props.width,
       height: props.height,
     }"
+    @mousedown="onTouchStart"
+    @touchstart="onTouchStart"
+    @touchmove="onTouchMove"
+    @touchend="onTouchEnd"
+    @touchcancel="onTouchEnd"
   >
     <div 
       :class="`${classPrefix}-area`"
-      @mousedown="onTouchStart"
-      @touchstart="onTouchStart"
-      @touchmove="onTouchMove"
-      @touchend="onTouchEnd"
-      @touchcancel="onTouchEnd"
       :style="circleStyle"
     >
       <slot></slot>

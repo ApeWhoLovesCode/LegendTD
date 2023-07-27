@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
 import { GameBaseData, GameConfigType, GameMasterSkill } from '@/type/game';
-import { computed, onMounted, reactive } from 'vue';
+import { computed } from 'vue';
 import imgSource from '@/dataSource/imgSource';
 
 const props = defineProps<{
@@ -67,6 +67,8 @@ function transRatio(v: number) {
   .terminal-icon {
     display: block;
     width: calc(@size * 1.8);
+    user-select: none;
+    -webkit-user-drag: none;
   }
   .money-icon {
     position: absolute;
@@ -75,6 +77,8 @@ function transRatio(v: number) {
     width: calc(@size * 1.2);
     height: calc(@size * 1.2);
     cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 }
 </style>

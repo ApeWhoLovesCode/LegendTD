@@ -3,7 +3,7 @@ import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
 import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'
 import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
-import { SourceImgObj } from '@/utils/worker-libgif'
+import { SourceImgObj } from 'lhh-utils'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 

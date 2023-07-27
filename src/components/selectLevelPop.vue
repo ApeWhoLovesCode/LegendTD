@@ -107,8 +107,8 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
     height: 100vh;
     .card {
       position: relative;
-      width: 11rem;
-      height: 8rem;
+      width: 12.5rem;
+      height: 7.5rem;
       border: 2px solid #fff;
       border-radius: 4px;
       cursor: pointer;
