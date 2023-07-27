@@ -26,7 +26,7 @@ const state = reactive({
   // 遍历的数据列表
   items: [] as TowerType[],
   pageNum: 1,
-  pageSize: 3,
+  pageSize: 15,
 })
 
 const towerList = computed(() => {

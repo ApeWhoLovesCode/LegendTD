@@ -15,11 +15,11 @@ const routes = [
   //   name: 'gameVue',
   //   component: () => import('../views/game/index.vue') 
   // },
-  {
-    path: '/test',
-    name: 'test',
-    component: () => import('../views/test/index.vue') 
-  },
+  // {
+  //   path: '/test',
+  //   name: 'test',
+  //   component: () => import('../views/test/index.vue') 
+  // },
   {
     path: '/game',
     redirect: '/game/1'

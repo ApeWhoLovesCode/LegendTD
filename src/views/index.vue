@@ -117,7 +117,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
       right: 0;
       bottom: 0;
       text-align: center;
-      line-height: 18rem;
+      line-height: calc(12.5 * @gridSize);
       font-size: 10rem;
       color: rgba(255, 255, 255, .5);
     }
