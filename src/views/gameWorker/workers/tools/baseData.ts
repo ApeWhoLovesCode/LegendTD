@@ -65,7 +65,7 @@ function initAllGrid() {
 }
 
 function onLevelChange() {
-  const val = baseDataState.level
+  const level = baseDataState.level
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
     // 处理地图关卡中的敌人数据
@@ -80,17 +80,17 @@ function onLevelChange() {
       enemyDataArr = levelData[0].enemyArr
     }
     // 获取地图关卡中的敌人数据
-    if(val < enemyDataArr.length && !isInfinite()) {
-      enemyState.levelEnemy = enemyDataArr[val]
+    if(level < enemyDataArr.length && !isInfinite()) {
+      enemyState.levelEnemy = enemyDataArr[level]
     } else {
-      const levelNum = val + (isInfinite() ? 5 : 0)
+      const levelNum = level + (isInfinite() ? 5 : 0)
       enemyState.levelEnemy = randomNumList(levelNum)
     }
-    if(val) {
-      addMoney((val + 1) * Math.round(10))
+    if(level) {
+      addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))
       makeEnemy()
     }
-    onWorkerPostFn('onLevelChange', val)
+    onWorkerPostFn('onLevelChange', level)
   }, 500);
 }
 
@@ -127,7 +127,10 @@ function onGameOver() {
 /** 改变金钱 */
 function addMoney(money: number) {
   baseDataState.money += money
-  onWorkerPostFn('addMoney', money)
+}
+/** 统一金币 */
+function unifiedMoney() {
+  onWorkerPostFn('unifiedMoney', baseDataState.money)
 }
 function onWorkerPostFn(fnName: VueFnName, param?: any) {
   postMessage({fnName, param})
@@ -147,6 +150,7 @@ export {
   onReduceHp,
   onWorkerPostFn,
   addMoney,
+  unifiedMoney,
 }
 
 export type TargetCircleInfo = {

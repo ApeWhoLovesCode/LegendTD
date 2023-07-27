@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
 import GameNavBar from '../game/components/gameNavBar.vue'
 import StartAndEnd from '../game/components/startAndEnd.vue';
@@ -50,20 +50,6 @@ const state = reactive({
   progress: 0,
 })
 
-// 监听增加的钱
-watch(() => baseDataState.money, (newVal, oldVal) => {
-  gameSkillState.addMoney.num = ''
-  clearTimeout(gameSkillState.addMoney.timer as NodeJS.Timer)
-  gameSkillState.addMoney.timer = null
-  nextTick(() => {
-    const val = newVal - oldVal
-    gameSkillState.addMoney.num = (val >= 0 ? '+' : '') + val
-    gameSkillState.addMoney.timer = setTimeout(() => {
-      gameSkillState.addMoney.num = ''
-    }, gameSkillState.addMoney.time);
-  })
-})
-
 onMounted(() => {
   init()
 })
@@ -103,8 +89,8 @@ function initWorker() {
     const { data } = e
     const param = data.param
     switch (data.fnName as VueFnName) {
-      case 'addMoney': {
-        baseDataState.money += param; break;
+      case 'unifiedMoney': {
+        baseDataState.money = param; break;
       }
       case 'createAudio': {
         createAudio(param.audioKey, param.id); break;
@@ -332,7 +318,6 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
           :money="baseDataState.money"
-          :addMoney="gameSkillState.addMoney"
           :level="baseDataState.level"
           :isPause="baseDataState.isPause"
           :isPlayBgAudio="baseDataState.isPlayBgAudio"

@@ -67,6 +67,8 @@ function transRatio(v: number) {
   .terminal-icon {
     display: block;
     width: calc(@size * 1.8);
+    user-select: none;
+    -webkit-user-drag: none;
   }
   .money-icon {
     position: absolute;
@@ -75,6 +77,8 @@ function transRatio(v: number) {
     width: calc(@size * 1.2);
     height: calc(@size * 1.2);
     cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 }
 </style>

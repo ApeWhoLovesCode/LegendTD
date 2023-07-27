@@ -1,7 +1,7 @@
 import mapData, { GridInfo, mapGridInfoList } from "@/dataSource/mapData";
 import { getScreenFps } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
-import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source } from "./tools/baseData";
+import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
 import keepInterval from "@/utils/keepInterval";
 import _ from "lodash";
@@ -112,6 +112,7 @@ function startDraw() {
   drawSpecialBullets()
   watchEnemyList()
   watchEnemySkill()
+  unifiedMoney()
 }
 
 /** 画地板 */

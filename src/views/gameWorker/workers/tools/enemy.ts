@@ -22,7 +22,7 @@ const enemyState: EnemyState = {
 }
 
 /** 随着关卡增加敌人等级提升 */
-const addEnemyLevel = () => range(Math.ceil((baseDataState.level - 20) / 5), 0, ENEMY_MAX_LEVEL)
+const addEnemyLevel = () => range(Math.ceil((baseDataState.level + 1 - 20) / 5), 0, ENEMY_MAX_LEVEL)
 
 function allEnemyIn() {
   return enemyState.createdEnemyNum === enemyState.levelEnemy.length

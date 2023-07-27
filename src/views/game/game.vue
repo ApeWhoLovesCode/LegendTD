@@ -67,19 +67,6 @@ const allEnemyIn = computed(() => {
   return enemyState.createdEnemyNum === enemyState.levelEnemy.length
 })
 
-// 监听增加的钱
-watch(() => baseDataState.money, (newVal, oldVal) => {
-  gameSkillState.addMoney.num = ''
-  clearTimeout(gameSkillState.addMoney.timer as NodeJS.Timer)
-  gameSkillState.addMoney.timer = null
-  nextTick(() => {
-    const val = newVal - oldVal
-    gameSkillState.addMoney.num = (val >= 0 ? '+' : '') + val
-    gameSkillState.addMoney.timer = setTimeout(() => {
-      gameSkillState.addMoney.num = ''
-    }, gameSkillState.addMoney.time);
-  })
-})
 // 游戏结束判断
 watch(() => baseDataState.hp, (hp) => {
   if(hp) return
@@ -1251,7 +1238,6 @@ function transRatio(v: number) {
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
           :money="baseDataState.money"
-          :addMoney="gameSkillState.addMoney"
           :level="baseDataState.level"
           :isPause="baseDataState.isPause"
           :isPlayBgAudio="baseDataState.isPlayBgAudio"
