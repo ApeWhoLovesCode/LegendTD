@@ -1,6 +1,6 @@
 import enemyData from "@/dataSource/enemyData"
 import otherImgData, { OnloadImgKey } from "@/dataSource/otherImgData"
-import towerData, { TowerName } from "@/dataSource/towerData"
+import towerData, { TowerDataObj, TowerName } from "@/dataSource/towerData"
 import { EnemyStateType } from "@/type/game"
 import { range } from "@/utils/format"
 import { gifToStaticImgList, loadImageWorker } from "@/utils/handleImg"
@@ -9,7 +9,7 @@ import { SourceStateType, TowerSource } from "./source"
 
 export type SourceClassType = {
   state: SourceStateType
-  loadingAllImg: (fn: (progress: number) => void) => Promise<number>
+  loadingAllImg: (fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: number[]}) => Promise<number>
   handleEnemyImg: (fn: (progress: number) => void) => Promise<void[]>
   handleTowerImg: () => Promise<void[]>
   handleOtherImg: () => Promise<(void | "")[]>
@@ -35,7 +35,7 @@ class SourceClass {
     }
     return this._instance
   }
-  public async loadingAllImg(fn: (progress: number) => void) {
+  public async loadingAllImg(fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: number[]}) {
     if(this.state.progress >= 100) {
       return 100
     }
@@ -43,10 +43,10 @@ class SourceClass {
       this.handleOtherImg().then(() => {
         fn(this.state.progress)
       }),
-      this.handleEnemyImg(fn).then(() => {
+      this.handleEnemyImg(fn, params?.enemyList).then(() => {
         fn(this.state.progress)
       }), 
-      this.handleTowerImg().then(() => {
+      this.handleTowerImg(params?.towerList).then(() => {
         fn(this.state.progress)
       }),
     ]).then(() => {
@@ -55,12 +55,17 @@ class SourceClass {
       return this.state.progress
     })
   }
-  public async handleEnemyImg(fn: (progress: number) => void) {
+  /** 
+   * @param fn 敌人加载的回调
+   * @param enemyList 只加载指定的敌人
+   */
+  public async handleEnemyImg(fn: (progress: number) => void, enemyList?: number[]) {
     if(!this.state.enemySource.length) {
       this.state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
     }
-    const step = 70 / enemyData.length
-    return Promise.all(enemyData.map(async (enemy) => {
+    const _enemyData = enemyList?.map(i => enemyData[i]) ?? enemyData
+    const step = 70 / _enemyData.length
+    return Promise.all(_enemyData.map(async (enemy) => {
       const item = this.state.enemyImgSource[enemy.name]
       if(!item?.imgList?.length && !item?.img) {
         if(enemy.imgType === 'gif') {
@@ -76,20 +81,24 @@ class SourceClass {
       return 
     }))
   }
-  public async handleTowerImg() {
-    const arr = Object.keys(towerData) as TowerName[]
+  /** 
+   * @param towerName 只加载指定的塔防
+   */
+  public async handleTowerImg(towerList?: TowerName[]) {
+    const _towerData = towerList?.reduce((pre, tName) => ({...pre, [tName]: towerData[tName]}), {} as TowerDataObj) ?? towerData
+    const arr = Object.keys(_towerData) as TowerName[]
     if(!this.state.towerSource) {
-      this.state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
+      this.state.towerSource = _.cloneDeep(_towerData) as unknown as TowerSource
     }
     const step = 20 / arr.length / 2
     return Promise.all(arr.map(async (key) => {
       const item = this.state.towerSource![key]
       if(!item.onloadImg) {
-        item.onloadImg = await loadImageWorker(towerData[key].img)
+        item.onloadImg = await loadImageWorker(_towerData[key].img)
         this.state.progress += step
       }
       if(!item.onloadbulletImg) {
-        item.onloadbulletImg = await loadImageWorker(towerData[key].bulletImg)
+        item.onloadbulletImg = await loadImageWorker(_towerData[key].bulletImg)
         this.state.progress += step
       }
       return

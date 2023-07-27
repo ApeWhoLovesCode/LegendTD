@@ -7,17 +7,17 @@
 </template>
 
 <style lang='less' scoped>
-@import '@/style.less';
 // 加载中
 .loading-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 32px;
   .loading-item {
     display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    margin: 1rem;
+    width: 1em;
+    height: 1em;
+    margin: 0.5em;
     background-color: currentColor;
     border-radius: 100%;
     animation: point-animation 1s ease infinite;

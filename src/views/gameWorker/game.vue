@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
 import GameNavBar from '../game/components/gameNavBar.vue'
 import StartAndEnd from '../game/components/startAndEnd.vue';
@@ -26,6 +26,7 @@ import { updateScoreApi } from "@/service/rank";
 import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
 import { waitTime } from "@/utils/tools";
+import { useSettingStore } from "@/stores/setting";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
+const setting = useSettingStore()
 
 const keepInterval = useKeepInterval()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
@@ -48,20 +50,6 @@ const workerRef = ref<Worker>()
 const state = reactive({
   isProgressBar: false,
   progress: 0,
-})
-
-// 监听增加的钱
-watch(() => baseDataState.money, (newVal, oldVal) => {
-  gameSkillState.addMoney.num = ''
-  clearTimeout(gameSkillState.addMoney.timer as NodeJS.Timer)
-  gameSkillState.addMoney.timer = null
-  nextTick(() => {
-    const val = newVal - oldVal
-    gameSkillState.addMoney.num = (val >= 0 ? '+' : '') + val
-    gameSkillState.addMoney.timer = setTimeout(() => {
-      gameSkillState.addMoney.num = ''
-    }, gameSkillState.addMoney.time);
-  })
 })
 
 onMounted(() => {
@@ -93,6 +81,9 @@ function initWorker() {
       ratio: source.ratio,
       mapLevel: source.mapLevel,
     },
+    setting: {
+      isHighRefreshScreen: setting.isHighRefreshScreen,
+    },
     canvasInfo: {
       offscreen,
       size: gameConfigState.size,
@@ -103,8 +94,8 @@ function initWorker() {
     const { data } = e
     const param = data.param
     switch (data.fnName as VueFnName) {
-      case 'addMoney': {
-        baseDataState.money += param; break;
+      case 'unifiedMoney': {
+        baseDataState.money = param; break;
       }
       case 'createAudio': {
         createAudio(param.audioKey, param.id); break;
@@ -332,7 +323,6 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
         <!-- 游戏顶部信息展示区域 -->
         <GameNavBar 
           :money="baseDataState.money"
-          :addMoney="gameSkillState.addMoney"
           :level="baseDataState.level"
           :isPause="baseDataState.isPause"
           :isPlayBgAudio="baseDataState.isPlayBgAudio"

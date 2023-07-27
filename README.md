@@ -1,6 +1,6 @@
 ## LegendTD
 
-**项目地址：** http://codeape.site:16666
+**项目地址：** http://game.codeape.site
 
 **github：** https://github.com/ApeWhoLovesCode/LegendTD
 

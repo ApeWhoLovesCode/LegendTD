@@ -6,7 +6,7 @@ export default function useTower() {
   const towerList = reactive<TowerStateType[]>([])
   const towerState = reactive<TowerState>({
     building: { left: 0, top: 0, isShow: false },
-    buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerIndex: 0, saleMoney: 0}
+    buildingScope: {left: 0, top: 0, r: 0, isShow: false, towerId: '', saleMoney: 0}
   })
   
   /** 点击背景 隐藏塔防 */
@@ -19,8 +19,9 @@ export default function useTower() {
     // 当前点击的是哪个塔防
     const towerIndex = towerList.findIndex(item => item.x === x && item.y === y)
     const {x:left, y:top, r, saleMoney} = towerList[towerIndex]
+    const towerId = towerList.find(t => t.x === left && t.y === top)?.id ?? ''
     // 展示攻击范围
-    towerState.buildingScope = {isShow: true, left, top, r, towerIndex, saleMoney}
+    towerState.buildingScope = {isShow: true, left, top, r, towerId, saleMoney}
   }
   
   return {

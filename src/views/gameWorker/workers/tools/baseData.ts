@@ -6,6 +6,7 @@ import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData from "@/dataSource/levelData";
 import mapData from "@/dataSource/mapData";
+import { TowerName } from "@/dataSource/towerData";
 
 const source = sourceInstance.state
 
@@ -16,13 +17,19 @@ const setting = {
   isLevelLock: false,
   /** 是否是开发测试模式 */
   isDevTestMode: false,
+  /** 是否是塔防展示组件 */
+  isTowerCover: false,
+  /** 塔防名字 */
+  tname: '' as TowerName,
+  /** 敌人索引列表 */
+  enemyList: [] as {i: number, level?: number}[],
 }
 
 const baseDataState = {
   // 地板：大小 数量
   floorTile: {size: 50, num: 83},
   // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 21, y_num: 12, arr: [] as (string | number)[][] },
+  gridInfo: { x_num: 20, y_num: 12, arr: [] as (string | number)[][] },
   // 等级
   level: 0,
   // 生命值
@@ -65,7 +72,7 @@ function initAllGrid() {
 }
 
 function onLevelChange() {
-  const val = baseDataState.level
+  const level = baseDataState.level
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
     // 处理地图关卡中的敌人数据
@@ -80,17 +87,21 @@ function onLevelChange() {
       enemyDataArr = levelData[0].enemyArr
     }
     // 获取地图关卡中的敌人数据
-    if(val < enemyDataArr.length && !isInfinite()) {
-      enemyState.levelEnemy = enemyDataArr[val]
+    if(level < enemyDataArr.length && !isInfinite()) {
+      enemyState.levelEnemy = enemyDataArr[level]
     } else {
-      const levelNum = val + (isInfinite() ? 5 : 0)
-      enemyState.levelEnemy = randomNumList(levelNum)
+      if(isInfinite()) {
+        // 无限火力 第一关 每个怪兽都遍历生成一次
+        enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
+      } else {
+        enemyState.levelEnemy = randomNumList(level)
+      }
     }
-    if(val) {
-      addMoney((val + 1) * Math.round(10))
+    if(level) {
+      addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))
       makeEnemy()
     }
-    onWorkerPostFn('onLevelChange', val)
+    onWorkerPostFn('onLevelChange', level)
   }, 500);
 }
 
@@ -127,7 +138,10 @@ function onGameOver() {
 /** 改变金钱 */
 function addMoney(money: number) {
   baseDataState.money += money
-  onWorkerPostFn('addMoney', money)
+}
+/** 统一金币 */
+function unifiedMoney() {
+  onWorkerPostFn('unifiedMoney', baseDataState.money)
 }
 function onWorkerPostFn(fnName: VueFnName, param?: any) {
   postMessage({fnName, param})
@@ -147,6 +161,7 @@ export {
   onReduceHp,
   onWorkerPostFn,
   addMoney,
+  unifiedMoney,
 }
 
 export type TargetCircleInfo = {
