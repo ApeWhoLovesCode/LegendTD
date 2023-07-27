@@ -26,7 +26,7 @@ export default [
 ] as {[key in number]: DirectionType}[]
 
 /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
-const mapGridInfoList: MapGridInfo[] = [
+export const mapGridInfoList: MapGridInfo[] = [
   {x: 0, y: 5, x_y: 3, num: 74},
   {x: 8, y: 4, x_y: 2, num: 64}, // 心形
   { x: 0, y: 1, x_y: 3, num: 83 },
@@ -48,9 +48,9 @@ const mapGridInfoList: MapGridInfo[] = [
   // --- 无限火力 ---
   {x: 0, y: 5, x_y: 3, num: 74},
 ]
-export {
-  mapGridInfoList
-}
+/** 塔防展示组件的地图数据 */
+export const towerCanvasMapData: {[key in number]: DirectionType} = {6: 2, 10: 1, 16: 4}
+export const towerCanvasMapGridInfo: MapGridInfo = {x: 1, y: 5, x_y: 3, num: 20}
 
 /** 格子类型 */
 export type GridInfo = {

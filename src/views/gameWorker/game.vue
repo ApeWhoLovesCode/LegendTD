@@ -26,6 +26,7 @@ import { updateScoreApi } from "@/service/rank";
 import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
 import { waitTime } from "@/utils/tools";
+import { useSettingStore } from "@/stores/setting";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 
 const source = useSourceStore()
 const userInfoStore = useUserInfoStore()
+const setting = useSettingStore()
 
 const keepInterval = useKeepInterval()
 const { canvasRef, audioBgRef, audioLevelRef, audioSkillRef, audioEndRef, audioRefObj } = useDomRef()
@@ -78,6 +80,9 @@ function initWorker() {
       isMobile: source.isMobile,
       ratio: source.ratio,
       mapLevel: source.mapLevel,
+    },
+    setting: {
+      isHighRefreshScreen: setting.isHighRefreshScreen,
     },
     canvasInfo: {
       offscreen,

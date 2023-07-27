@@ -1,6 +1,6 @@
 import { BulletType, EnemyStateType, SpecialBulletItem, SpecialBullets, TargetInfo, TowerStateType } from "@/type/game"
 import { damageTheEnemy, enemyMap, removeEnemy, slowEnemy } from "./enemy"
-import { addMoney, canvasInfo, gameConfigState, source } from "./baseData"
+import { addMoney, canvasInfo, gameConfigState, setting, source } from "./baseData"
 import { powAndSqrt } from "@/utils/tools"
 import { getAngle } from "@/utils/handleCircle"
 import { towerMap } from "./tower"
@@ -182,6 +182,10 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
   // 敌人扣血
   enemy.hp.cur = Math.max(hp, 0)
   if(enemy.hp.cur <= 0) {
+    if(setting.isTowerCover) {
+      enemy.hp.cur = enemy.hp.sum
+      return
+    }
     e_idList.push(e_id)
     t.targetIdList.splice(t.targetIdList.findIndex(item => item === e_id), 1)
     let reward = enemy.reward
@@ -191,10 +195,6 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
       }
     }
     addMoney(reward)
-    // 这里可以放击杀音频
-    // if(t.name === '茄子') {
-    //   playDomAudio({id: t.id})
-    // }
   } else {
     if(t.slow) { // 判断减速
       slowEnemy(e_id, t.slow)

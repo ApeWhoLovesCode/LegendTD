@@ -6,6 +6,7 @@ import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData from "@/dataSource/levelData";
 import mapData from "@/dataSource/mapData";
+import { TowerName } from "@/dataSource/towerData";
 
 const source = sourceInstance.state
 
@@ -16,6 +17,12 @@ const setting = {
   isLevelLock: false,
   /** 是否是开发测试模式 */
   isDevTestMode: false,
+  /** 是否是塔防展示组件 */
+  isTowerCover: false,
+  /** 塔防名字 */
+  tname: '' as TowerName,
+  /** 敌人索引列表 */
+  enemyList: [] as {i: number, level?: number}[],
 }
 
 const baseDataState = {

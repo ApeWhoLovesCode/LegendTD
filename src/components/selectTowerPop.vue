@@ -10,7 +10,7 @@ import { useSourceStore } from '@/stores/source';
 
 const userStore = useUserInfoStore()
 const source = useSourceStore()
-const {visible} = defineProps({
+defineProps({
   visible: {
     type: Boolean,
     default: false,
@@ -26,7 +26,7 @@ const state = reactive({
   // 遍历的数据列表
   items: [] as TowerType[],
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 3,
 })
 
 const towerList = computed(() => {
@@ -113,7 +113,7 @@ onMounted(() => {
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
-        :list-length="towerList.length" 
+        :list-length="state.items.length" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >
@@ -127,7 +127,7 @@ onMounted(() => {
         >
           <div class="card">
             <div class="towerImg"> 
-              <TowerCanvas :tname="item.name" :enemy-list="towerStaticData[item.name].enemyList" />
+              <TowerCanvas :tname="item.name" :enemy-list="towerStaticData[item.name].enemyList" :is-pause="!visible" />
             </div>
             <div class="nameWrap">
               <span class="name">· {{ towerStaticData[item.name].name }}</span>

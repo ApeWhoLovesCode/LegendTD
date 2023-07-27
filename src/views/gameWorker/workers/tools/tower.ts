@@ -45,8 +45,10 @@ function buildTower({x, y, tname}: {
     tower.preDamage = tower.damage
   }
   towerMap.set(tower.id, tower)
-  // 用于标记是哪个塔防 10 + index
-  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
+  if(!setting.isTowerCover) {
+    // 用于标记是哪个塔防 10 + index
+    baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
+  }
   drawTower(tower)
   onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
   if(isMusic) {
