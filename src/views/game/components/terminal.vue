@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
 import { GameBaseData, GameConfigType, GameMasterSkill } from '@/type/game';
-import { computed, onMounted, reactive } from 'vue';
+import { computed } from 'vue';
 import imgSource from '@/dataSource/imgSource';
 
 const props = defineProps<{

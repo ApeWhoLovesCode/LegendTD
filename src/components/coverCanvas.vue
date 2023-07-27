@@ -1,8 +1,10 @@
 <script setup lang='ts'>
+import imgSource from '@/dataSource/imgSource';
 import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData';
 import { useSourceStore } from '@/stores/source';
 import { loadImage, requireCDN } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
+import { size } from 'lodash';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 const props = defineProps<{
@@ -59,7 +61,7 @@ function initMovePath() {
   if(!mapGridInfoList[props.index]) return
   const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(mapGridInfoList[props.index]))
   movePathItem.x *= size
-  movePathItem.y = movePathItem.y * size + size
+  movePathItem.y = movePathItem.y * size
   const length = movePathItem.num!
   delete movePathItem.num
   const movePath: GridInfo[]  = []
@@ -87,10 +89,15 @@ async function drawFloorTile() {
   if(!floor) {
     floor = await loadImage(requireCDN('floor-tile.png'))
   }
-  state.ctx?.clearRect(0, 0, state.size, state.size)
+  const size = state.size
+  state.ctx?.clearRect(0, 0, size, size)
   for(let f of state.movePath) {
-    state.ctx?.drawImage(floor, f.x, f.y, state.size, state.size)
+    state.ctx?.drawImage(floor, f.x, f.y, size, size)
   }
+  const terminal = state.movePath.at(-1)!
+  loadImage(imgSource.TerminalImg).then((terminalImg) => {
+    state.ctx?.drawImage(terminalImg, terminal.x - 0.35 * size, terminal.y - 1.42 * size, size * 1.8, size * 2.48)
+  })
 }
 
 </script>

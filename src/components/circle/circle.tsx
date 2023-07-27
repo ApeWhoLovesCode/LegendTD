@@ -80,7 +80,6 @@ const Circle = defineComponent({
   
     /** 在canvas上绘画 */
     const drawCanvas = (
-      context: CanvasRenderingContext2D,
       strokeStyle: string,
       beginAngle: number,
       endAngle: number,
@@ -90,6 +89,7 @@ const Circle = defineComponent({
       const strokeWidth = props.strokeWidth * state.ratio
       const position = size / 2;
       const radius = position - strokeWidth / 2;
+      const context = state.ctx!
       context.strokeStyle = strokeStyle;
       context.lineWidth = strokeWidth;
       context.lineCap = props.lineCap;
@@ -107,13 +107,13 @@ const Circle = defineComponent({
       const size = props.size * state.ratio
       state.ctx?.clearRect(0, 0, size, size);
       /** 绘画背景圆环 */
-      drawCanvas(state.ctx!, props.layerColor, 0, PERIMETER, props.fill);
+      drawCanvas(props.layerColor, 0, PERIMETER, props.fill);
       const formatVal = range(curVal, 0, MAX);
       /** 绘画当前进度的圆环 */
       if (formatVal !== 0) {
         const progress = PERIMETER * (formatVal / 100);
         const endAngle = props.clockwise ? BEGIN_ANGLE + progress : 3 * Math.PI - (BEGIN_ANGLE + progress);
-        drawCanvas(state.ctx!, state.curColor, BEGIN_ANGLE, endAngle);
+        drawCanvas(state.curColor, BEGIN_ANGLE, endAngle);
       }
     };
   

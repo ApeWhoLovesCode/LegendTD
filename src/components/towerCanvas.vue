@@ -188,7 +188,7 @@ function shootBullet(eIdList: string[], t_i: number) {
     // 子弹和敌人的距离
     const distance = powAndSqrt(diff.x, diff.y)
     const addX = speed * diff.x / distance, addY = speed * diff.y / distance
-    const bullet: BulletType = {x: begin.x, y: begin.y, addX, addY, xy: 0, x_y: distance, e_id}
+    const bullet: BulletType = {x: begin.x, y: begin.y, addX, addY, xy: distance, e_id}
     if(isThrough) {
       bullet.attactIdSet = new Set()
     }
@@ -220,15 +220,16 @@ function handleBulletMove() {
       // 重新计算子弹离敌人的距离
       const b_e_distance = bulletEnemyDistance(e_id, +t_i, bItem.x, bItem.y)
       if(b_e_distance) {
-        const {addX: _addX, addY: _addY, x_y} = b_e_distance
+        const {addX: _addX, addY: _addY, distance} = b_e_distance
         addX = _addX, addY = _addY
         bItem.addX = _addX
         bItem.addY = _addY
-        bItem.x_y = x_y
+        bItem.xy = distance
+      } else {
+        bItem.xy -= t.speed
       }
       bItem.x += addX
       bItem.y += addY
-      bItem.xy += t.speed
       // 穿透性塔防
       if(t.isThrough) {
         const newEid = handleThroughBulletEid({x, y, w, h, attactIdSet: bItem.attactIdSet!})
@@ -287,13 +288,13 @@ function handleBulletAndEnemy(t: TowerStateType, b_i: number, e_id: string) {
   } else {
     if(t.isSaveBullet) {
       // 老鼠子弹到达目标 
-      if(t.name === 'twitch' && bItem.xy >= bItem.x_y) {
+      if(t.name === 'twitch' && bItem.xy <= 0) {
         handleSpecialBullets(t, bItem)
         t.bulletArr.splice(b_i, 1)
       }
     }
     // 清除子弹
-    if(!t.isThrough && !t.isSaveBullet && bItem.xy >= bItem.x_y) {
+    if(!t.isThrough && !t.isSaveBullet && bItem.xy <= 0) {
       t.bulletArr.splice(b_i, 1)
     }
     const ctx = state.ctx!
@@ -488,7 +489,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
 
 /** 
  * 计算子弹和敌人的距离
- * 返回 x,y方向需要增加的值, distance: 子弹和敌人的距离, x_y: 塔和敌人的距离
+ * 返回 x,y方向需要增加的值, distance: 子弹和敌人的距离
  */
  function bulletEnemyDistance(
   e_id: string, t_i: number, bx: number, by: number
@@ -497,11 +498,10 @@ function startPoisonInterval(e_id: string, t: TowerType) {
   if(towerList[t_i].isThrough || towerList[t_i].name === 'twitch') return
   const enemy = enemyList.find(e => e.id === e_id)
   if(!enemy) return
-  const size_2 = state.size / 2
   const {x, y, w, h} = enemy
   // 敌人中心坐标
   const _x = x + w / 2, _y = y + h / 2
-  const { speed,  x: tx, y: ty } = towerList[t_i]
+  const { speed } = towerList[t_i]
   // 两坐标间的差值
   const diff = {x: _x - bx, y: _y - by}
   // 子弹和敌人的距离
@@ -509,7 +509,7 @@ function startPoisonInterval(e_id: string, t: TowerType) {
   return {
     addX: speed * diff.x / distance,
     addY: speed * diff.y / distance,
-    x_y: powAndSqrt(_x - (tx + size_2), _y - (ty + size_2))
+    distance,
   }
 }
 
