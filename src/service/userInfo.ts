@@ -1,7 +1,6 @@
 import { UserInfo } from '@/stores/userInfo';
 import request from './request';
-
-const api = 'api'
+import { prefixAPI } from '@/config';
 
 export type EditUserParams = {
   id: string
@@ -14,7 +13,7 @@ export type EditUserParams = {
 export const editUserApi = (
   params: EditUserParams
 ) => {
-  return request.post<UserInfo>(`/${api}/users/editUser`, params)
+  return request.post<UserInfo>(`/${prefixAPI}/users/editUser`, params)
 }
 
 export type EditPassParams = {
@@ -27,5 +26,5 @@ export type EditPassParams = {
 export const editPassApi = (
   params: EditPassParams
 ) => {
-  return request.post(`/${api}/users/editPassword`, params)
+  return request.post(`/${prefixAPI}/users/editPassword`, params)
 }
