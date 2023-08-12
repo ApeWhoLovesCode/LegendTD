@@ -58,12 +58,18 @@ export const useSourceStore = defineStore('source', {
         return
       }
       return Promise.all([
-        this.handleOtherImg(),
-        this.handleEnemyImg(), 
+        this.loadMapImg(),
         this.handleTowerImg(),
       ]).then(() => {
         this.$state.progress = 100
       })
+      // return Promise.all([
+      //   this.handleOtherImg(),
+      //   this.handleEnemyImg(), 
+      //   this.handleTowerImg(),
+      // ]).then(() => {
+      //   this.$state.progress = 100
+      // })
     },
     async handleEnemyImg() {
       if(!this.$state.enemySource.length) {
@@ -90,7 +96,8 @@ export const useSourceStore = defineStore('source', {
       if(!this.$state.towerSource) {
         this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
       }
-      const step = 20 / arr.length / 2
+      // const step = 20 / arr.length / 2
+      const step = 80 / arr.length / 2
       return Promise.all(arr.map(async (key) => {
         const item = this.$state.towerSource![key]
         if(!item.onloadImg) {
@@ -107,6 +114,19 @@ export const useSourceStore = defineStore('source', {
     async handleOtherImg() {
       const arr = Object.keys(otherImgData) as OnloadImgKey[]
       const step = 10 / arr.length
+      return Promise.all(
+        arr.map(key => (
+          !this.$state.othOnloadImg[key] ? loadImage(otherImgData[key]).then((img) => {
+            this.$state.othOnloadImg[key] = img
+            this.$state.progress += step
+          }) : ''
+        ))
+      )
+    },
+    /** 仅加载地图需要的图片就够了，其他的都是worker中获取的。 */
+    async loadMapImg() {
+      const arr: OnloadImgKey[] = ['floor']
+      const step = 20 / arr.length
       return Promise.all(
         arr.map(key => (
           !this.$state.othOnloadImg[key] ? loadImage(otherImgData[key]).then((img) => {

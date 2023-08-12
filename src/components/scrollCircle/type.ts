@@ -87,26 +87,6 @@ export type ScrollRotateItemProps = {
   index: number
 }
 
-export type CircleInfoType = {
-  /** 滚动盒子的宽/高 */
-  circleWrapWH: number;
-  /** 卡片宽/高 */
-  cardWH: number;
-  /** 圆的半径 */
-  circleR: number;
-  /** 可滚动区域高度对应的圆的角度 */
-  scrollViewDeg: number;
-};
-
-export type CircleTouchType = {
-  /** 记录初始化触摸的xy */
-  startXY: number;
-  /** 记录滚动触摸的旋转度数 */
-  startDeg: number;
-  /** 记录触摸开始的时间，用于与触摸结束进行比较 */
-  time: number;
-};
-
 export type ScrollCirclePageType = { pageNum: number; pageSize: number }
 
 export type CenterPointType = 'auto' | 'center' | 'left' | 'top' | 'right' | 'bottom'
