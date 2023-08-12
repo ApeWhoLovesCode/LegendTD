@@ -56,8 +56,7 @@ onMounted(() => {
   init()
 })
 onBeforeUnmount(() => {
-  workerRef.value?.terminate()
-  keepInterval.clear()
+  onGameOver()
 })
 
 function init() {
@@ -171,28 +170,29 @@ function onHpChange(hp: number) {
   if(hp) return
   uploadScore()
 }
-async function uploadScore() {
+function onGameOver() {
   baseDataState.isGameOver = true
   baseDataState.isPause = true
-  playAudio('ma-gameover', 'Skill')
   audioBgRef.value?.pause()
   source.isGameing = false
+  workerRef.value?.terminate()
+  keepInterval.clear()
+}
+async function uploadScore() {
+  playAudio('ma-gameover', 'Skill')
+  onGameOver()
   const {userInfo} = userInfoStore
   if(userInfo) {
     if(!baseDataState.level) {
       await waitTime(200)
       return ElMessage.info('很遗憾你一波敌人都没抵御成功')
     }
-    try {
-      const res = await updateScoreApi({
-        userId: userInfo.id,
-        score: baseDataState.level,
-        level: source.mapLevel
-      })
-      ElMessage.success(res.isUpdate ? '恭喜，创造了当前地图的新纪录~~' : '还未超越最高分，继续努力吧~~')
-    } catch (error) {
-      console.log('updateScoreApi-error: ', error);
-    }
+    const res = await updateScoreApi({
+      userId: userInfo.id,
+      score: baseDataState.level,
+      level: source.mapLevel
+    })
+    ElMessage.success(res.isUpdate ? '恭喜，创造了当前地图的新纪录~~' : '还未超越最高分，继续努力吧~~')
   } else {
     await waitTime(200)
     ElMessage.info('登录后才能上传成绩~~')
