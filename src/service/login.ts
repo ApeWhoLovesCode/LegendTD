@@ -1,7 +1,6 @@
 import { UserInfo } from '@/stores/userInfo';
 import request from './request';
-
-const api = 'api'
+import { prefixAPI } from '@/config';
 
 /** 登录 */
 export type LoginApiParams = {
@@ -11,15 +10,15 @@ export type LoginApiParams = {
 export const loginApi = (
   params: LoginApiParams
 ) => {
-  return request.post<UserInfo>(`/${api}/users/login`, params)
+  return request.post<UserInfo>(`/${prefixAPI}/users/login`, params)
 }
 
 /** 退出登录 */
 export const logoutApi = () => {
-  return request.get(`/${api}/users/logout`)
+  return request.get(`/${prefixAPI}/users/logout`)
 }
 
 /** 注册 */
 export const registerApi = (params: LoginApiParams) => {
-  return request.post(`/${api}/users/register`, params)
+  return request.post(`/${prefixAPI}/users/register`, params)
 }

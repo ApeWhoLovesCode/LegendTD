@@ -1,6 +1,5 @@
+import { prefixAPI } from '@/config';
 import request from './request';
-
-const api = 'api'
 
 export type GameIdType = '101'
 
@@ -26,7 +25,7 @@ export type RankItem = {
 } & RankScore
 
 export const getRankListApi = () => {
-  return request.get<RankItem[]>(`/${api}/legendTD/getScoreList`)
+  return request.get<RankItem[]>(`/${prefixAPI}/legendTD/getScoreList`)
 }
 
 export type UpdateScoreParasm = {
@@ -44,5 +43,5 @@ export type UpdateScoreRes = {
 }
 /** 上传得分 */
 export const updateScoreApi = (params: UpdateScoreParasm) => {
-  return request.post<UpdateScoreRes>(`/${api}/legendTD/setScore`, params)
+  return request.post<UpdateScoreRes>(`/${prefixAPI}/legendTD/setScore`, params)
 }
