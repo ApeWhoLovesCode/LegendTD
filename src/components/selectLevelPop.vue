@@ -2,10 +2,9 @@
 import { onMounted, reactive } from 'vue';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
-import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
+import levelData, {levelNullItem, LevelDataItem, LevelDataItemEnum} from '@/dataSource/levelData';
 import CoverCanvas from '@/components/coverCanvas.vue';
 import { ElDrawer } from 'element-plus';
-import mapData from '@/dataSource/mapData';
 import { useSourceStore } from '@/stores/source';
 
 const source = useSourceStore()
@@ -53,6 +52,14 @@ onMounted(() => {
 
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
+const getCardText = (i: number) => {
+  switch (levelData[i].type) {
+    case LevelDataItemEnum.Endless: return '卍';
+    case LevelDataItemEnum.Experience: return '试玩';
+    default: return i
+  }
+}
+
 </script>
 
 <template>
@@ -74,7 +81,7 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
           :key="cardIndex(i)" 
           :index="i"
           @on-click="() => {
-            if(mapData[cardIndex(i)]) {
+            if(levelData[cardIndex(i)]) {
               emit('switchMapLevel', cardIndex(i));
               emit('update:visible', false);
             }
@@ -84,9 +91,9 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
             <div v-if="source.mapLevel === cardIndex(i)" class="card-selected"></div>
             <div class="card-bg">
               <CoverCanvas :index="cardIndex(i)" />
-              <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
+              <div v-if="!levelData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
             </div>
-            <div class="card-level">{{ (cardIndex(i) !== mapData.length - 1) ? cardIndex(i) + 1 : '卍' }}</div>
+            <div class="card-level">{{ getCardText(i) }}</div>
           </div>
         </ScrollCircleItem>
       </ScrollCircle>

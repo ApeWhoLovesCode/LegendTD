@@ -7,3 +7,5 @@ export type AreaType = {
 }
 
 export type AreaKeyType = keyof AreaType
+
+export type GridItem = {v: number, i?: number}

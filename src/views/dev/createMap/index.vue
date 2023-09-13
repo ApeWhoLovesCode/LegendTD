@@ -1,14 +1,15 @@
 <script setup lang='ts'>
 import { useSourceStore } from '@/stores/source';
-import { checkInRect, createTwoArray, getDirection, getDirectionVal } from '@/utils/tools';
+import { checkInRect, createTwoArray } from '@/utils/tools';
 import _ from 'lodash';
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
-import { AreaKeyType, AreaType } from './type';
+import { AreaKeyType, AreaType, GridItem } from './type';
 import { loadImage } from '@/utils/handleImg'
 import otherImgData from '@/dataSource/otherImgData';
 import { ElButton, ElMessage, ElSpace } from 'element-plus';
 import { EraserIcon, FlagIcon } from './imgSource'
 import type {DirectionType} from '@/dataSource/mapData'
+import { getDirection, getDirectionVal, getStartDirection } from './utils';
 
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
@@ -32,7 +33,9 @@ const state = reactive({
   ctx: null as unknown as CanvasRenderingContext2D,
   animationFrame: 0,
   /** 格子信息 0:初始值 1:地板 -1:旗子 */
-  gridArr: createTwoArray(12, 20, () => 0),
+  gridArr: createTwoArray(12, 20, () => ({v: 0, i: 0})) as GridItem[][],
+  /** 地板的累计数量 */
+  floorNum: 0,
   floorImgList: [otherImgData.floor],
   floorOnloadImgs: [] as HTMLImageElement[],
   flagOnloadImg: undefined as HTMLImageElement | undefined
@@ -146,28 +149,32 @@ function onDrawMouseImg(e: MouseEvent) {
   const row = Math.floor((e.clientY - top) / size)
   const col = Math.floor((e.clientX - left) / size)
   if(mouseImg.isFlag) { // 画旗子
-    if(state.gridArr[row][col]) return
+    if(state.gridArr[row][col].v) return
     if(startFlag.isShow) {
       const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
       state.ctx.clearRect(x, y, gridW, gridW)
-      state.gridArr[startFlag.row][startFlag.col] = 0
+      state.gridArr[startFlag.row][startFlag.col].v = 0
     }
     startFlag.isShow = true
     startFlag.row = row
     startFlag.col = col
-    state.gridArr[row][col] = -1
+    state.gridArr[row][col].v = -1
     drawFlag()
     return
   }
   // 该位置的橡皮擦或地板已经不需要操作了
-  if(!state.gridArr[row][col] === mouseImg.isEraser) {
+  if(!state.gridArr[row][col].v === mouseImg.isEraser) {
     return
   }
-  state.gridArr[row][col] = mouseImg.isEraser ? 0 : 1
   const {x, y, gridW} = getGridInside(col, row)
   if(mouseImg.isEraser) {
+    state.gridArr[row][col].v = 0
+    state.gridArr[row][col].i = void 0
     state.ctx.clearRect(x, y, gridW, gridW)
   } else {
+    state.gridArr[row][col].v = 1
+    state.gridArr[row][col].i = state.floorNum
+    state.floorNum++
     state.ctx.drawImage(state.floorOnloadImgs[mouseImg.imgIndex], x, y, gridW, gridW)
   }
 }
@@ -185,20 +192,23 @@ function getGridInside(col: number, row: number) {
 function exportData() {
   if(!startFlag.isShow) return ElMessage.warning('请选择旗子作为敌人起点~')
   const floorTotal = state.gridArr.reduce((pre, cur) => {
-    cur.forEach(v => pre +=v)
+    cur.forEach(v => pre += v.v)
     return pre
   }, 0)
   if(!floorTotal) return ElMessage.warning('当前没有地板~')
   const res: {[key in number]: DirectionType} = {} 
   let row = startFlag.row, col = startFlag.col;
-  let xy: DirectionType | undefined = getDirection(state.gridArr, row, col)
-  if(!xy) return ElMessage.warning('旗子附近没有地板~')
+  let item = getStartDirection(state.gridArr, row, col)
+  let xy = item?.xy
+  if(!item) return ElMessage.warning('旗子附近没有地板~')
+  row = item.row
+  col = item.col
   const mapInfoItem = {x: col, y: row, x_y: xy, num: floorTotal}
   for(let i = 1; i < floorTotal - 1; i++) {
     const item = getDirectionVal(state.gridArr, row, col, xy!)
     row = item.row
     col = item.col
-    const _xy = getDirection(state.gridArr, row, col, xy);
+    const _xy = getDirection(state.gridArr, row, col);
     if(!_xy) return ElMessage.warning('请将所有地板格子相连~')
     if(_xy !== xy) {
       xy = _xy
@@ -239,9 +249,9 @@ function drawAllGrid() {
   const {rowNum, colNum} = state.canvasInfo
   for(let i = 0; i < rowNum; i++) {
     for(let j = 0; j < colNum; j++) {
-      if(state.gridArr[i][j] > 0) {
+      if(state.gridArr[i][j].v > 0) {
         const {x, y, gridW} = getGridInside(j, i)
-        state.ctx.drawImage(state.floorOnloadImgs[state.gridArr[i][j] - 1], x, y, gridW, gridW)
+        state.ctx.drawImage(state.floorOnloadImgs[state.gridArr[i][j].v - 1], x, y, gridW, gridW)
       }
     }
   }
@@ -293,9 +303,6 @@ function calcArea(area: AreaType) {
 
 <template>
   <div class='createMap' :style="{'--size': state.size / source.ratio + 'px'}">
-    <div class="header">
-      <ElButton @click="exportData">导出数据</ElButton>
-    </div>
     <div class="createMap-area">
       <div class="floorWrap">
         <div 
@@ -316,8 +323,11 @@ function calcArea(area: AreaType) {
               <img :src="EraserIcon" alt="" class="eraserIcon">
             </div>
           </ElSpace>
-          <div class="toolsRight">
-            <ElButton @click="clearCanvas">清空画布</ElButton>
+          <div>
+            <ElButton type="danger" @click="clearCanvas">清空画布</ElButton>
+          </div>
+          <div>
+            <ElButton @click="exportData">导出数据</ElButton>
           </div>
         </ElSpace>
         <div ref="canvasWrapRef" class="createMap-canvasWrap">
@@ -384,9 +394,6 @@ function calcArea(area: AreaType) {
       &Left {
         display: flex;
         align-items: center;
-      }
-      &Right {
-
       }
       .iconWrap {
         padding: 5px 10px;

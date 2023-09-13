@@ -2,11 +2,10 @@
 import { onMounted, reactive } from 'vue';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
-import levelData, {levelNullItem, LevelDataItem} from '@/dataSource/levelData';
+import levelData, {levelNullItem, LevelDataItem, LevelDataItemEnum} from '@/dataSource/levelData';
 import CoverCanvas from '@/components/coverCanvas.vue';
 import { useSourceStore } from '@/stores/source';
 import { useRouter } from 'vue-router';
-import mapData from '@/dataSource/mapData';
 import UserBall from '@/components/userBall.vue'
 
 const source = useSourceStore()
@@ -46,12 +45,20 @@ onMounted(() => {
 })
 
 const onCardClick = (i: number) => {
-  if(mapData[i] && source.progress === 100) {
+  if(levelData[i] && source.progress === 100) {
     router.push(`/game/${i + 1}`)
   }
 }
 
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
+
+const getCardText = (i: number) => {
+  switch (levelData[i].type) {
+    case LevelDataItemEnum.Endless: return '卍';
+    case LevelDataItemEnum.Experience: return '试玩';
+    default: return i
+  }
+}
 
 </script>
 
@@ -70,9 +77,9 @@ const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
         <div class="card">
           <div class="card-bg" :style="{filter: `blur(${20 - source.progress * 20 / 100}px)`}">
             <CoverCanvas v-if="source.progress > 10" :index="cardIndex(i)" />
-            <div v-if="!mapData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
+            <div v-if="!levelData[cardIndex(i)]" class="card-disable iconfont icon-disablecase"></div>
           </div>
-          <div class="card-level">{{ (cardIndex(i) !== mapData.length - 1) ? cardIndex(i) + 1 : '卍' }}</div>
+          <div class="card-level">{{ getCardText(i) }}</div>
         </div>
       </ScrollCircleItem>
     </ScrollCircle>

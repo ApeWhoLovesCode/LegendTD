@@ -4,8 +4,7 @@ import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
-import levelData from "@/dataSource/levelData";
-import mapData from "@/dataSource/mapData";
+import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 import { TowerName } from "@/dataSource/towerData";
 
 const source = sourceInstance.state
@@ -56,7 +55,7 @@ const canvasInfo = {
 }
 
 /** 是否是无限火力模式 */
-const isInfinite = () => source.mapLevel === mapData.length - 1
+const isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
 
 /** 初始化所有格子 */
 function initAllGrid() {
@@ -87,10 +86,10 @@ function onLevelChange() {
       enemyDataArr = levelData[0].enemyArr
     }
     // 获取地图关卡中的敌人数据
-    if(level < enemyDataArr.length && !isInfinite()) {
+    if(level < enemyDataArr.length && !isInfinite) {
       enemyState.levelEnemy = enemyDataArr[level]
     } else {
-      if(isInfinite()) {
+      if(isInfinite) {
         // 无限火力 第一关 每个怪兽都遍历生成一次
         enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
       } else {

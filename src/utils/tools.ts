@@ -1,5 +1,3 @@
-import { DirectionType } from "@/dataSource/mapData";
-
 /** 用于限制 num 最大和最小不能超过边界值 */
 export function limitRange(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
@@ -99,23 +97,4 @@ export function createTwoArray<T>(rowNum: number, colNum: number, cb: (i: number
   return Array.from({length: rowNum}).map(() => (
     Array.from({length: colNum}).map((_, i) => cb(i))
   ))
-}
-
-/** 从二维数组中获取方向 */
-export function getDirection(arr: Array<any[]>, row: number, col: number, xy?: DirectionType) {
-  if(arr[row][col - 1] && xy !== 3) return 1;
-  else if(arr[row - 1]?.[col] && xy !== 4) return 2;
-  else if(arr[row][col + 1] && xy !== 1) return 3;
-  else if(arr[row + 1]?.[col] && xy !== 2) return 4;
-}
-/** 根据方向值返回二维数组的值和新的row col */
-export function getDirectionVal(arr: Array<any[]>, row: number, col: number, v: DirectionType) {
-  let value 
-  switch (v) {
-    case 1: {value = arr[row][--col]; break};
-    case 2: {value = arr[--row][col]; break};
-    case 3: {value = arr[row][++col]; break};
-    case 4: {value = arr[++row][col]; break};
-  }
-  return {value, row, col}
 }

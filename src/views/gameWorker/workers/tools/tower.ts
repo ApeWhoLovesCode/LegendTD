@@ -7,13 +7,12 @@ import { powAndSqrt } from "@/utils/tools"
 import _ from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
+import { BuildTowerParams } from "../type/tower"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
 /** 点击建造塔防 */
-function buildTower({x, y, tname}: {
-  x: number, y: number, tname: TowerName
-}, isMusic = true) {
+function buildTower({x, y, tname}: BuildTowerParams, isMusic = true) {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(baseDataState.money < money) return
   addMoney(-money)

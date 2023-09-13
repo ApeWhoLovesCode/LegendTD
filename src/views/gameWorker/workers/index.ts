@@ -1,4 +1,4 @@
-import mapData, { GridInfo, mapGridInfoList, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
+import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
 import { waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
 import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
@@ -11,6 +11,7 @@ import { range } from "@/utils/format";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
+import levelData from "@/dataSource/levelData";
 
 addEventListener('message', e => {
   const { data } = e;
@@ -66,7 +67,7 @@ async function init() {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   }, params)
   onWorkerPostFn('onProgress', 100)
-  if(isInfinite()) {
+  if(isInfinite) {
     addMoney(999999)
   }
   if(!setting.isTowerCover) {
@@ -141,7 +142,7 @@ function drawFloorTile() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const movePathItem = JSON.parse(JSON.stringify(
-    !setting.isTowerCover ? mapGridInfoList[source.mapLevel] : towerCanvasMapGridInfo
+    !setting.isTowerCover ? levelData[source.mapLevel].mapGridInfo : towerCanvasMapGridInfo
   ))
   movePathItem.x *= gameConfigState.size
   movePathItem.y *= gameConfigState.size
@@ -151,7 +152,7 @@ function initMovePath() {
   // 刚开始就右移了，所以该初始格不会算上去
   const length = movePathItem.num!
   delete movePathItem.num
-  const _mapData = !setting.isTowerCover ? mapData[source.mapLevel] : towerCanvasMapData
+  const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].mapData : towerCanvasMapData
   const movePath: GridInfo[] = []
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y

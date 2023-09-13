@@ -23,7 +23,7 @@ export default [
   {1: 1, 2: 4, 4: 3, 7: 2, 8: 3, 9: 2, 10: 3, 12: 2, 14: 1, 16: 2, 17: 1, 19: 2, 20: 1, 22: 4, 23: 1, 24: 4, 25: 1, 26: 4, 28: 1, 29: 4, 30: 1, 32: 2, 35: 1, 36: 2, 37: 1, 38: 2, 39: 1, 44: 4, 46: 1, 47: 4, 52: 3, 53: 4, 57: 3, 59: 2, 63: 3, 65: 4, 69: 3, 71: 2, 75: 3, 79: 4, 81: 3},
   // 最后一个地图选项是无限火力版
   {3: 2, 5: 3, 7: 2, 9: 3, 19: 4, 21: 3, 23: 4, 25: 3, 27: 4, 29: 1, 31: 4, 33: 1, 35: 4, 37: 1, 47: 2, 49: 1, 52: 2, 54: 3, 59: 2, 62: 3, 68: 4, 71: 1},
-] as {[key in number]: DirectionType}[]
+] as MapDataItem[]
 
 /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
 export const mapGridInfoList: MapGridInfo[] = [
@@ -45,12 +45,31 @@ export const mapGridInfoList: MapGridInfo[] = [
   {x: 8, y: 6, x_y: 4, num: 78},
   {x: 11, y: 10, x_y: 2, num: 48},
   {x: 14, y: 3, x_y: 4, num: 84},
-  // --- 无限火力 ---
-  {x: 0, y: 5, x_y: 3, num: 74},
 ]
+
+/** 其他的地图数据 */
+export const othMapData = {
+  /** 体验关卡地图 */
+  experience: [
+    {
+      mapData: {3: 2, 5: 3, 7: 2, 9: 3, 19: 4, 21: 3, 23: 4, 25: 3, 27: 4, 29: 1, 31: 4, 33: 1, 35: 4, 37: 1, 47: 2, 49: 1, 52: 2, 54: 3, 59: 2, 62: 3, 68: 4, 71: 1} as MapDataItem,
+      mapGridInfo: {x: 0, y: 5, x_y: 3, num: 74} as MapGridInfo,
+    },
+  ],
+  /** 无尽模式 */
+  endless: [
+    {
+      mapData: {3: 2, 5: 3, 7: 2, 9: 3, 19: 4, 21: 3, 23: 4, 25: 3, 27: 4, 29: 1, 31: 4, 33: 1, 35: 4, 37: 1, 47: 2, 49: 1, 52: 2, 54: 3, 59: 2, 62: 3, 68: 4, 71: 1} as MapDataItem,
+      mapGridInfo: {x: 0, y: 5, x_y: 3, num: 74} as MapGridInfo,
+    },
+  ],
+}
+
 /** 塔防展示组件的地图数据 */
 export const towerCanvasMapData: {[key in number]: DirectionType} = {6: 2, 10: 1, 16: 4}
 export const towerCanvasMapGridInfo: MapGridInfo = {x: 1, y: 5, x_y: 3, num: 20}
+
+export type MapDataItem = {[key in number]: DirectionType}
 
 /** 格子类型 */
 export type GridInfo = {
@@ -64,4 +83,3 @@ export type MapGridInfo = GridInfo & {num: number}
 
 /** 方向 1:左 2:上 3:右 4:下 */
 export type DirectionType = 1 | 2 | 3 | 4
-  
