@@ -1,10 +1,10 @@
 import mapData, { GridInfo, mapGridInfoList, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
-import { getScreenFps, waitTime } from "@/utils/tools";
+import { waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
 import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
 import keepInterval from "@/utils/keepInterval";
-import _, { size } from "lodash";
+import _ from "lodash";
 import { WorkerFnName } from "./type/worker";
 import testBuildData from "./tools/testBuild";
 import { range } from "@/utils/format";
