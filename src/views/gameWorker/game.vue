@@ -3,12 +3,12 @@ import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
-import GameNavBar from '../game/components/gameNavBar.vue'
-import StartAndEnd from '../game/components/startAndEnd.vue';
-import TowerBuild from '../game/components/towerBuild.vue';
-import Skill from '../game/components/skill.vue'
-import Terminal from "../game/components/terminal.vue";
-import ProgressBar from '@/components/progressBar.vue';
+import GameNavBar from './components/gameNavBar.vue'
+import StartAndEnd from './components/startAndEnd.vue';
+import TowerBuild from './components/towerBuild.vue';
+import Skill from './components/skill.vue'
+import Terminal from "./components/terminal.vue";
+import ProgressBar from './components/progressBar.vue';
 
 import useDomRef from './tools/domRef';
 import useGameConfig from './tools/gameConfig';
