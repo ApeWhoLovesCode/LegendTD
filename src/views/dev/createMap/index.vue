@@ -50,6 +50,8 @@ const mouseImg = reactive({
   isDraw: false,
   /** img类型 */
   type: '' as MouseImgType,
+  /** 新的地板索引，用于覆盖之前的索引 */
+  newFloorNum: -1,
 })
 /** 起点 */
 const startFlag = reactive({
@@ -159,11 +161,7 @@ function onDrawMouseImg(e: MouseEvent) {
       item.i = state.floorNum
       state.floorNum++
       drawGrid({
-        img: state.floorOnloadImgs[mouseImg.imgIndex],
-        text: item.i + '',
-        x, 
-        y, 
-        gridW
+        img: state.floorOnloadImgs[mouseImg.imgIndex], text: item.i + '', x, y, gridW
       })
       return
     }
@@ -192,31 +190,22 @@ function onDrawMouseImg(e: MouseEvent) {
       return
     }
     case 'oneselfAdd': {
-      handleAndDrawGridVal(item, 1, row, col)
+      handleAndDrawGridVal(item, item.i! + 1, row, col)
       return
     }
     case 'oneselfMinus': {
-      handleAndDrawGridVal(item, -1, row, col)
-      return
-    }
-    case 'previousAdd': {
-      if(item.v !== 1) return
-      changeOtherGrid(item.i!, 1, false)
-      return
-    }
-    case 'previousMinus': {
-      if(item.v !== 1) return
-      changeOtherGrid(item.i!, -1, false)
+      handleAndDrawGridVal(item, item.i! - 1, row, col)
       return
     }
     case 'nextAdd': {
-      if(item.v !== 1) return
-      changeOtherGrid(item.i!, 1)
-      return
-    }
-    case 'nextMinus': {
-      if(item.v !== 1) return
-      changeOtherGrid(item.i!, -1)
+      if(item.v !== 1 || mouseImg.newFloorNum === item.i) return
+      if(mouseImg.newFloorNum < 0) {
+        mouseImg.newFloorNum = item.i!
+      } else {
+        mouseImg.newFloorNum++
+        item.i = mouseImg.newFloorNum
+        handleAndDrawGridVal(item, item.i, row, col)
+      }
       return
     }
   }
@@ -229,14 +218,14 @@ function changeOtherGrid(floorNum: number, addVal: number, isNext = true) {
       const item = state.gridArr[i][j]
       const isOther = isNext ? item.i! >= floorNum : item.i! <= floorNum
       if(item.v > 0 && isOther) {
-        handleAndDrawGridVal(item, addVal, i, j)
+        handleAndDrawGridVal(item, item.i! + addVal, i, j)
       }
     }
   }
 }
 /** 改变格子的值 */
-function handleAndDrawGridVal(item: GridItem, addVal: number, row: number, col: number) {
-  item.i = range(item.i! + addVal, 0, state.floorNum - 1);
+function handleAndDrawGridVal(item: GridItem, itemNewI: number, row: number, col: number) {
+  item.i = range(itemNewI, 0, state.floorNum - 1);
   const {x, y, gridW} = getGridInside(col, row)
   state.ctx.clearRect(x, y, gridW, gridW)
   drawGrid({
@@ -406,34 +395,19 @@ function getCanvasWrapInfo() {
               </ElTooltip>
             </ElSpace>
             <ElSpace>
-              <ElTooltip content="使该格索引加一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'oneselfAdd')">
-                  oneself +1
-                </ElButton>
-              </ElTooltip>
-              <ElTooltip content="使该格索引减一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'oneselfMinus')">
-                  oneself -1
-                </ElButton>
-              </ElTooltip>
-              <ElTooltip content="使该索引和前面索引都加一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'previousAdd')">
-                  Pre +1
-                </ElButton>
-              </ElTooltip>
-              <ElTooltip content="使该索引和前面索引都减一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'previousMinus')">
-                  Pre -1
-                </ElButton>
-              </ElTooltip>
-              <ElTooltip content="使该索引和后续索引都减一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
+              <ElTooltip content="以该格为索引起始，移动为后面的格子赋值" placement="top">
+                <ElButton type="primary" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
                   Next +1
                 </ElButton>
               </ElTooltip>
-              <ElTooltip content="使该索引和后续索引都减一" placement="top">
-                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'nextMinus')">
-                  Next -1
+              <ElTooltip content="使该格索引加一" placement="top">
+                <ElButton @click="onClickDrag($event, floorImgList.length + 2, 'oneselfAdd')">
+                  索引 +1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该格索引减一" placement="top">
+                <ElButton @click="onClickDrag($event, floorImgList.length + 2, 'oneselfMinus')">
+                  索引 -1
                 </ElButton>
               </ElTooltip>
             </ElSpace>
