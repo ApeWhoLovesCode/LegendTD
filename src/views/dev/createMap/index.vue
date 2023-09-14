@@ -3,14 +3,16 @@ import { useSourceStore } from '@/stores/source';
 import { checkInRect, createTwoArray } from '@/utils/tools';
 import _ from 'lodash';
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
-import { AreaKeyType, AreaType, GridItem } from './type';
+import { GridItem, MouseImgType } from './type';
 import { loadImage } from '@/utils/handleImg'
-import otherImgData from '@/dataSource/otherImgData';
-import { ElButton, ElMessage, ElSpace } from 'element-plus';
-import { EraserIcon, FlagIcon } from './imgSource'
+import { ElButton, ElMessage, ElSpace, ElTooltip } from 'element-plus';
+import { EraserIcon, FlagIcon, AddAndMinusIcon } from './imgSource'
 import type {DirectionType} from '@/dataSource/mapData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
+import { range } from '@/utils/format';
+import otherImgData from '@/dataSource/otherImgData';
 
+const floorImgList = [otherImgData.floor]
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
 const canvasRef = ref<HTMLCanvasElement>()
@@ -36,20 +38,18 @@ const state = reactive({
   gridArr: createTwoArray(12, 20, () => ({v: 0, i: 0})) as GridItem[][],
   /** 地板的累计数量 */
   floorNum: 0,
-  floorImgList: [otherImgData.floor],
   floorOnloadImgs: [] as HTMLImageElement[],
-  flagOnloadImg: undefined as HTMLImageElement | undefined
+  flagOnloadImg: void 0 as HTMLImageElement | undefined,
 })
 const mouseImg = reactive({
   x: 0,
   y: 0,
+  /** 当前图片的索引 */
   imgIndex: 0,
   /** 是否允许绘画 */
   isDraw: false,
-  /** 是否是橡皮 */
-  isEraser: false,
-  /** 是否是起点 */
-  isFlag: false,
+  /** img类型 */
+  type: '' as MouseImgType,
 })
 /** 起点 */
 const startFlag = reactive({
@@ -59,7 +59,7 @@ const startFlag = reactive({
 })
 
 const mouseIcons = computed(() => {
-  return [...state.floorImgList, FlagIcon, EraserIcon][mouseImg.imgIndex]
+  return [...floorImgList, FlagIcon, EraserIcon, AddAndMinusIcon][mouseImg.imgIndex]
 })
 
 onMounted(() => {
@@ -84,23 +84,36 @@ async function init() {
 }
 
 async function initData() {
-  state.floorOnloadImgs = await Promise.all(state.floorImgList.map(img => loadImage(img)))
+  state.floorOnloadImgs = await Promise.all(floorImgList.map(img => loadImage(img)))
   state.flagOnloadImg = await loadImage(FlagIcon)
 }
 
 function startDraw() {
   state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
+  // for(let i = 0; i < 5; i++) {
+  //   state.gridArr[2][3 + i].v = 1
+  //   state.gridArr[2][3 + i].i = i
+  //   state.floorNum++
+  // }
+  // for(let i = 0; i < 5; i++) {
+  //   state.gridArr[3 + i][7].v = 1
+  //   state.gridArr[3 + i][7].i = 5 + i
+  //   state.floorNum++
+  // }
   drawLine()
   drawAllGrid()
   drawFlag()
 }
 
-function onClickFloor(e: MouseEvent, i: number) {
+/** 点击拖拽 */
+function onClickDrag(e: MouseEvent, i: number, type: MouseImgType) {
+  mouseImg.type = type
   document.addEventListener("mousemove", onMouseMove);
   mouseImg.imgIndex = i
   mouseImg.x = e.clientX - state.size / 4
   mouseImg.y = e.clientY - state.size / 4
 }
+
 function onMouseMove(e: MouseEvent) {
   mouseImg.x = e.clientX - state.size / 4
   mouseImg.y = e.clientY - state.size / 4
@@ -129,18 +142,7 @@ function onRightClick() {
   document.removeEventListener("mousemove", onMouseMove);
   mouseImg.x = 0
   mouseImg.y = 0
-  mouseImg.isEraser = false
-  mouseImg.isFlag = false
-}
-/** 点击橡皮擦 */
-function onEraserClick(e: MouseEvent) {
-  mouseImg.isEraser = true
-  onClickFloor(e, state.floorImgList.length + 1)
-}
-/** 点击旗子 */
-function onFlagClick(e: MouseEvent) {
-  mouseImg.isFlag = true
-  onClickFloor(e, state.floorImgList.length)
+  mouseImg.type = ''
 }
 /** 在canvas中画鼠标拖拽的图片 */
 function onDrawMouseImg(e: MouseEvent) {
@@ -148,35 +150,98 @@ function onDrawMouseImg(e: MouseEvent) {
   const size = state.size / source.ratio
   const row = Math.floor((e.clientY - top) / size)
   const col = Math.floor((e.clientX - left) / size)
-  if(mouseImg.isFlag) { // 画旗子
-    if(state.gridArr[row][col].v) return
-    if(startFlag.isShow) {
-      const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
-      state.ctx.clearRect(x, y, gridW, gridW)
-      state.gridArr[startFlag.row][startFlag.col].v = 0
+  const item = state.gridArr[row][col]
+  switch (mouseImg.type) {
+    case 'floor': {
+      if(item.v) return
+      const {x, y, gridW} = getGridInside(col, row)
+      item.v = 1
+      item.i = state.floorNum
+      state.floorNum++
+      drawGrid({
+        img: state.floorOnloadImgs[mouseImg.imgIndex],
+        text: item.i + '',
+        x, 
+        y, 
+        gridW
+      })
+      return
     }
-    startFlag.isShow = true
-    startFlag.row = row
-    startFlag.col = col
-    state.gridArr[row][col].v = -1
-    drawFlag()
-    return
+    case 'flag': {
+      if(item.v) return
+      if(startFlag.isShow) {
+        const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
+        state.ctx.clearRect(x, y, gridW, gridW)
+        state.gridArr[startFlag.row][startFlag.col].v = 0
+      }
+      startFlag.isShow = true
+      startFlag.row = row
+      startFlag.col = col
+      item.v = -1
+      drawFlag()
+      return
+    }
+    case 'eraser': {
+      if(!item.v) return
+      const {x, y, gridW} = getGridInside(col, row)
+      changeOtherGrid(item.i!, -1)
+      state.floorNum--
+      state.ctx.clearRect(x, y, gridW, gridW)
+      item.v = 0
+      item.i = void 0
+      return
+    }
+    case 'oneselfAdd': {
+      handleAndDrawGridVal(item, 1, row, col)
+      return
+    }
+    case 'oneselfMinus': {
+      handleAndDrawGridVal(item, -1, row, col)
+      return
+    }
+    case 'previousAdd': {
+      if(item.v !== 1) return
+      changeOtherGrid(item.i!, 1, false)
+      return
+    }
+    case 'previousMinus': {
+      if(item.v !== 1) return
+      changeOtherGrid(item.i!, -1, false)
+      return
+    }
+    case 'nextAdd': {
+      if(item.v !== 1) return
+      changeOtherGrid(item.i!, 1)
+      return
+    }
+    case 'nextMinus': {
+      if(item.v !== 1) return
+      changeOtherGrid(item.i!, -1)
+      return
+    }
   }
-  // 该位置的橡皮擦或地板已经不需要操作了
-  if(!state.gridArr[row][col].v === mouseImg.isEraser) {
-    return
+}
+/** 改变前面或后面的格子信息 */
+function changeOtherGrid(floorNum: number, addVal: number, isNext = true) {
+  const {rowNum, colNum} = state.canvasInfo
+  for(let i = 0; i < rowNum; i++) {
+    for(let j = 0; j < colNum; j++) {
+      const item = state.gridArr[i][j]
+      const isOther = isNext ? item.i! >= floorNum : item.i! <= floorNum
+      if(item.v > 0 && isOther) {
+        handleAndDrawGridVal(item, addVal, i, j)
+      }
+    }
   }
+}
+/** 改变格子的值 */
+function handleAndDrawGridVal(item: GridItem, addVal: number, row: number, col: number) {
+  item.i = range(item.i! + addVal, 0, state.floorNum - 1);
   const {x, y, gridW} = getGridInside(col, row)
-  if(mouseImg.isEraser) {
-    state.gridArr[row][col].v = 0
-    state.gridArr[row][col].i = void 0
-    state.ctx.clearRect(x, y, gridW, gridW)
-  } else {
-    state.gridArr[row][col].v = 1
-    state.gridArr[row][col].i = state.floorNum
-    state.floorNum++
-    state.ctx.drawImage(state.floorOnloadImgs[mouseImg.imgIndex], x, y, gridW, gridW)
-  }
+  state.ctx.clearRect(x, y, gridW, gridW)
+  drawGrid({
+    img: state.floorOnloadImgs[item.v - 1], text: item.i + '', x, y, gridW
+  })
 }
 /** 获取格子内部的信息，不包括边框 */
 function getGridInside(col: number, row: number) {
@@ -220,6 +285,16 @@ function exportData() {
 }
 
 /** ------ 绘画 ------ */
+function drawGrid({img, x, y, gridW, text}: {
+  img: HTMLImageElement, x: number, y: number, gridW: number, text?: string
+}) {
+  state.ctx.drawImage(img, x, y, gridW, gridW)
+  if(!text) return
+  state.ctx.font = `${gridW / 1.5}px 宋体`
+  state.ctx.textAlign = 'center';
+  state.ctx.textBaseline = "middle";
+  state.ctx.fillText(text, x + gridW / 2, y + gridW / 2)
+}
 /** 画线 */
 function drawLine() {
   const {colNum, rowNum, lineW} = state.canvasInfo
@@ -251,7 +326,13 @@ function drawAllGrid() {
     for(let j = 0; j < colNum; j++) {
       if(state.gridArr[i][j].v > 0) {
         const {x, y, gridW} = getGridInside(j, i)
-        state.ctx.drawImage(state.floorOnloadImgs[state.gridArr[i][j].v - 1], x, y, gridW, gridW)
+        drawGrid({
+          img: state.floorOnloadImgs[state.gridArr[i][j].v - 1], 
+          text: state.gridArr[i][j].i + '', 
+          x, 
+          y, 
+          gridW
+        })
       }
     }
   }
@@ -273,6 +354,7 @@ function clearCanvas() {
   // 将二维数组中的值置为0
   state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
   startFlag.isShow = false
+  state.floorNum = 0
   startDraw()
 }
 
@@ -293,67 +375,102 @@ function getCanvasWrapInfo() {
   const lineW = state.size / 8
   state.canvasInfo.lineW = lineW
 }
-function calcArea(area: AreaType) {
-  Object.keys(area).forEach((key) => {
-    area[key as AreaKeyType] *= source.ratio
-  })
-}
 
 </script>
 
 <template>
   <div class='createMap' :style="{'--size': state.size / source.ratio + 'px'}">
-    <div class="createMap-area">
-      <div class="floorWrap">
-        <div 
-          v-for="(floor, i) in state.floorImgList" 
-          :key="i" 
-          class="floor"
-        >
-          <img :src="floor" class="floorImg" @mousedown="onClickFloor($event, i)">
+    <div>
+      <div class="createMap-area">
+        <div class="floorWrap">
+          <div 
+            v-for="(floor, i) in floorImgList" 
+            :key="i" 
+            class="floor"
+          >
+            <img :src="floor" class="floorImg" @mousedown="onClickDrag($event, i, 'floor')">
+          </div>
         </div>
-      </div>
-      <div class="right">
-        <ElSpace class="tools">
-          <ElSpace class="toolsLeft">
-            <div class="iconWrap" @click="onFlagClick">
-              <img :src="FlagIcon" alt="" class="flagIcon">
-            </div>
-            <div class="iconWrap" @click="onEraserClick">
-              <img :src="EraserIcon" alt="" class="eraserIcon">
-            </div>
+        <div class="right">
+          <ElSpace class="tools">
+            <ElSpace class="toolsLeft">
+              <ElTooltip content="起点的标志" placement="top">
+                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length, 'flag')">
+                  <img :src="FlagIcon" alt="" class="flagIcon">
+                </div>
+              </ElTooltip>
+              <ElTooltip content="清除某个格子" placement="top">
+                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 1, 'eraser')">
+                  <img :src="EraserIcon" alt="" class="eraserIcon">
+                </div>
+              </ElTooltip>
+            </ElSpace>
+            <ElSpace>
+              <ElTooltip content="使该格索引加一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'oneselfAdd')">
+                  oneself +1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该格索引减一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'oneselfMinus')">
+                  oneself -1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该索引和前面索引都加一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'previousAdd')">
+                  Pre +1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该索引和前面索引都减一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'previousMinus')">
+                  Pre -1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该索引和后续索引都减一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
+                  Next +1
+                </ElButton>
+              </ElTooltip>
+              <ElTooltip content="使该索引和后续索引都减一" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, floorImgList.length + 2, 'nextMinus')">
+                  Next -1
+                </ElButton>
+              </ElTooltip>
+            </ElSpace>
           </ElSpace>
-          <div>
-            <ElButton type="danger" @click="clearCanvas">清空画布</ElButton>
+          <div ref="canvasWrapRef" class="createMap-canvasWrap">
+            <canvas 
+              ref="canvasRef"
+              :width="state.canvasInfo.w"
+              :height="state.canvasInfo.h"
+              :style="{
+                width: state.canvasInfo.w / source.ratio + 'px',
+                height: state.canvasInfo.h / source.ratio + 'px',
+              }"
+            ></canvas>
           </div>
-          <div>
-            <ElButton @click="exportData">导出数据</ElButton>
-          </div>
-        </ElSpace>
-        <div ref="canvasWrapRef" class="createMap-canvasWrap">
-          <canvas 
-            ref="canvasRef"
-            :width="state.canvasInfo.w"
-            :height="state.canvasInfo.h"
-            :style="{
-              width: state.canvasInfo.w / source.ratio + 'px',
-              height: state.canvasInfo.h / source.ratio + 'px',
-            }"
-          ></canvas>
+        </div>
+        <div 
+          class="mouseImg"
+          :style="{
+            top: (mouseImg.y || -999) + 'px',
+            left: (mouseImg.x || -999) + 'px',
+          }"
+          @mousedown="onMouseFloorClick"
+          @mouseup="onMouseUp"
+          @contextmenu.prevent="onRightClick"
+        >
+          <img :src="mouseIcons" class="mouseImg-img">
         </div>
       </div>
-      <div 
-        class="mouseImg"
-        :style="{
-          top: (mouseImg.y || -999) + 'px',
-          left: (mouseImg.x || -999) + 'px',
-        }"
-        @mousedown="onMouseFloorClick"
-        @mouseup="onMouseUp"
-        @contextmenu.prevent="onRightClick"
-      >
-        <img :src="mouseIcons" class="mouseImg-img">
-      </div>
+      <ElSpace class="createMap-bottom">
+        <div>
+          <ElButton type="danger" @click="clearCanvas">清空画布</ElButton>
+        </div>
+        <div>
+          <ElButton @click="exportData">导出数据</ElButton>
+        </div>
+      </ElSpace>
     </div>
   </div>
 </template>
@@ -364,6 +481,7 @@ function calcArea(area: AreaType) {
   width: 100vw;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   .header {
@@ -429,6 +547,12 @@ function calcArea(area: AreaType) {
         -webkit-user-drag: none;
       }
     }
+  }
+  &-bottom {
+    width: 100%;
+    padding: 12px;
+    background-color: #e0eafb;
+    justify-content: space-between;
   }
 }
 </style>
