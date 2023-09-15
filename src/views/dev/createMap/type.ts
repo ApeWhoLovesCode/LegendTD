@@ -8,7 +8,12 @@ export type AreaType = {
 
 export type AreaKeyType = keyof AreaType
 
-export type GridItem = {v: number, i?: number}
+export type GridItem = {
+  /** 格子信息: 0:初始值 1:地板(n:第n块地板) -1:旗子 */
+  v: number
+  /** 地板的索引值 */
+  i: number
+}
 
 export type MouseImgType = '' 
 | 'floor'
@@ -17,3 +22,4 @@ export type MouseImgType = ''
 | 'oneselfAdd'
 | 'oneselfMinus'
 | 'nextAdd' 
+| 'chooseFlag'

@@ -34,7 +34,7 @@ const state = reactive({
   size: 50,
   ctx: null as unknown as CanvasRenderingContext2D,
   animationFrame: 0,
-  /** 格子信息 0:初始值 1:地板 -1:旗子 */
+  /** 格子信息二维数组 */
   gridArr: createTwoArray(12, 20, () => ({v: 0, i: 0})) as GridItem[][],
   /** 地板的累计数量 */
   floorNum: 0,
@@ -52,6 +52,8 @@ const mouseImg = reactive({
   type: '' as MouseImgType,
   /** 新的地板索引，用于覆盖之前的索引 */
   newFloorNum: -1,
+  /** 当前的起点索引 */
+  curFlagIndex: 0,
 })
 /** 起点 */
 const startFlag = reactive<{
@@ -178,7 +180,7 @@ function onDrawMouseImg(e: MouseEvent) {
       state.floorNum = Math.max(state.floorNum - 1, 0)
       state.ctx.clearRect(x, y, gridW, gridW)
       item.v = 0
-      item.i = void 0
+      item.i = 0
       return
     }
     case 'oneselfAdd': {
@@ -387,6 +389,13 @@ function getCanvasWrapInfo() {
                 <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 1, 'eraser')">
                   <img :src="EraserIcon" alt="" class="eraserIcon">
                 </div>
+              </ElTooltip>
+            </ElSpace>
+            <ElSpace>
+              <ElTooltip content="选中某个旗子，接下来的索引将按照该起点生成路径" placement="top">
+                <ElButton type="success" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
+                  当前的路径是: {{ mouseImg.curFlagIndex + 1 }}
+                </ElButton>
               </ElTooltip>
             </ElSpace>
             <ElSpace>
