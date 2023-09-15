@@ -54,11 +54,10 @@ const mouseImg = reactive({
   newFloorNum: -1,
 })
 /** 起点 */
-const startFlag = reactive({
-  isShow: false,
-  row: 0,
-  col: 0,
-})
+const startFlag = reactive<{
+  row: number
+  col: number
+}[]>([])
 
 const mouseIcons = computed(() => {
   return [...floorImgList, FlagIcon, EraserIcon, AddAndMinusIcon][mouseImg.imgIndex]
@@ -104,7 +103,7 @@ function startDraw() {
   // }
   drawLine()
   drawAllGrid()
-  drawFlag()
+  drawAllFlag()
 }
 
 /** 点击拖拽 */
@@ -167,23 +166,16 @@ function onDrawMouseImg(e: MouseEvent) {
     }
     case 'flag': {
       if(item.v) return
-      if(startFlag.isShow) {
-        const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
-        state.ctx.clearRect(x, y, gridW, gridW)
-        state.gridArr[startFlag.row][startFlag.col].v = 0
-      }
-      startFlag.isShow = true
-      startFlag.row = row
-      startFlag.col = col
+      startFlag.push({row, col})
       item.v = -1
-      drawFlag()
+      drawFlag(row, col)
       return
     }
     case 'eraser': {
       if(!item.v) return
       const {x, y, gridW} = getGridInside(col, row)
       changeOtherGrid(item.i!, -1)
-      state.floorNum--
+      state.floorNum = Math.max(state.floorNum - 1, 0)
       state.ctx.clearRect(x, y, gridW, gridW)
       item.v = 0
       item.i = void 0
@@ -244,14 +236,14 @@ function getGridInside(col: number, row: number) {
 
 /** 导出数据 */
 function exportData() {
-  if(!startFlag.isShow) return ElMessage.warning('请选择旗子作为敌人起点~')
+  if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
   const floorTotal = state.gridArr.reduce((pre, cur) => {
     cur.forEach(v => pre += v.v)
     return pre
   }, 0)
   if(!floorTotal) return ElMessage.warning('当前没有地板~')
   const res: {[key in number]: DirectionType} = {} 
-  let row = startFlag.row, col = startFlag.col;
+  let row = startFlag[0].row, col = startFlag[0].col;
   let item = getStartDirection(state.gridArr, row, col)
   let xy = item?.xy
   if(!item) return ElMessage.warning('旗子附近没有地板~')
@@ -326,11 +318,14 @@ function drawAllGrid() {
     }
   }
 }
-function drawFlag() {
-  if(startFlag.isShow) {
-    const {x, y, gridW} = getGridInside(startFlag.col, startFlag.row)
-    state.ctx.drawImage(state.flagOnloadImg!, x, y, gridW, gridW)
-  }
+function drawAllFlag() {
+  startFlag.forEach(flag => {
+    drawFlag(flag.row, flag.col)
+  })
+}
+function drawFlag(row: number, col: number) {
+  const {x, y, gridW} = getGridInside(col, row)
+  state.ctx.drawImage(state.flagOnloadImg!, x, y, gridW, gridW)
 }
 /** ------ 绘画 end ------ */
 
@@ -342,7 +337,7 @@ function isInCanvas(e: MouseEvent) {
 function clearCanvas() {
   // 将二维数组中的值置为0
   state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
-  startFlag.isShow = false
+  startFlag.length = 0
   state.floorNum = 0
   startDraw()
 }

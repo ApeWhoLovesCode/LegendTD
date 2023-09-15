@@ -304,7 +304,7 @@ function moveEnemy(enemy: EnemyStateType) {
   let newIndex = curFloorI
   // 敌人到达终点
   if(!setting.isTowerCover) {
-    if(curFloorI === baseDataState.floorTile.num - 1) {
+    if(curFloorI === baseDataState.floorTile.num) {
       removeEnemy([id])
       onReduceHp(1)
       return true

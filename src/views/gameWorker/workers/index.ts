@@ -142,7 +142,7 @@ function drawFloorTile() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const movePathItem = JSON.parse(JSON.stringify(
-    !setting.isTowerCover ? levelData[source.mapLevel].mapGridInfo : towerCanvasMapGridInfo
+    !setting.isTowerCover ? levelData[source.mapLevel].start[0] : towerCanvasMapGridInfo
   ))
   movePathItem.x *= gameConfigState.size
   movePathItem.y *= gameConfigState.size
@@ -152,8 +152,8 @@ function initMovePath() {
   // 刚开始就右移了，所以该初始格不会算上去
   const length = movePathItem.num!
   delete movePathItem.num
-  const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].mapData : towerCanvasMapData
-  const movePath: GridInfo[] = []
+  const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].map[0] : towerCanvasMapData
+  const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
   for(let i = 0; i < length; i++) {

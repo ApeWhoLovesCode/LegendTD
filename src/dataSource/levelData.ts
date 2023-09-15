@@ -1,5 +1,5 @@
 import levelEnemyArr from '@/dataSource/levelEnemyArr';
-import mapData, { DirectionType, MapGridInfo, mapGridInfoList, othMapData } from './mapData';
+import mapData, { DirectionType, MapDataInfo, MapGridInfo, othMapData } from './mapData';
 import { BuildTowerParams } from '@/views/gameWorker/workers/type/tower';
 
 export enum LevelDataItemEnum {
@@ -17,8 +17,8 @@ const levelData: LevelDataItem[] = [
     type: LevelDataItemEnum.Experience,
     typeIndex: 0,
     enemyArr: levelEnemyArr[0],
-    mapData: othMapData.experience[0].mapData,
-    mapGridInfo: othMapData.experience[0].mapGridInfo,
+    start: othMapData.experience[0].start,
+    map: othMapData.experience[0].map,
     // towerArr: [
     //   {tname: 'aixi', x: }
     // ]
@@ -26,12 +26,12 @@ const levelData: LevelDataItem[] = [
 ]
 
 // 正常关卡
-for(let initI = levelData.length, i = 0; i < initI + mapData.length; i++) {
+for(let initI = levelData.length, i = 0; i < mapData.length; i++) {
   const item: LevelDataItem = {
     type: LevelDataItemEnum.Normal,
     enemyArr: levelEnemyArr[0],
-    mapData: mapData[i],
-    mapGridInfo: mapGridInfoList[i],
+    start: mapData[i].start,
+    map: mapData[i].map,
   }
   levelData[initI + i] = item
 }
@@ -41,8 +41,8 @@ levelData.push({
   type: LevelDataItemEnum.Endless,
   typeIndex: 0,
   enemyArr: levelEnemyArr[0],
-  mapData: othMapData.endless[0].mapData,
-  mapGridInfo: othMapData.endless[0].mapGridInfo,
+  start: othMapData.endless[0].start,
+  map: othMapData.endless[0].map,
 })
 
 
@@ -51,8 +51,8 @@ export default levelData
 export const levelNullItem: LevelDataItem = {
   type: LevelDataItemEnum.Normal,
   enemyArr: [],
-  mapData: {},
-  mapGridInfo: {x: 0, y: 0, x_y: 1, num: 0},
+  start: [],
+  map: [],
   disable: true
 }
 
@@ -63,10 +63,10 @@ export type LevelDataItem = {
   typeIndex?: number
   /** 敌人数组 */
   enemyArr: Array<number[]>
+  /** 起点信息 */
+  start: MapGridInfo[]
   /** 地图移动方向信息 */
-  mapData: {[key in number]: DirectionType}
-  /** 格子信息 */
-  mapGridInfo: MapGridInfo
+  map: MapDataInfo[]
   /** 初始化建造的塔防 */
   towerArr?: BuildTowerParams[]
   /** 是否禁用 */

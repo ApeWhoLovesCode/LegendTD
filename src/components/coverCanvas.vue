@@ -58,19 +58,19 @@ function getCanvasWH() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const size = state.size
-  if(!levelData[props.index].mapGridInfo) return
+  if(!levelData[props.index].start) return
   const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(
-    levelData[props.index].mapGridInfo
+    levelData[props.index].start[0]
   ))
   movePathItem.x *= size
   movePathItem.y = movePathItem.y * size
   const length = movePathItem.num!
   delete movePathItem.num
-  const movePath: GridInfo[]  = []
+  const movePath: GridInfo[]  = [JSON.parse(JSON.stringify(movePathItem))]
   // 控制x y轴的方向 1:左 2:下 3:右 4:上
   let x_y = movePathItem.x_y
   for(let i = 0; i < length; i++) {
-    const newXY = levelData[props.index].mapData[i]
+    const newXY = levelData[props.index].map[0][i]
     if(newXY) {
       x_y = newXY
     }
