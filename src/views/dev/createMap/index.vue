@@ -11,6 +11,7 @@ import type {DirectionType} from '@/dataSource/mapData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
 import { range } from '@/utils/format';
 import otherImgData from '@/dataSource/otherImgData';
+import { START_MAX_COUNT, startColors, startColors2 } from './config';
 
 const floorImgList = [otherImgData.floor]
 const source = useSourceStore()
@@ -36,8 +37,10 @@ const state = reactive({
   animationFrame: 0,
   /** 格子信息二维数组 */
   gridArr: createTwoArray(12, 20, () => ({v: 0, i: 0})) as GridItem[][],
-  /** 地板的累计数量 */
-  floorNum: 0,
+  /** 当前的起点索引 */
+  curFlagIndex: 0,
+  /** 地板的累计数量, 和上面的起点索引对应 */
+  floorNumList: [0, 0, 0, 0],
   floorOnloadImgs: [] as HTMLImageElement[],
   flagOnloadImg: void 0 as HTMLImageElement | undefined,
 })
@@ -52,8 +55,6 @@ const mouseImg = reactive({
   type: '' as MouseImgType,
   /** 新的地板索引，用于覆盖之前的索引 */
   newFloorNum: -1,
-  /** 当前的起点索引 */
-  curFlagIndex: 0,
 })
 /** 起点 */
 const startFlag = reactive<{
@@ -117,6 +118,14 @@ function onClickDrag(e: MouseEvent, i: number, type: MouseImgType) {
   mouseImg.y = e.clientY - state.size / 4
 }
 
+function onChangeFlagIndex() {
+  if(state.curFlagIndex < startFlag.length - 1) {
+    state.curFlagIndex++
+  } else {
+    state.curFlagIndex = 0
+  }
+}
+
 function onMouseMove(e: MouseEvent) {
   mouseImg.x = e.clientX - state.size / 4
   mouseImg.y = e.clientY - state.size / 4
@@ -159,8 +168,8 @@ function onDrawMouseImg(e: MouseEvent) {
       if(item.v) return
       const {x, y, gridW} = getGridInside(col, row)
       item.v = 1
-      item.i = state.floorNum
-      state.floorNum++
+      item.i = state.floorNumList[state.curFlagIndex]
+      state.floorNumList[state.curFlagIndex]++
       drawGrid({
         img: state.floorOnloadImgs[mouseImg.imgIndex], text: item.i + '', x, y, gridW
       })
@@ -168,6 +177,7 @@ function onDrawMouseImg(e: MouseEvent) {
     }
     case 'flag': {
       if(item.v) return
+      if(startFlag.length >= START_MAX_COUNT) return
       startFlag.push({row, col})
       item.v = -1
       drawFlag(row, col)
@@ -177,7 +187,13 @@ function onDrawMouseImg(e: MouseEvent) {
       if(!item.v) return
       const {x, y, gridW} = getGridInside(col, row)
       changeOtherGrid(item.i!, -1)
-      state.floorNum = Math.max(state.floorNum - 1, 0)
+      if(item.v === -1) { // 删除旗子的数据
+        const fIndex = startFlag.findIndex(f => f.row === row && f.col === col)
+        if(fIndex !== -1) {
+          startFlag.splice(fIndex, 1)
+        }
+      }
+      state.floorNumList[state.curFlagIndex] = Math.max(state.floorNumList[state.curFlagIndex] - 1, 0)
       state.ctx.clearRect(x, y, gridW, gridW)
       item.v = 0
       item.i = 0
@@ -219,7 +235,7 @@ function changeOtherGrid(floorNum: number, addVal: number, isNext = true) {
 }
 /** 改变格子的值 */
 function handleAndDrawGridVal(item: GridItem, itemNewI: number, row: number, col: number) {
-  item.i = range(itemNewI, 0, state.floorNum - 1);
+  item.i = range(itemNewI, 0, state.floorNumList[state.curFlagIndex] - 1);
   const {x, y, gridW} = getGridInside(col, row)
   state.ctx.clearRect(x, y, gridW, gridW)
   drawGrid({
@@ -273,6 +289,7 @@ function drawGrid({img, x, y, gridW, text}: {
 }) {
   state.ctx.drawImage(img, x, y, gridW, gridW)
   if(!text) return
+  state.ctx.fillStyle = startColors2[state.curFlagIndex]
   state.ctx.font = `${gridW / 1.5}px 宋体`
   state.ctx.textAlign = 'center';
   state.ctx.textBaseline = "middle";
@@ -340,7 +357,7 @@ function clearCanvas() {
   // 将二维数组中的值置为0
   state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
   startFlag.length = 0
-  state.floorNum = 0
+  state.floorNumList[state.curFlagIndex] = 0
   startDraw()
 }
 
@@ -392,9 +409,9 @@ function getCanvasWrapInfo() {
               </ElTooltip>
             </ElSpace>
             <ElSpace>
-              <ElTooltip content="选中某个旗子，接下来的索引将按照该起点生成路径" placement="top">
-                <ElButton type="success" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
-                  当前的路径是: {{ mouseImg.curFlagIndex + 1 }}
+              <ElTooltip content="切换接下来的敌人路径的索引" placement="top">
+                <ElButton :type="startColors[state.curFlagIndex]" @click="onChangeFlagIndex">
+                  当前的路径是: {{ state.curFlagIndex + 1 }}
                 </ElButton>
               </ElTooltip>
             </ElSpace>
@@ -512,7 +529,7 @@ function getCanvasWrapInfo() {
       }
     }
     .createMap-canvasWrap {
-      width: 90vw;
+      width: 81vw;
       height: 54vw;
       border: 1px solid #ccc;
     }
