@@ -14,6 +14,8 @@ import otherImgData from '@/dataSource/otherImgData';
 import { START_MAX_COUNT, startColors, startColors2 } from './config';
 
 const floorImgList = [otherImgData.floor]
+let floorOnloadImgs: HTMLImageElement[] = []
+let flagOnloadImg: HTMLImageElement | undefined = void 0
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
 const canvasRef = ref<HTMLCanvasElement>()
@@ -36,13 +38,11 @@ const state = reactive({
   ctx: null as unknown as CanvasRenderingContext2D,
   animationFrame: 0,
   /** 格子信息二维数组 */
-  gridArr: createTwoArray(12, 20, () => ({v: 0, i: 0})) as GridItem[][],
+  gridArr: createTwoArray(12, 20, () => ({v: 0, i: []})) as GridItem[][],
   /** 当前的起点索引 */
   curFlagIndex: 0,
   /** 地板的累计数量, 和上面的起点索引对应 */
   floorNumList: [0, 0, 0, 0],
-  floorOnloadImgs: [] as HTMLImageElement[],
-  flagOnloadImg: void 0 as HTMLImageElement | undefined,
 })
 const mouseImg = reactive({
   x: 0,
@@ -88,8 +88,8 @@ async function init() {
 }
 
 async function initData() {
-  state.floorOnloadImgs = await Promise.all(floorImgList.map(img => loadImage(img)))
-  state.flagOnloadImg = await loadImage(FlagIcon)
+  floorOnloadImgs = await Promise.all(floorImgList.map(img => loadImage(img)))
+  flagOnloadImg = await loadImage(FlagIcon)
 }
 
 function startDraw() {
@@ -163,15 +163,18 @@ function onDrawMouseImg(e: MouseEvent) {
   const row = Math.floor((e.clientY - top) / size)
   const col = Math.floor((e.clientX - left) / size)
   const item = state.gridArr[row][col]
+  const curIndex = state.curFlagIndex
   switch (mouseImg.type) {
     case 'floor': {
-      if(item.v) return
+      if(item.v === -1) return
+      // 排除当前路径的地板
+      if(item.v > 0 && item.i[state.curFlagIndex] !== void 0) return
       const {x, y, gridW} = getGridInside(col, row)
       item.v = 1
-      item.i = state.floorNumList[state.curFlagIndex]
-      state.floorNumList[state.curFlagIndex]++
+      item.i[curIndex] = state.floorNumList[curIndex]
+      state.floorNumList[curIndex]++
       drawGrid({
-        img: state.floorOnloadImgs[mouseImg.imgIndex], text: item.i + '', x, y, gridW
+        img: floorOnloadImgs[mouseImg.imgIndex], itemI: item.i, x, y, gridW
       })
       return
     }
@@ -186,35 +189,35 @@ function onDrawMouseImg(e: MouseEvent) {
     case 'eraser': {
       if(!item.v) return
       const {x, y, gridW} = getGridInside(col, row)
-      changeOtherGrid(item.i!, -1)
+      changeOtherGrid(item.i[curIndex], -1)
       if(item.v === -1) { // 删除旗子的数据
         const fIndex = startFlag.findIndex(f => f.row === row && f.col === col)
         if(fIndex !== -1) {
           startFlag.splice(fIndex, 1)
         }
       }
-      state.floorNumList[state.curFlagIndex] = Math.max(state.floorNumList[state.curFlagIndex] - 1, 0)
+      state.floorNumList[curIndex] = Math.max(state.floorNumList[curIndex] - 1, 0)
       state.ctx.clearRect(x, y, gridW, gridW)
       item.v = 0
-      item.i = 0
+      item.i = []
       return
     }
     case 'oneselfAdd': {
-      handleAndDrawGridVal(item, item.i! + 1, row, col)
+      handleAndDrawGridVal(item, item.i[curIndex] + 1, row, col)
       return
     }
     case 'oneselfMinus': {
-      handleAndDrawGridVal(item, item.i! - 1, row, col)
+      handleAndDrawGridVal(item, item.i[curIndex] - 1, row, col)
       return
     }
     case 'nextAdd': {
-      if(item.v !== 1 || mouseImg.newFloorNum === item.i) return
+      if(item.v !== 1 || mouseImg.newFloorNum === item.i[curIndex]) return
       if(mouseImg.newFloorNum < 0) {
-        mouseImg.newFloorNum = item.i!
+        mouseImg.newFloorNum = item.i[curIndex]
       } else {
         mouseImg.newFloorNum++
-        item.i = mouseImg.newFloorNum
-        handleAndDrawGridVal(item, item.i, row, col)
+        item.i[curIndex] = mouseImg.newFloorNum
+        handleAndDrawGridVal(item, item.i[curIndex], row, col)
       }
       return
     }
@@ -223,23 +226,24 @@ function onDrawMouseImg(e: MouseEvent) {
 /** 改变前面或后面的格子信息 */
 function changeOtherGrid(floorNum: number, addVal: number, isNext = true) {
   const {rowNum, colNum} = state.canvasInfo
+  const curIndex = state.curFlagIndex
   for(let i = 0; i < rowNum; i++) {
     for(let j = 0; j < colNum; j++) {
       const item = state.gridArr[i][j]
-      const isOther = isNext ? item.i! >= floorNum : item.i! <= floorNum
+      const isOther = isNext ? item.i[curIndex] >= floorNum : item.i[curIndex] <= floorNum
       if(item.v > 0 && isOther) {
-        handleAndDrawGridVal(item, item.i! + addVal, i, j)
+        handleAndDrawGridVal(item, item.i[curIndex] + addVal, i, j)
       }
     }
   }
 }
 /** 改变格子的值 */
 function handleAndDrawGridVal(item: GridItem, itemNewI: number, row: number, col: number) {
-  item.i = range(itemNewI, 0, state.floorNumList[state.curFlagIndex] - 1);
+  item.i[state.curFlagIndex] = range(itemNewI, 0, state.floorNumList[state.curFlagIndex] - 1);
   const {x, y, gridW} = getGridInside(col, row)
   state.ctx.clearRect(x, y, gridW, gridW)
   drawGrid({
-    img: state.floorOnloadImgs[item.v - 1], text: item.i + '', x, y, gridW
+    img: floorOnloadImgs[item.v - 1], itemI: item.i, x, y, gridW
   })
 }
 /** 获取格子内部的信息，不包括边框 */
@@ -284,16 +288,72 @@ function exportData() {
 }
 
 /** ------ 绘画 ------ */
-function drawGrid({img, x, y, gridW, text}: {
-  img: HTMLImageElement, x: number, y: number, gridW: number, text?: string
+function drawGrid({img, x, y, gridW, itemI}: {
+  img: HTMLImageElement, x: number, y: number, gridW: number, itemI: number[]
 }) {
   state.ctx.drawImage(img, x, y, gridW, gridW)
-  if(!text) return
-  state.ctx.fillStyle = startColors2[state.curFlagIndex]
-  state.ctx.font = `${gridW / 1.5}px 宋体`
+  const length = itemI?.filter(v => v !== void 0) ?.length
+  if(!length) return
   state.ctx.textAlign = 'center';
   state.ctx.textBaseline = "middle";
-  state.ctx.fillText(text, x + gridW / 2, y + gridW / 2)
+  switch (length) {
+    case 1: {
+      state.ctx.fillStyle = startColors2[state.curFlagIndex];
+      itemI.forEach((i) => {
+        if(i === void 0) return 
+        drawGridValue({
+          fontSize: gridW / 1.5, x: x + gridW / 2, y: y + gridW / 2, text: i + ''
+        })
+      })
+      break;
+    }
+    case 2: {
+      let drawI = 0;
+      itemI.forEach((i, index) => {
+        if(i === void 0) return 
+        state.ctx.fillStyle = startColors2[index];
+        drawGridValue({
+          fontSize: gridW / 2, x: x + gridW * (drawI % 2 ? 3 : 1) / 4, y: y + gridW / 2, text: i + ''
+        })
+        drawI++;
+      })
+      break;
+    }
+    case 3: {
+      let drawI = 0;
+      itemI.forEach((i, index) => {
+        if(i === void 0) return 
+        state.ctx.fillStyle = startColors2[index];
+        drawGridValue({
+          fontSize: gridW / 2, 
+          x: x + gridW * (drawI ? (drawI === 1 ? 1 : 3) : 2) / 4, 
+          y: y + gridW * (drawI ? 3 : 1) / 4, 
+          text: i + ''
+        })
+        drawI++;
+      })
+      break;
+    }
+    case 4: {
+      let drawI = 0;
+      itemI.forEach((i, index) => {
+        if(i === void 0) return 
+        state.ctx.fillStyle = startColors2[index];
+        drawGridValue({
+          fontSize: gridW / 2, 
+          x: x + gridW * (drawI % 2 ? 3 : 1) / 4, 
+          y: y + gridW * (drawI > 1 ? 3 : 1) / 4, 
+          text: i + ''
+        })
+        drawI++;
+      })
+      break;
+    }
+  }
+}
+function drawGridValue({fontSize, x, y, text}: {fontSize: number, text: string, x: number, y: number}) {
+  state.ctx.font = `${fontSize}px 宋体`;
+  state.ctx.fillText(text, x, y);
 }
 /** 画线 */
 function drawLine() {
@@ -327,8 +387,8 @@ function drawAllGrid() {
       if(state.gridArr[i][j].v > 0) {
         const {x, y, gridW} = getGridInside(j, i)
         drawGrid({
-          img: state.floorOnloadImgs[state.gridArr[i][j].v - 1], 
-          text: state.gridArr[i][j].i + '', 
+          img: floorOnloadImgs[state.gridArr[i][j].v - 1], 
+          itemI: state.gridArr[i][j].i, 
           x, 
           y, 
           gridW
@@ -344,7 +404,7 @@ function drawAllFlag() {
 }
 function drawFlag(row: number, col: number) {
   const {x, y, gridW} = getGridInside(col, row)
-  state.ctx.drawImage(state.flagOnloadImg!, x, y, gridW, gridW)
+  state.ctx.drawImage(flagOnloadImg!, x, y, gridW, gridW)
 }
 /** ------ 绘画 end ------ */
 
@@ -355,9 +415,16 @@ function isInCanvas(e: MouseEvent) {
 }
 function clearCanvas() {
   // 将二维数组中的值置为0
-  state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
+  // state.gridArr = JSON.parse(JSON.stringify(state.gridArr).replace(/\d+/g, '0'))
+  state.gridArr.forEach(arr => {
+    arr.forEach(item => {
+      item.v = 0
+      item.i = []
+    })
+  })
+  state.curFlagIndex = 0
   startFlag.length = 0
-  state.floorNumList[state.curFlagIndex] = 0
+  state.floorNumList = [0, 0, 0, 0]
   startDraw()
 }
 
@@ -529,8 +596,9 @@ function getCanvasWrapInfo() {
       }
     }
     .createMap-canvasWrap {
-      width: 81vw;
-      height: 54vw;
+      // 20 / 12
+      width: 80vw;
+      height: 48vw;
       border: 1px solid #ccc;
     }
     .mouseImg {
