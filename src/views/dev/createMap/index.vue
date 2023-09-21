@@ -7,15 +7,17 @@ import { GridItem, MouseImgType } from './type';
 import { loadImage } from '@/utils/handleImg'
 import { ElButton, ElMessage, ElSpace, ElTooltip } from 'element-plus';
 import { EraserIcon, FlagIcon, AddAndMinusIcon } from './imgSource'
-import type {DirectionType} from '@/dataSource/mapData'
+import type {MapDataItem, MapGridInfo} from '@/dataSource/mapData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
 import { range } from '@/utils/format';
 import otherImgData from '@/dataSource/otherImgData';
 import { START_MAX_COUNT, startColors, startColors2 } from './config';
+import ImgSource from '@/dataSource/imgSource';
 
 const floorImgList = [otherImgData.floor]
 let floorOnloadImgs: HTMLImageElement[] = []
 let flagOnloadImg: HTMLImageElement | undefined = void 0
+let terminalOnloadImg: HTMLImageElement | undefined = void 0
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
 const canvasRef = ref<HTMLCanvasElement>()
@@ -61,9 +63,11 @@ const startFlag = reactive<{
   row: number
   col: number
 }[]>([])
+/** 起点 */
+const end = ref<{row: number, col: number}>()
 
 const mouseIcons = computed(() => {
-  return [...floorImgList, FlagIcon, EraserIcon, AddAndMinusIcon][mouseImg.imgIndex]
+  return [...floorImgList, FlagIcon, EraserIcon, ImgSource.TerminalImg, AddAndMinusIcon][mouseImg.imgIndex]
 })
 
 onMounted(() => {
@@ -90,6 +94,7 @@ async function init() {
 async function initData() {
   floorOnloadImgs = await Promise.all(floorImgList.map(img => loadImage(img)))
   flagOnloadImg = await loadImage(FlagIcon)
+  terminalOnloadImg = await loadImage(ImgSource.TerminalImg)
 }
 
 function startDraw() {
@@ -186,6 +191,18 @@ function onDrawMouseImg(e: MouseEvent) {
       drawFlag(row, col)
       return
     }
+    case 'end': {
+      if(item.v) return
+      if(end.value) {
+        const {x, y, gridW} = getGridInside(end.value.col, end.value.row)
+        state.gridArr[end.value.row][end.value.col].v = 0
+        state.ctx.clearRect(x, y, gridW, gridW)
+      }
+      end.value = {row, col}
+      item.v = -2
+      drawEnd(row, col)
+      return
+    }
     case 'eraser': {
       if(!item.v) return
       const {x, y, gridW} = getGridInside(col, row)
@@ -195,6 +212,8 @@ function onDrawMouseImg(e: MouseEvent) {
         if(fIndex !== -1) {
           startFlag.splice(fIndex, 1)
         }
+      } else if(item.v === -2) {
+        end.value = void 0
       }
       state.floorNumList[curIndex] = Math.max(state.floorNumList[curIndex] - 1, 0)
       state.ctx.clearRect(x, y, gridW, gridW)
@@ -259,32 +278,35 @@ function getGridInside(col: number, row: number) {
 /** 导出数据 */
 function exportData() {
   if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
+  if(!end.value) return ElMessage.warning('请选择萝卜作为敌人终点~')
   const floorTotal = state.gridArr.reduce((pre, cur) => {
     cur.forEach(v => pre += v.v)
     return pre
   }, 0)
   if(!floorTotal) return ElMessage.warning('当前没有地板~')
-  const res: {[key in number]: DirectionType} = {} 
-  let row = startFlag[0].row, col = startFlag[0].col;
-  let item = getStartDirection(state.gridArr, row, col)
-  let xy = item?.xy
-  if(!item) return ElMessage.warning('旗子附近没有地板~')
-  row = item.row
-  col = item.col
-  const mapInfoItem = {x: col, y: row, x_y: xy, num: floorTotal}
-  for(let i = 1; i < floorTotal - 1; i++) {
-    const item = getDirectionVal(state.gridArr, row, col, xy!)
+  const res: MapDataItem = {start: [], map: [], end: {x: 0, y: 0}} 
+  for(let index = 0; index < startFlag.length; index++) {
+    let {row, col} = startFlag[index]
+    let item = getStartDirection(state.gridArr, row, col)
+    let xy = item?.xy
+    if(!item) return ElMessage.warning('旗子附近没有地板~')
     row = item.row
     col = item.col
-    const _xy = getDirection(state.gridArr, row, col);
-    if(!_xy) return ElMessage.warning('请将所有地板格子相连~')
-    if(_xy !== xy) {
-      xy = _xy
-      res[i] = _xy
+    const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: xy ?? 1, num: floorTotal}
+    for(let i = 1; i < floorTotal - 1; i++) {
+      const item = getDirectionVal(state.gridArr, row, col, xy!)
+      row = item.row
+      col = item.col
+      const _xy = getDirection(state.gridArr, row, col);
+      if(!_xy) return ElMessage.warning('请将所有地板格子相连~')
+      if(_xy !== xy) {
+        xy = _xy
+        res.map[index][i] = _xy
+      }
     }
+    res.start.push(mapInfoItem)
   }
   console.log(res);
-  console.log(mapInfoItem);
 }
 
 /** ------ 绘画 ------ */
@@ -406,6 +428,10 @@ function drawFlag(row: number, col: number) {
   const {x, y, gridW} = getGridInside(col, row)
   state.ctx.drawImage(flagOnloadImg!, x, y, gridW, gridW)
 }
+function drawEnd(row: number, col: number) {
+  const {x, y, gridW} = getGridInside(col, row)
+  state.ctx.drawImage(terminalOnloadImg!, x, y, gridW, gridW)
+}
 /** ------ 绘画 end ------ */
 
 /** 当前event是否在canvas中 */
@@ -466,12 +492,17 @@ function getCanvasWrapInfo() {
             <ElSpace class="toolsLeft">
               <ElTooltip content="起点的标志" placement="top">
                 <div class="iconWrap" @click="onClickDrag($event, floorImgList.length, 'flag')">
-                  <img :src="FlagIcon" alt="" class="flagIcon">
+                  <img :src="FlagIcon" alt="" class="iconImg">
                 </div>
               </ElTooltip>
               <ElTooltip content="清除某个格子" placement="top">
                 <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 1, 'eraser')">
-                  <img :src="EraserIcon" alt="" class="eraserIcon">
+                  <img :src="EraserIcon" alt="" class="iconImg">
+                </div>
+              </ElTooltip>
+              <ElTooltip content="终点的标志" placement="top">
+                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 2, 'end')">
+                  <img :src="ImgSource.TerminalImg" alt="" class="iconImg">
                 </div>
               </ElTooltip>
             </ElSpace>
@@ -585,13 +616,10 @@ function getCanvasWrapInfo() {
           transform: scale(1.1);
           background-color: rgba(255, 255, 255, .5);
         }
-        .eraserIcon { 
+        .iconImg { 
           width: 25px;
           height: 25px;
-        }
-        .flagIcon {
-          width: 25px;
-          height: 25px;
+          object-fit: cover;
         }
       }
     }

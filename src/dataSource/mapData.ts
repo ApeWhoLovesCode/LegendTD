@@ -109,6 +109,8 @@ export type MapDataItem = {
   /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
   start: MapGridInfo[]
   map: MapDataInfo[]
+  /** 终点的位置 */
+  end: {x: number, y: number}
 }
 
 export type MapDataInfo = {[key in number]: DirectionType}
