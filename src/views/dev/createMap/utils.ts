@@ -17,7 +17,9 @@ export function getStartDirection(arr: Array<GridItem[]>, row: number, col: numb
 }
 
 /** 从二维数组中获取方向 */
-export function getDirection(arr: Array<GridItem[]>, row: number, col: number): DirectionType | undefined {
+export function getDirection(
+  arr: Array<GridItem[]>, row: number, col: number, flagIndex: number, end: {row: number, col: number}
+): {xy: DirectionType | 'end', flagIndex: number} | undefined {
   const array = [
     {addRow: 0, addCol: -1},
     {addRow: -1, addCol: 0},
@@ -26,10 +28,25 @@ export function getDirection(arr: Array<GridItem[]>, row: number, col: number): 
   ]
   for(let i = 0; i < array.length; i++) {
     const cur = arr[row][col]
-    const next = arr[row + array[i].addRow][col + array[i].addCol]
-    const isNextGrid = cur.i && cur.i + 1 === next.i
+    const nextRow = row + array[i].addRow, nextCol = col + array[i].addCol
+    const next = arr[nextRow][nextCol]
+    let isNextGrid = cur.i[flagIndex] && cur.i[flagIndex] + 1 === next.i[flagIndex]
+    // 尝试走其他的路径中可走的路
+    if(!isNextGrid) {
+      for(let otherI = 0; otherI < cur.i.length; otherI++) {
+        if(otherI === flagIndex) break;
+        const _isNextGrid = cur.i[otherI] && cur.i[otherI] + 1 === next.i[otherI]
+        if(_isNextGrid) {
+          isNextGrid = _isNextGrid
+          flagIndex = otherI
+        }
+      }
+    }
     if(next.v && isNextGrid) {
-      return i + 1 as DirectionType;
+      return {xy: i + 1 as DirectionType, flagIndex};
+    }
+    if(end.row === nextRow && end.col === nextCol) {
+      return {xy: 'end', flagIndex}
     }
   }
 }

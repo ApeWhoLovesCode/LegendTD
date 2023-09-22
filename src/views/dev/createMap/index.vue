@@ -99,19 +99,10 @@ async function initData() {
 
 function startDraw() {
   state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
-  // for(let i = 0; i < 5; i++) {
-  //   state.gridArr[2][3 + i].v = 1
-  //   state.gridArr[2][3 + i].i = i
-  //   state.floorNum++
-  // }
-  // for(let i = 0; i < 5; i++) {
-  //   state.gridArr[3 + i][7].v = 1
-  //   state.gridArr[3 + i][7].i = 5 + i
-  //   state.floorNum++
-  // }
+  // devTry()
   drawLine()
   drawAllGrid()
-  drawAllFlag()
+  drawAllFlagAndEnd()
 }
 
 /** 点击拖拽 */
@@ -187,6 +178,7 @@ function onDrawMouseImg(e: MouseEvent) {
       if(item.v) return
       if(startFlag.length >= START_MAX_COUNT) return
       startFlag.push({row, col})
+      state.curFlagIndex = startFlag.length - 1
       item.v = -1
       drawFlag(row, col)
       return
@@ -284,25 +276,33 @@ function exportData() {
     return pre
   }, 0)
   if(!floorTotal) return ElMessage.warning('当前没有地板~')
-  const res: MapDataItem = {start: [], map: [], end: {x: 0, y: 0}} 
-  for(let index = 0; index < startFlag.length; index++) {
-    let {row, col} = startFlag[index]
+  const res: MapDataItem = {start: [], map: [], end: {x: end.value.row, y: end.value.col}} 
+  for(let flagIndex = 0; flagIndex < startFlag.length; flagIndex++) {
+    res.map.push({})
+    let {row, col} = startFlag[flagIndex]
     let item = getStartDirection(state.gridArr, row, col)
     let xy = item?.xy
     if(!item) return ElMessage.warning('旗子附近没有地板~')
     row = item.row
     col = item.col
     const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: xy ?? 1, num: floorTotal}
-    for(let i = 1; i < floorTotal - 1; i++) {
+    let i = 1;
+    // 当前遍历的路径，可能会由于当前路径不足以到终点，走其他路径的路
+    let _flagIndex = flagIndex
+    while(row !== end.value.row || col !== end.value.col) {
       const item = getDirectionVal(state.gridArr, row, col, xy!)
       row = item.row
       col = item.col
-      const _xy = getDirection(state.gridArr, row, col);
-      if(!_xy) return ElMessage.warning('请将所有地板格子相连~')
-      if(_xy !== xy) {
-        xy = _xy
-        res.map[index][i] = _xy
+      const direction = getDirection(state.gridArr, row, col, _flagIndex, end.value);
+      // console.log(flagIndex, row, col, direction?.xy);
+      if(!direction) return ElMessage.warning('请将所有地板格子相连~')
+      if(direction.xy === 'end') break; // 该路径到达终点
+      _flagIndex = direction.flagIndex // 如果路径不同就被修改到其他的路径上了
+      if(direction.xy !== xy) {
+        xy = direction.xy
+        res.map[flagIndex][i] = direction.xy
       }
+      i++;
     }
     res.start.push(mapInfoItem)
   }
@@ -314,13 +314,20 @@ function drawGrid({img, x, y, gridW, itemI}: {
   img: HTMLImageElement, x: number, y: number, gridW: number, itemI: number[]
 }) {
   state.ctx.drawImage(img, x, y, gridW, gridW)
-  const length = itemI?.filter(v => v !== void 0) ?.length
-  if(!length) return
+  const gridValue = itemI.reduce((pre, cur, index) => {
+    if(cur !== void 0) {
+      pre.length++;
+      // 当该格只有1个值时才有效，用于绘画颜色
+      pre.curFlagIndex = index
+    }
+    return pre
+  }, {length: 0, curFlagIndex: 0})
+  if(!gridValue.length) return
   state.ctx.textAlign = 'center';
   state.ctx.textBaseline = "middle";
-  switch (length) {
+  switch (gridValue.length) {
     case 1: {
-      state.ctx.fillStyle = startColors2[state.curFlagIndex];
+      state.ctx.fillStyle = startColors2[gridValue.curFlagIndex];
       itemI.forEach((i) => {
         if(i === void 0) return 
         drawGridValue({
@@ -331,9 +338,9 @@ function drawGrid({img, x, y, gridW, itemI}: {
     }
     case 2: {
       let drawI = 0;
-      itemI.forEach((i, index) => {
+      itemI.forEach((i, flagIndex) => {
         if(i === void 0) return 
-        state.ctx.fillStyle = startColors2[index];
+        state.ctx.fillStyle = startColors2[flagIndex];
         drawGridValue({
           fontSize: gridW / 2, x: x + gridW * (drawI % 2 ? 3 : 1) / 4, y: y + gridW / 2, text: i + ''
         })
@@ -343,9 +350,9 @@ function drawGrid({img, x, y, gridW, itemI}: {
     }
     case 3: {
       let drawI = 0;
-      itemI.forEach((i, index) => {
+      itemI.forEach((i, flagIndex) => {
         if(i === void 0) return 
-        state.ctx.fillStyle = startColors2[index];
+        state.ctx.fillStyle = startColors2[flagIndex];
         drawGridValue({
           fontSize: gridW / 2, 
           x: x + gridW * (drawI ? (drawI === 1 ? 1 : 3) : 2) / 4, 
@@ -358,9 +365,9 @@ function drawGrid({img, x, y, gridW, itemI}: {
     }
     case 4: {
       let drawI = 0;
-      itemI.forEach((i, index) => {
+      itemI.forEach((i, flagIndex) => {
         if(i === void 0) return 
-        state.ctx.fillStyle = startColors2[index];
+        state.ctx.fillStyle = startColors2[flagIndex];
         drawGridValue({
           fontSize: gridW / 2, 
           x: x + gridW * (drawI % 2 ? 3 : 1) / 4, 
@@ -419,10 +426,13 @@ function drawAllGrid() {
     }
   }
 }
-function drawAllFlag() {
+function drawAllFlagAndEnd() {
   startFlag.forEach(flag => {
     drawFlag(flag.row, flag.col)
   })
+  if(end.value?.row) {
+    drawEnd(end.value.row, end.value.col)
+  }
 }
 function drawFlag(row: number, col: number) {
   const {x, y, gridW} = getGridInside(col, row)
@@ -451,6 +461,7 @@ function clearCanvas() {
   state.curFlagIndex = 0
   startFlag.length = 0
   state.floorNumList = [0, 0, 0, 0]
+  end.value = void 0
   startDraw()
 }
 
@@ -470,6 +481,29 @@ function getCanvasWrapInfo() {
   state.size = width / state.canvasInfo.colNum
   const lineW = state.size / 8
   state.canvasInfo.lineW = lineW
+}
+
+function devTry() {
+  // 路径一
+  startFlag[0] = {row: 2, col: 2}
+  end.value = {row: 8, col: 7}
+  for(let i = 0; i < 5; i++) {
+    state.gridArr[2][3 + i].v = 1
+    state.gridArr[2][3 + i].i[0] = i
+    state.floorNumList[0]++
+  }
+  for(let i = 0; i < 5; i++) {
+    state.gridArr[3 + i][7].v = 1
+    state.gridArr[3 + i][7].i[0] = 5 + i
+    state.floorNumList[0]++
+  }
+  // 路径二
+  startFlag[1] = {row: 2, col: 11}
+  for(let i = 0; i < 4; i++) {
+    state.gridArr[2][10 - i].v = 1
+    state.gridArr[2][10 - i].i[1] = i
+    state.floorNumList[1]++
+  }
 }
 
 </script>
@@ -515,17 +549,17 @@ function getCanvasWrapInfo() {
             </ElSpace>
             <ElSpace>
               <ElTooltip content="以该格为索引起始，移动为后面的格子赋值" placement="top">
-                <ElButton type="primary" @click="onClickDrag($event, floorImgList.length + 2, 'nextAdd')">
+                <ElButton type="primary" @click="onClickDrag($event, floorImgList.length + 3, 'nextAdd')">
                   Next +1
                 </ElButton>
               </ElTooltip>
               <ElTooltip content="使该格索引加一" placement="top">
-                <ElButton @click="onClickDrag($event, floorImgList.length + 2, 'oneselfAdd')">
+                <ElButton @click="onClickDrag($event, floorImgList.length + 3, 'oneselfAdd')">
                   索引 +1
                 </ElButton>
               </ElTooltip>
               <ElTooltip content="使该格索引减一" placement="top">
-                <ElButton @click="onClickDrag($event, floorImgList.length + 2, 'oneselfMinus')">
+                <ElButton @click="onClickDrag($event, floorImgList.length + 3, 'oneselfMinus')">
                   索引 -1
                 </ElButton>
               </ElTooltip>
