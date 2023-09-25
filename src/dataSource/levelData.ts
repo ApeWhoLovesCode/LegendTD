@@ -1,5 +1,5 @@
 import levelEnemyArr from '@/dataSource/levelEnemyArr';
-import mapData, { DirectionType, MapDataInfo, MapGridInfo, othMapData } from './mapData';
+import mapData, { DirectionType, MapDataInfo, MapDataItem, MapGridInfo, othMapData } from './mapData';
 import { BuildTowerParams } from '@/views/gameWorker/workers/type/tower';
 
 export enum LevelDataItemEnum {
@@ -30,8 +30,7 @@ for(let initI = levelData.length, i = 0; i < mapData.length; i++) {
   const item: LevelDataItem = {
     type: LevelDataItemEnum.Normal,
     enemyArr: levelEnemyArr[0],
-    start: mapData[i].start,
-    map: mapData[i].map,
+    ...mapData[i]
   }
   levelData[initI + i] = item
 }
@@ -63,12 +62,8 @@ export type LevelDataItem = {
   typeIndex?: number
   /** 敌人数组 */
   enemyArr: Array<number[]>
-  /** 起点信息 */
-  start: MapGridInfo[]
-  /** 地图移动方向信息 */
-  map: MapDataInfo[]
   /** 初始化建造的塔防 */
   towerArr?: BuildTowerParams[]
   /** 是否禁用 */
   disable?: boolean
-}
+} & MapDataItem

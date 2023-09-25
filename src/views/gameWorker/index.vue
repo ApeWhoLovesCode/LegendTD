@@ -7,6 +7,7 @@ import UserBall from '@/components/userBall.vue'
 import _ from 'lodash'
 import { useSourceStore } from '@/stores/source';
 import { requireCDN } from '@/utils/handleImg';
+import levelData from '@/dataSource/levelData';
 
 const source = useSourceStore()
 const route = useRoute()
@@ -38,6 +39,10 @@ function reStart() {
 
 onMounted(() => {
   source.mapLevel = +(route.params.id ?? 1) - 1
+  if(!levelData[source.mapLevel]) {
+    state.isProtectTheHorse = false
+    return
+  }
   init()
 })
 

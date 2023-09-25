@@ -28,7 +28,7 @@ export type GameConfigType = {
 /** 游戏基本数据 */
 export type GameBaseData = {
   /** 终点位置 */
-  terminal?: GridInfo,
+  terminal?: {x: number, y: number},
   /** 地板：大小 数量 */
   floorTile: {size: number, num: number},
   /** 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，t(有塔防：10塔防一，11塔防二...) ]] */
@@ -64,6 +64,8 @@ export type EnemyStateType = {
   framesNum: number
   /** 当前绘画到的图片索引，用于gif图 */
   imgIndex: number
+  /** 敌人移动路径(会有多个路径的情况)的索引 */
+  movePathIndex: number
 } & EnemyType
 
 /** 敌人数据 */
@@ -73,7 +75,7 @@ export type EnemyState = {
   /** 已上场的敌人数量 */
   createdEnemyNum: number
   /** 敌人的移动轨迹 x坐标, y坐标, x_y方向 1:左 2:下 3:右 4:上 */
-  movePath: GridInfo[]
+  movePath: GridInfo[][]
 }
 /** 敌人中毒 */
 export type EnemyPoison = {

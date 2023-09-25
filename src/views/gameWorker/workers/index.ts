@@ -134,43 +134,47 @@ function startDraw() {
 /** 画地板 */
 function drawFloorTile() {
   const size = gameConfigState.size
-  for(let f of enemyState.movePath) {
-    gameConfigState.ctx.drawImage(source.othOnloadImg.floor!, f.x, f.y, size, size)
-  }
+  enemyState.movePath.forEach(pathArr => {
+    pathArr.forEach(f => {
+      gameConfigState.ctx.drawImage(source.othOnloadImg.floor!, f.x, f.y, size, size)
+    })
+  })
 }
 
 /** 初始化行动轨迹 */
 function initMovePath() {
-  const movePathItem = JSON.parse(JSON.stringify(
-    !setting.isTowerCover ? levelData[source.mapLevel].start[0] : towerCanvasMapGridInfo
-  ))
-  movePathItem.x *= gameConfigState.size
-  movePathItem.y *= gameConfigState.size
-  baseDataState.mapGridInfoItem = JSON.parse(JSON.stringify(movePathItem))
-  baseDataState.floorTile.num = movePathItem.num
-  const size = gameConfigState.size
-  // 刚开始就右移了，所以该初始格不会算上去
-  const length = movePathItem.num!
-  delete movePathItem.num
-  const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].map[0] : towerCanvasMapData
-  const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
-  // 控制x y轴的方向 1:左 2:下 3:右 4:上
-  let x_y = movePathItem.x_y
-  for(let i = 0; i < length; i++) {
-    const newXY = _mapData[i]
-    if(newXY) {
-      x_y = newXY
+  levelData[source.mapLevel].start.forEach((levelStart, startIndex) => {
+    const movePathItem = JSON.parse(JSON.stringify(
+      !setting.isTowerCover ? levelStart : towerCanvasMapGridInfo
+    ))
+    movePathItem.x *= gameConfigState.size
+    movePathItem.y *= gameConfigState.size
+    baseDataState.mapGridInfoItem = JSON.parse(JSON.stringify(movePathItem))
+    baseDataState.floorTile.num = movePathItem.num
+    const size = gameConfigState.size
+    // 刚开始就右移了，所以该初始格不会算上去
+    const length = movePathItem.num!
+    delete movePathItem.num
+    const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].map[startIndex] : towerCanvasMapData
+    const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
+    // 控制x y轴的方向 1:左 2:下 3:右 4:上
+    let x_y = movePathItem.x_y
+    for(let i = 0; i < length; i++) {
+      const newXY = _mapData[i]
+      if(newXY) {
+        x_y = newXY
+      }
+      if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
+      else movePathItem.y += x_y === 4 ? size : -size
+      movePathItem.x_y = x_y
+      movePath.push(JSON.parse(JSON.stringify(movePathItem)))
+      if(!setting.isTowerCover) {
+        baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
+      }
     }
-    if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
-    else movePathItem.y += x_y === 4 ? size : -size
-    movePathItem.x_y = x_y
-    movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-    if(!setting.isTowerCover) {
-      baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
-    }
-  }
-  onWorkerPostFn('initMovePathCallback', movePath[movePath.length - 1])
-  enemyState.movePath = movePath
+    enemyState.movePath.push(movePath)
+    onWorkerPostFn('initMovePathCallback')
+  })
 }
 
 /** 点击获取鼠标位置 操作塔防 */

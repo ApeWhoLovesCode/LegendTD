@@ -27,6 +27,7 @@ import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
 import { waitTime } from "@/utils/tools";
 import { useSettingStore } from "@/stores/setting";
+import levelData from "@/dataSource/levelData";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -123,7 +124,7 @@ function initWorker() {
         onWorkerReady(); break;
       }
       case 'initMovePathCallback': {
-        baseDataState.terminal = param; break;
+        baseDataState.terminal = levelData[source.mapLevel].end; break;
       }
       case 'onProgress': {
         state.progress = param; break;

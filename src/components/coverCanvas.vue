@@ -18,7 +18,7 @@ const state = reactive({
   canvasInfo: {w: 0, h: 0},
   /** 地板大小 */
   size: 10,
-  movePath: [] as GridInfo[]
+  movePath: [] as GridInfo[][]
 })
 
 onMounted(() => {
@@ -59,27 +59,29 @@ function getCanvasWH() {
 function initMovePath() {
   const size = state.size
   if(!levelData[props.index].start) return
-  const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(
-    levelData[props.index].start[0]
-  ))
-  movePathItem.x *= size
-  movePathItem.y = movePathItem.y * size
-  const length = movePathItem.num!
-  delete movePathItem.num
-  const movePath: GridInfo[]  = [JSON.parse(JSON.stringify(movePathItem))]
-  // 控制x y轴的方向 1:左 2:下 3:右 4:上
-  let x_y = movePathItem.x_y
-  for(let i = 0; i < length; i++) {
-    const newXY = levelData[props.index].map[0][i]
-    if(newXY) {
-      x_y = newXY
+  levelData[props.index].start.forEach((levelStart, startIndex) => {
+    const movePathItem: GridInfo & {num?: number} = JSON.parse(
+      JSON.stringify(levelStart)
+    )
+    movePathItem.x *= size
+    movePathItem.y = movePathItem.y * size
+    const length = movePathItem.num!
+    delete movePathItem.num
+    const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
+    // 控制x y轴的方向 1:左 2:下 3:右 4:上
+    let x_y = movePathItem.x_y
+    for(let i = 0; i < length; i++) {
+      const newXY = levelData[props.index].map[startIndex][i]
+      if(newXY) {
+        x_y = newXY
+      }
+      if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
+      else movePathItem.y += x_y === 4 ? size : -size
+      movePathItem.x_y = x_y
+      movePath.push(JSON.parse(JSON.stringify(movePathItem)))
     }
-    if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
-    else movePathItem.y += x_y === 4 ? size : -size
-    movePathItem.x_y = x_y
-    movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-  }
-  state.movePath = movePath
+    state.movePath.push(movePath)
+  })
   setTimeout(() => {
     drawFloorTile()
   }, 10);
@@ -93,12 +95,14 @@ async function drawFloorTile() {
   }
   const size = state.size
   state.ctx?.clearRect(0, 0, size, size)
-  for(let f of state.movePath) {
-    state.ctx?.drawImage(floor, f.x, f.y, size, size)
-  }
-  const terminal = state.movePath.at(-1)!
+  state.movePath.forEach(pathArr => {
+    for(let f of pathArr) {
+      state.ctx?.drawImage(floor!, f.x, f.y, size, size)
+    }
+  })
+  const terminal = levelData[props.index].end ?? state.movePath[0].at(-1)!
   loadImage(imgSource.TerminalImg).then((terminalImg) => {
-    state.ctx?.drawImage(terminalImg, terminal.x - 0.35 * size, terminal.y - 1.42 * size, size * 1.8, size * 2.48)
+    state.ctx?.drawImage(terminalImg, (terminal.x - 0.35) * size, (terminal.y - 1.42) * size, size * 1.8, size * 2.48)
   })
 }
 
@@ -122,6 +126,7 @@ async function drawFloorTile() {
 .com-cover-canvas {
   width: 100%;
   height: 100%;
-  background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+  // background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
+  border: 1px solid skyblue;
 }
 </style>

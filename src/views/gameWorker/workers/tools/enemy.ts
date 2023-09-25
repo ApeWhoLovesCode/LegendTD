@@ -17,7 +17,6 @@ const enemyMap: Map<string, EnemyStateType> = new Map()
 const enemyState: EnemyState = {
   levelEnemy: [],
   createdEnemyNum: 0,
-  // 敌人的移动轨迹 x坐标, y坐标, x_y(方向): 1:左 2:下 3:右 4:上
   movePath: [],
 }
 
@@ -110,7 +109,7 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0}
+  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0, movePathIndex: 0}
   const {audioKey, name, w, h} = enemyItem
   const {x, y} = baseDataState.mapGridInfoItem
   // 设置敌人的初始位置
@@ -161,6 +160,7 @@ function enemySkillDance(e_id: string) {
   const total = baseDataState.floorTile.num - 1
   for(let i = 0; i < 4; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[12])
+    newEnemy.movePathIndex = enemy.movePathIndex
     switch (i) {
       case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
       case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
@@ -180,6 +180,7 @@ function enemySkillFulisha(e_id: string) {
   const total = baseDataState.floorTile.num - 1
   for(let i = 0; i < 2; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[13])
+    newEnemy.movePathIndex = enemy.movePathIndex
     switch (i) {
       case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
       case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
@@ -277,8 +278,8 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
 }
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyStateType, i: number) {
-  const { curFloorI, audioKey } = newEnemy
-  const { x, y } = enemyState.movePath[curFloorI - 1]
+  const { curFloorI, audioKey, movePathIndex } = newEnemy
+  const { x, y } = enemyState.movePath[movePathIndex][curFloorI - 1]
   const id = randomStr(`callenemy-${i}`)
   const size = gameConfigState.size
   newEnemy.w *= size
@@ -292,6 +293,7 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
     ...newEnemy,
     imgIndex: 0,
     framesNum: 0,
+    movePathIndex: 0,
     id: audioKey + id,
     x: x - newEnemy.w / 4,
     y: y - newEnemy.h / 2,
@@ -300,7 +302,7 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
 
 /** 敌人移动 */
 function moveEnemy(enemy: EnemyStateType) {
-  const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemy
+  const { curSpeed, speed, curFloorI, isForward, movePathIndex, isFlip, id, w, h } = enemy
   let newIndex = curFloorI
   // 敌人到达终点
   if(!setting.isTowerCover) {
@@ -315,7 +317,7 @@ function moveEnemy(enemy: EnemyStateType) {
     }
   }
   // 将格子坐标同步到敌人的坐标
-  const { x, y, x_y } = enemyState.movePath[newIndex]
+  const { x, y, x_y } = enemyState.movePath[movePathIndex][newIndex]
   const _x = x - w / 4, _y = y - h / 2
   switch (x_y) {
     case 1: {

@@ -45,6 +45,8 @@ const state = reactive({
   curFlagIndex: 0,
   /** 地板的累计数量, 和上面的起点索引对应 */
   floorNumList: [0, 0, 0, 0],
+  /** 新的地板索引，用于覆盖之前的索引 */
+  newFloorNum: -1,
 })
 const mouseImg = reactive({
   x: 0,
@@ -55,8 +57,6 @@ const mouseImg = reactive({
   isDraw: false,
   /** img类型 */
   type: '' as MouseImgType,
-  /** 新的地板索引，用于覆盖之前的索引 */
-  newFloorNum: -1,
 })
 /** 起点 */
 const startFlag = reactive<{
@@ -115,6 +115,7 @@ function onClickDrag(e: MouseEvent, i: number, type: MouseImgType) {
 }
 
 function onChangeFlagIndex() {
+  state.newFloorNum = -1 // 切换完地板路径，需要清空一下该值
   if(state.curFlagIndex < startFlag.length - 1) {
     state.curFlagIndex++
   } else {
@@ -222,12 +223,12 @@ function onDrawMouseImg(e: MouseEvent) {
       return
     }
     case 'nextAdd': {
-      if(item.v !== 1 || mouseImg.newFloorNum === item.i[curIndex]) return
-      if(mouseImg.newFloorNum < 0) {
-        mouseImg.newFloorNum = item.i[curIndex]
+      if(item.v !== 1 || state.newFloorNum === item.i[curIndex]) return
+      if(state.newFloorNum < 0) {
+        state.newFloorNum = item.i[curIndex]
       } else {
-        mouseImg.newFloorNum++
-        item.i[curIndex] = mouseImg.newFloorNum
+        state.newFloorNum++
+        item.i[curIndex] = state.newFloorNum
         handleAndDrawGridVal(item, item.i[curIndex], row, col)
       }
       return
@@ -271,11 +272,11 @@ function getGridInside(col: number, row: number) {
 function exportData() {
   if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
   if(!end.value) return ElMessage.warning('请选择萝卜作为敌人终点~')
-  const floorTotal = state.gridArr.reduce((pre, cur) => {
-    cur.forEach(v => pre += v.v)
-    return pre
-  }, 0)
-  if(!floorTotal) return ElMessage.warning('当前没有地板~')
+  // const floorTotal = state.gridArr.reduce((pre, cur) => {
+  //   cur.forEach(v => pre += v.v)
+  //   return pre
+  // }, 0)
+  // if(!floorTotal) return ElMessage.warning('当前没有地板~')
   const res: MapDataItem = {start: [], map: [], end: {x: end.value.row, y: end.value.col}} 
   for(let flagIndex = 0; flagIndex < startFlag.length; flagIndex++) {
     res.map.push({})
@@ -285,7 +286,7 @@ function exportData() {
     if(!item) return ElMessage.warning('旗子附近没有地板~')
     row = item.row
     col = item.col
-    const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: xy ?? 1, num: floorTotal}
+    const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: xy ?? 1, num: 0}
     let i = 1;
     // 当前遍历的路径，可能会由于当前路径不足以到终点，走其他路径的路
     let _flagIndex = flagIndex
@@ -304,6 +305,7 @@ function exportData() {
       }
       i++;
     }
+    mapInfoItem.num = i
     res.start.push(mapInfoItem)
   }
   console.log(res);

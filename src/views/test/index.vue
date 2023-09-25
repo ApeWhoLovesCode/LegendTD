@@ -4,6 +4,7 @@ import { useSourceStore } from '@/stores/source';
 import { useUserInfoStore } from '@/stores/userInfo';
 import { onMounted, reactive, ref } from 'vue';
 import TowerCanvas from '@/components/towerCanvas.vue';
+import CoverCanvas from '@/components/coverCanvas.vue';
 
 const source = useSourceStore()
 
@@ -19,7 +20,10 @@ onMounted(() => {
 
 <template>
   <div class='test'>
-    <UserBall />
+    <div style="width: 400px; height: 240px; margin: 20px;">
+      <CoverCanvas :index="1" />
+    </div>
+    <!-- <UserBall /> -->
     <div class="towerImg"> 
       <!-- :enemy-list="[{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}]" -->
       <!-- <TowerCanvas 

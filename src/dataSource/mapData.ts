@@ -4,6 +4,21 @@
  */
 const mapData: MapDataItem[] = [
   {
+    start: [
+      {x: 3, y: 2, x_y: 4, num: 25},
+      {x: 7, y: 2, x_y: 4, num: 23},
+      {x: 11, y: 2, x_y: 4, num: 17},
+      {x: 15, y: 2, x_y: 4, num: 13},
+    ],
+    map: [
+      {3: 1, 5: 4, 10: 3},
+      {5: 1, 8: 4, 11: 3},
+      {2: 1, 4: 4, 7: 3, 9: 4, 12: 3},
+      {3: 1, 5: 4, 10: 3},
+    ],
+    end: {x: 17, y: 10}
+  },
+  {
     start: [{x: 0, y: 5, x_y: 3, num: 74}],
     map: [{3: 2, 5: 3, 7: 2, 9: 3, 19: 4, 21: 3, 23: 4, 25: 3, 27: 4, 29: 1, 31: 4, 33: 1, 35: 4, 37: 1, 47: 2, 49: 1, 52: 2, 54: 3, 59: 2, 62: 3, 68: 4, 71: 1}]
   },
@@ -109,8 +124,8 @@ export type MapDataItem = {
   /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */
   start: MapGridInfo[]
   map: MapDataInfo[]
-  /** 终点的位置 */
-  end: {x: number, y: number}
+  /** 终点的位置，不传默认就是地图路径一的最后一格 */
+  end?: {x: number, y: number}
 }
 
 export type MapDataInfo = {[key in number]: DirectionType}
