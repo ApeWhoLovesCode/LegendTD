@@ -100,9 +100,11 @@ async function drawFloorTile() {
       state.ctx?.drawImage(floor!, f.x, f.y, size, size)
     }
   })
-  const terminal = levelData[props.index].end ?? state.movePath[0].at(-1)!
+  const end = levelData[props.index].end
+  const x = end ? end.x * size : state.movePath[0].at(-1)!.x
+  const y = end ? end.y * size : state.movePath[0].at(-1)!.y
   loadImage(imgSource.TerminalImg).then((terminalImg) => {
-    state.ctx?.drawImage(terminalImg, (terminal.x - 0.35) * size, (terminal.y - 1.42) * size, size * 1.8, size * 2.48)
+    state.ctx?.drawImage(terminalImg, x - 0.35 * size, y - 1.42 * size, size * 1.8, size * 2.48)
   })
 }
 
@@ -126,7 +128,6 @@ async function drawFloorTile() {
 .com-cover-canvas {
   width: 100%;
   height: 100%;
-  // background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
-  border: 1px solid skyblue;
+  background-image: radial-gradient(circle 250px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);
 }
 </style>

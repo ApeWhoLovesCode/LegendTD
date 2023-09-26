@@ -151,6 +151,11 @@ function onRightClick() {
   document.removeEventListener("mousemove", onMouseMove);
   mouseImg.x = 0
   mouseImg.y = 0
+  switch(mouseImg.type) {
+    case 'nextAdd': {
+      state.newFloorNum = -1
+    }
+  }
   mouseImg.type = ''
 }
 /** 在canvas中画鼠标拖拽的图片 */
@@ -251,7 +256,7 @@ function changeOtherGrid(floorNum: number, addVal: number, isNext = true) {
 }
 /** 改变格子的值 */
 function handleAndDrawGridVal(item: GridItem, itemNewI: number, row: number, col: number) {
-  item.i[state.curFlagIndex] = range(itemNewI, 0, state.floorNumList[state.curFlagIndex] - 1);
+  item.i[state.curFlagIndex] = range(itemNewI, 0, state.floorNumList[state.curFlagIndex]);
   const {x, y, gridW} = getGridInside(col, row)
   state.ctx.clearRect(x, y, gridW, gridW)
   drawGrid({
@@ -272,12 +277,7 @@ function getGridInside(col: number, row: number) {
 function exportData() {
   if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
   if(!end.value) return ElMessage.warning('请选择萝卜作为敌人终点~')
-  // const floorTotal = state.gridArr.reduce((pre, cur) => {
-  //   cur.forEach(v => pre += v.v)
-  //   return pre
-  // }, 0)
-  // if(!floorTotal) return ElMessage.warning('当前没有地板~')
-  const res: MapDataItem = {start: [], map: [], end: {x: end.value.row, y: end.value.col}} 
+  const res: MapDataItem = {start: [], map: [], end: {x: end.value.col, y: end.value.row}} 
   for(let flagIndex = 0; flagIndex < startFlag.length; flagIndex++) {
     res.map.push({})
     let {row, col} = startFlag[flagIndex]

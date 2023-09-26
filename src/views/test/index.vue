@@ -21,7 +21,7 @@ onMounted(() => {
 <template>
   <div class='test'>
     <div style="width: 400px; height: 240px; margin: 20px;">
-      <CoverCanvas :index="1" />
+      <CoverCanvas :index="2" />
     </div>
     <!-- <UserBall /> -->
     <div class="towerImg"> 

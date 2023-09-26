@@ -12,6 +12,8 @@ import { range } from "@/utils/format"
 import { limitRange, powAndSqrt } from "@/utils/tools"
 import { getEndXy, isLineInRect } from "./compute"
 import { getPointsCos } from "@/utils/handleCircle"
+import levelData from "@/dataSource/levelData"
+import { towerCanvasMapGridInfo } from "@/dataSource/mapData"
 
 const enemyMap: Map<string, EnemyStateType> = new Map()
 const enemyState: EnemyState = {
@@ -109,12 +111,13 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0, movePathIndex: 0}
+  const movePathIndex = Math.floor(Math.random() * levelData[source.mapLevel].start.length)
+  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0, movePathIndex}
   const {audioKey, name, w, h} = enemyItem
-  const {x, y} = baseDataState.mapGridInfoItem
+  const {x, y} = !setting.isTowerCover ? levelData[source.mapLevel].start[movePathIndex] : towerCanvasMapGridInfo
   // 设置敌人的初始位置
-  enemyItem.x = x - w / 4
-  enemyItem.y = y - h / 2
+  enemyItem.x = x * size - w / 4
+  enemyItem.y = y * size - h / 2
   enemyMap.set(enemyItem.id, enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, id)
@@ -295,8 +298,8 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
     framesNum: 0,
     movePathIndex: 0,
     id: audioKey + id,
-    x: x - newEnemy.w / 4,
-    y: y - newEnemy.h / 2,
+    x: x * size - newEnemy.w / 4,
+    y: y * size - newEnemy.h / 2,
   } as EnemyStateType
 }
 
@@ -306,19 +309,18 @@ function moveEnemy(enemy: EnemyStateType) {
   let newIndex = curFloorI
   // 敌人到达终点
   if(!setting.isTowerCover) {
-    if(curFloorI === baseDataState.floorTile.num) {
+    if(curFloorI === levelData[source.mapLevel].start[movePathIndex].num + 1) {
       removeEnemy([id])
       onReduceHp(1)
       return true
     }
-  } else {
-    if(newIndex === baseDataState.mapGridInfoItem.num) {
+  } else { // 塔防展示组件才需要
+    if(newIndex === towerCanvasMapGridInfo.num) {
       newIndex = 0
     }
   }
   // 将格子坐标同步到敌人的坐标
   const { x, y, x_y } = enemyState.movePath[movePathIndex][newIndex]
-  const _x = x - w / 4, _y = y - h / 2
   switch (x_y) {
     case 1: {
       enemy.x -= curSpeed;
@@ -338,8 +340,9 @@ function moveEnemy(enemy: EnemyStateType) {
     case 4: enemy.y += curSpeed; break;
   }
   const { x: eX, y: eY } = enemy
+  const _x = x - w / 4, _y = y - h / 2
   // 敌人到达下一个格子
-  if((eX >= _x && eX <= _x + speed) && (eY >= _y && eY <= _y + speed)) {
+  if((_x - speed <= eX && eX <= _x + speed) && (_y - speed <= eY && eY <= _y + speed)) {
     if(!setting.isTowerCover) {
       enemy.curFloorI++
     } else {

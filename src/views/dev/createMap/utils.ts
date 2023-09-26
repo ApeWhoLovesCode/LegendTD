@@ -29,8 +29,8 @@ export function getDirection(
   for(let i = 0; i < array.length; i++) {
     const cur = arr[row][col]
     const nextRow = row + array[i].addRow, nextCol = col + array[i].addCol
-    const next = arr[nextRow][nextCol]
-    let isNextGrid = cur.i[flagIndex] && cur.i[flagIndex] + 1 === next.i[flagIndex]
+    const next = arr[nextRow]?.[nextCol]
+    let isNextGrid = next && cur.i[flagIndex] && cur.i[flagIndex] + 1 === next.i[flagIndex]
     // 尝试走其他的路径中可走的路
     if(!isNextGrid) {
       for(let otherI = 0; otherI < cur.i.length; otherI++) {
@@ -42,7 +42,7 @@ export function getDirection(
         }
       }
     }
-    if(next.v && isNextGrid) {
+    if(next?.v && isNextGrid) {
       return {xy: i + 1 as DirectionType, flagIndex};
     }
     if(end.row === nextRow && end.col === nextCol) {

@@ -24,8 +24,6 @@ export default function useBaseData() {
     money: 5000,
     // 敌人生成间隔时间
     intervalTime: 900,
-    // 当前关卡地图信息
-    mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
   })
   
   /** 初始化所有格子 */

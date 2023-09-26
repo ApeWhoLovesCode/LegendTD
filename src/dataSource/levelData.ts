@@ -1,6 +1,5 @@
 import levelEnemyArr from '@/dataSource/levelEnemyArr';
-import mapData, { DirectionType, MapDataInfo, MapDataItem, MapGridInfo, othMapData } from './mapData';
-import { BuildTowerParams } from '@/views/gameWorker/workers/type/tower';
+import mapData, { MapDataItem, othMapData } from './mapData';
 
 export enum LevelDataItemEnum {
   /** 正常关卡 */
@@ -16,12 +15,7 @@ const levelData: LevelDataItem[] = [
   {
     type: LevelDataItemEnum.Experience,
     typeIndex: 0,
-    enemyArr: levelEnemyArr[0],
-    start: othMapData.experience[0].start,
-    map: othMapData.experience[0].map,
-    // towerArr: [
-    //   {tname: 'aixi', x: }
-    // ]
+    ...othMapData.experience[0]
   },
 ]
 
@@ -60,10 +54,6 @@ export type LevelDataItem = {
   type: LevelDataItemEnum
   /** 关卡索引，只有特殊关卡才需要区分 */
   typeIndex?: number
-  /** 敌人数组 */
-  enemyArr: Array<number[]>
-  /** 初始化建造的塔防 */
-  towerArr?: BuildTowerParams[]
   /** 是否禁用 */
   disable?: boolean
 } & MapDataItem

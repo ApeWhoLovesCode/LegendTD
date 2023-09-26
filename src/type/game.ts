@@ -47,9 +47,10 @@ export type GameBaseData = {
   money: number
   /** 敌人生成间隔时间 */
   intervalTime: number
-  /** 当前关卡地图信息 */
-  mapGridInfoItem: MapGridInfo
 }
+
+/** 格子的二维数组的值 */
+export type GridValue = 'floor' | 't'
 
 /** 敌人的类型 */
 export type EnemyStateType = {

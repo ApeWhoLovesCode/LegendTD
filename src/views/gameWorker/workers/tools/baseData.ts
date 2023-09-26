@@ -6,6 +6,7 @@ import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 import { TowerName } from "@/dataSource/towerData";
+import levelEnemyArr from "@/dataSource/levelEnemyArr";
 
 const source = sourceInstance.state
 
@@ -37,8 +38,6 @@ const baseDataState = {
   money: 5000,
   // 敌人生成间隔时间
   intervalTime: 900,
-  // 当前关卡地图信息
-  mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
 }
 
 const gameConfigState = {
@@ -54,6 +53,8 @@ const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
+/** 是否是体验模式 */
+const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
 const isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
 
@@ -74,17 +75,7 @@ function onLevelChange() {
   const level = baseDataState.level
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
-    // 处理地图关卡中的敌人数据
-    let enemyDataArr: Array<number[]> | undefined
-    for(let i = 0; i < source.mapLevel; i++) { 
-      if(levelData[source.mapLevel]?.enemyArr) {
-        enemyDataArr = levelData[source.mapLevel].enemyArr
-        break
-      }
-    }
-    if(!enemyDataArr) {
-      enemyDataArr = levelData[0].enemyArr
-    }
+    const enemyDataArr = levelData[source.mapLevel]?.enemyArr ?? levelEnemyArr[0]
     // 获取地图关卡中的敌人数据
     if(level < enemyDataArr.length && !isInfinite) {
       enemyState.levelEnemy = enemyDataArr[level]
@@ -153,6 +144,7 @@ export {
   gameConfigState,
   canvasInfo,
   isInfinite,
+  isExperience,
   initAllGrid,
   onLevelChange,
   checkValInCircle,

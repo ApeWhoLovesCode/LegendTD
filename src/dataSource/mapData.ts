@@ -1,3 +1,5 @@
+import { BuildTowerParams } from "@/views/gameWorker/workers/type/tower"
+
 /**
  * 地图数据 
  * 控制x y轴的方向 1:左 2:上 3:右 4:下
@@ -103,8 +105,33 @@ export const othMapData = {
   /** 体验关卡地图 */
   experience: [
     {
-      start: [{x: 0, y: 5, x_y: 3, num: 74}],
-      map: [{3: 2, 5: 3, 7: 2, 9: 3, 19: 4, 21: 3, 23: 4, 25: 3, 27: 4, 29: 1, 31: 4, 33: 1, 35: 4, 37: 1, 47: 2, 49: 1, 52: 2, 54: 3, 59: 2, 62: 3, 68: 4, 71: 1}],
+      start: [
+        {x: 1, y: 2, x_y: 4, num: 40},
+        {x: 17, y: 1, x_y: 1, num: 33},
+        {x: 18, y: 10, x_y: 4, num: 29},
+        {x: 2, y: 8, x_y: 2, num: 31},
+      ],
+      map: [
+        {3: 3, 5: 2, 9: 3, 11: 4, 15: 3, 17: 2, 21: 3, 23: 4, 31: 3, 33: 2},
+        {4: 4, 6: 3, 11: 4, 12: 1, 15: 4, 17: 3, 20: 4, 21: 1, 28: 2},
+        {1: 1, 3: 2, 5: 1, 7: 4, 9: 1, 16: 2, 17: 3, 19: 2, 20: 3, 22: 2},
+        {1: 1, 3: 4, 7: 3, 11: 2, 15: 3, 20: 4, 22: 3, 24: 2},
+      ],
+      end: {x: 11, y: 1},
+      towerArr: [
+        {tname: 'aixi', x: 4, y: 6},{tname: 'aixi', x: 13, y: 5},{tname: 'aixi', x: 13, y: 9},{tname: 'lanbo', x: 3, y: 8},{tname: 'lanbo', x: 3, y: 9},{tname: 'lanbo', x: 4, y: 3},{tname: 'lanbo', x: 4, y: 4},
+        {tname: 'lanbo', x: 14, y: 4},{tname: 'lanbo', x: 14, y: 5},{tname: 'lanbo', x: 14, y: 8},{tname: 'huonan', x: 8, y: 6},{tname: 'huonan', x: 8, y: 5},{tname: 'huonan', x: 10, y: 6},
+        {tname: 'huonan', x: 10, y: 5},{tname: 'delaiwen', x: 0, y: 2},{tname: 'delaiwen', x: 0, y: 6},{tname: 'ez', x: 19, y: 11},{tname: 'ez', x: 17, y: 0},
+        {tname: 'twitch', x: 7, y: 8},{tname: 'twitch', x: 13, y: 4},{tname: 'twitch', x: 15, y: 10},{tname: 'jin', x: 10, y: 8},{tname: 'jin', x: 10, y: 7},
+        {tname: 'delaiwen', x: 6, y: 10},{tname: 'delaiwen', x: 6, y: 11},
+      ],
+      enemyArr: [
+        [0,17,17,16,16,16,11,11,14,14,7,7,7,7,10,9,8,6,5,4,3,2,1],
+        [0,7,16,7,16,7,16,7,16,7,16,7,16,7],
+        [0,17,17,17,17,17,17,17,17],
+        [0,14,7,14,7,14,7,14,7,14],
+        [0,15,17,16,14,11,10,9,8,7,6,5,4,3,2,1],
+      ]
     },
   ] as MapDataItem[],
   /** 无尽模式 */
@@ -126,6 +153,10 @@ export type MapDataItem = {
   map: MapDataInfo[]
   /** 终点的位置，不传默认就是地图路径一的最后一格 */
   end?: {x: number, y: number}
+  /** 初始化建造的塔防 */
+  towerArr?: BuildTowerParams[]
+  /** 敌人数组 */
+  enemyArr?: Array<number[]>
 }
 
 export type MapDataInfo = {[key in number]: DirectionType}

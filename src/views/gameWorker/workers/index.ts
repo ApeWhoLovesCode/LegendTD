@@ -1,14 +1,14 @@
 import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
 import { waitTime } from "@/utils/tools";
 import sourceInstance from '@/stores/sourceInstance'
-import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
+import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
 import keepInterval from "@/utils/keepInterval";
 import _ from "lodash";
 import { WorkerFnName } from "./type/worker";
 import testBuildData from "./tools/testBuild";
 import { range } from "@/utils/format";
-import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower } from "./tools/tower";
+import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
 import levelData from "@/dataSource/levelData";
@@ -67,8 +67,10 @@ async function init() {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   }, params)
   onWorkerPostFn('onProgress', 100)
-  if(isInfinite) {
-    addMoney(999999)
+  if(isExperience) {
+    addMoney(10_000)
+  } else if(isInfinite) {
+    addMoney(94_999)
   }
   if(!setting.isTowerCover) {
     initAllGrid()
@@ -79,9 +81,10 @@ async function init() {
   if(!setting.isTowerCover) {
     await waitTime(800)
     startDraw()
+    initBuildTowers()
     testBuildTowers()
   } else { // 塔防展示组件
-    buildTower({tname: setting.tname, x: 4 * gameConfigState.size, y: 3 * gameConfigState.size}, false)
+    buildTower({tname: setting.tname, x: 4 * gameConfigState.size, y: 3 * gameConfigState.size}, false, false)
     makeEnemy()
     startAnimation()
   }
@@ -118,6 +121,7 @@ function startAnimationLockFrame() {
 /** 开始绘画 */
 function startDraw() {
   gameConfigState.ctx.clearRect(0, 0, canvasInfo.offscreen.width, canvasInfo.offscreen.height);
+  drawStart()
   drawFloorTile()
   drawTowerMap()
   drawEnemyMap()
@@ -129,6 +133,21 @@ function startDraw() {
   if(!setting.isTowerCover) {
     unifiedMoney()
   }
+}
+
+/** 画起点 */
+function drawStart() {
+  const size = gameConfigState.size
+  levelData[source.mapLevel].start.forEach(s => {
+    let {x, y} = s
+    switch(s.x_y) {
+      case 1: x++; break;
+      case 2: y++; break;
+      case 3: x--; break;
+      case 4: y--; break;
+    }
+    gameConfigState.ctx.drawImage(source.othOnloadImg.star!, x * size, y * size, size, size)
+  })
 }
 
 /** 画地板 */
@@ -149,7 +168,6 @@ function initMovePath() {
     ))
     movePathItem.x *= gameConfigState.size
     movePathItem.y *= gameConfigState.size
-    baseDataState.mapGridInfoItem = JSON.parse(JSON.stringify(movePathItem))
     baseDataState.floorTile.num = movePathItem.num
     const size = gameConfigState.size
     // 刚开始就右移了，所以该初始格不会算上去
@@ -173,8 +191,8 @@ function initMovePath() {
       }
     }
     enemyState.movePath.push(movePath)
-    onWorkerPostFn('initMovePathCallback')
   })
+  onWorkerPostFn('initMovePathCallback')
 }
 
 /** 点击获取鼠标位置 操作塔防 */
@@ -217,19 +235,19 @@ function testBuildTowers() {
   testBuildData.forEach(item => {
     item.x *= size
     item.y *= size
-    buildTower({...item}, false)
+    buildTower({...item}, false, false)
   })
   for(let i = 0; i < 20; i++) {
-    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false)
+    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false, false)
   }
   for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false)
+    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false, false)
   }
   for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false)
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
   }
   for(let i = 6; i < 15; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false)
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
   }
 }
 

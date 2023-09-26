@@ -4,18 +4,21 @@ import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"
 import { TowerName } from "@/dataSource/towerData"
 import { powAndSqrt } from "@/utils/tools"
-import _ from "lodash"
+import _, { size } from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
 import { BuildTowerParams } from "../type/tower"
+import levelData from "@/dataSource/levelData"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
 /** 点击建造塔防 */
-function buildTower({x, y, tname}: BuildTowerParams, isMusic = true) {
+function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = true) {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
-  if(baseDataState.money < money) return
-  addMoney(-money)
+  if(isMoney) {
+    if(baseDataState.money < money) return
+    addMoney(-money)
+  }
   if(setting.isDevTestMode) {
     ret.damage /= 10
   }
@@ -53,6 +56,15 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true) {
   if(isMusic) {
     onWorkerPostFn('playDomAudio', {id: tower.id})
   }
+}
+
+/** 初始化建造塔防 */
+function initBuildTowers() {
+  levelData[source.mapLevel].towerArr?.forEach(t => {
+    t.x *= gameConfigState.size
+    t.y *= gameConfigState.size
+    buildTower(t, false, false)
+  })
 }
 
 function drawTowerMap() {
@@ -166,6 +178,7 @@ function enterAttackScopeList(target: TargetCircleInfo) {
 export {
   towerMap,
   buildTower,
+  initBuildTowers,
   drawTowerMap,
   damageTower,
   removeTower,

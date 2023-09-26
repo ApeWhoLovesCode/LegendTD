@@ -27,7 +27,7 @@ import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
 import { waitTime } from "@/utils/tools";
 import { useSettingStore } from "@/stores/setting";
-import levelData from "@/dataSource/levelData";
+import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -124,7 +124,11 @@ function initWorker() {
         onWorkerReady(); break;
       }
       case 'initMovePathCallback': {
-        baseDataState.terminal = levelData[source.mapLevel].end; break;
+        baseDataState.terminal = {
+          x: levelData[source.mapLevel].end!.x * gameConfigState.size,
+          y: levelData[source.mapLevel].end!.y * gameConfigState.size,
+        }; 
+        break;
       }
       case 'onProgress': {
         state.progress = param; break;
@@ -180,6 +184,9 @@ function onGameOver() {
   keepInterval.clear()
 }
 async function uploadScore() {
+  if(levelData[source.mapLevel].type !== LevelDataItemEnum.Normal) {
+    return
+  }
   playAudio('ma-gameover', 'Skill')
   onGameOver()
   const {userInfo} = userInfoStore
