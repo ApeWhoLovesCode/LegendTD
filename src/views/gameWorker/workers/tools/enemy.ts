@@ -63,7 +63,7 @@ function makeEnemy() {
       keepInterval.delete(KeepIntervalKey.makeEnemy)
     } else {
       setEnemy()
-      if(setting.isLevelLock) setting.isLevelLock = false
+      setting.isLevelLock = false
     }
   }, baseDataState.intervalTime)
 }
@@ -296,10 +296,9 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
     ...newEnemy,
     imgIndex: 0,
     framesNum: 0,
-    movePathIndex: 0,
     id: audioKey + id,
-    x: x * size - newEnemy.w / 4,
-    y: y * size - newEnemy.h / 2,
+    x: x - newEnemy.w / 4,
+    y: y - newEnemy.h / 2,
   } as EnemyStateType
 }
 

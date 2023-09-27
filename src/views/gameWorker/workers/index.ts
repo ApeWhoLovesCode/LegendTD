@@ -79,7 +79,7 @@ async function init() {
   initMovePath()
   source.isGameInit = true
   if(!setting.isTowerCover) {
-    await waitTime(800)
+    await waitTime(600)
     startDraw()
     initBuildTowers()
     testBuildTowers()
@@ -147,6 +147,7 @@ function drawStart() {
       case 4: y--; break;
     }
     gameConfigState.ctx.drawImage(source.othOnloadImg.star!, x * size, y * size, size, size)
+    baseDataState.gridInfo.arr[y][x] = 'start'
   })
 }
 
@@ -187,12 +188,14 @@ function initMovePath() {
       movePathItem.x_y = x_y
       movePath.push(JSON.parse(JSON.stringify(movePathItem)))
       if(!setting.isTowerCover) {
-        baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 1
+        baseDataState.gridInfo.arr[Math.floor(movePathItem.y / size)][Math.floor(movePathItem.x / size)] = 'floor'
       }
     }
     enemyState.movePath.push(movePath)
   })
-  onWorkerPostFn('initMovePathCallback')
+  if(levelData[source.mapLevel].end) { // 为终点赋值
+    baseDataState.gridInfo.arr[levelData[source.mapLevel].end!.y][levelData[source.mapLevel].end!.x] = 'end'
+  }
 }
 
 /** 点击获取鼠标位置 操作塔防 */
@@ -200,11 +203,11 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
   const size = gameConfigState.size
   const _x = e.offsetX * source.ratio, _y = e.offsetY * source.ratio
   // 当前点击的格子的索引值
-  const col = Math.floor(_y / size), row = Math.floor(_x / size)
-  const gridVal = baseDataState.gridInfo.arr[col][row]
-  const left = row * size, top = col * size
+  const row = Math.floor(_y / size), col = Math.floor(_x / size)
+  const gridVal = baseDataState.gridInfo.arr[row][col]
+  const left = col * size, top = row * size
   // 已经有地板或者有建筑了
-  if(String(gridVal).includes('t')) {
+  if(gridVal === 'tower') {
     // 当前点击的是哪个塔防
     let towerId = ''
     for(const item of towerMap.values()) {

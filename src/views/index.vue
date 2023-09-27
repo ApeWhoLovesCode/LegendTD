@@ -7,6 +7,7 @@ import CoverCanvas from '@/components/coverCanvas.vue';
 import { useSourceStore } from '@/stores/source';
 import { useRouter } from 'vue-router';
 import UserBall from '@/components/userBall.vue'
+import SelectTips from '@/components/selectTips.vue';
 
 const source = useSourceStore()
 const router = useRouter()
@@ -47,6 +48,7 @@ onMounted(() => {
 const onCardClick = (i: number) => {
   if(levelData[i] && source.progress === 100) {
     router.push(`/game/${i + 1}`)
+    return true // 为了关闭提示
   }
 }
 
@@ -84,6 +86,7 @@ const getCardText = (i: number) => {
       </ScrollCircleItem>
     </ScrollCircle>
     <UserBall />
+    <SelectTips @click-content="onCardClick(0)" />
   </div>
 </template>
 

@@ -106,10 +106,10 @@ export const othMapData = {
   experience: [
     {
       start: [
-        {x: 1, y: 2, x_y: 4, num: 40},
-        {x: 17, y: 1, x_y: 1, num: 33},
-        {x: 18, y: 10, x_y: 4, num: 29},
-        {x: 2, y: 8, x_y: 2, num: 31},
+        {x: 1, y: 2, x_y: 4, num: 39},
+        {x: 17, y: 1, x_y: 1, num: 32},
+        {x: 18, y: 10, x_y: 4, num: 28},
+        {x: 2, y: 8, x_y: 2, num: 30},
       ],
       map: [
         {3: 3, 5: 2, 9: 3, 11: 4, 15: 3, 17: 2, 21: 3, 23: 4, 31: 3, 33: 2},
@@ -117,7 +117,7 @@ export const othMapData = {
         {1: 1, 3: 2, 5: 1, 7: 4, 9: 1, 16: 2, 17: 3, 19: 2, 20: 3, 22: 2},
         {1: 1, 3: 4, 7: 3, 11: 2, 15: 3, 20: 4, 22: 3, 24: 2},
       ],
-      end: {x: 11, y: 1},
+      end: {x: 11, y: 2},
       towerArr: [
         {tname: 'aixi', x: 4, y: 6},{tname: 'aixi', x: 13, y: 5},{tname: 'aixi', x: 13, y: 9},{tname: 'lanbo', x: 3, y: 8},{tname: 'lanbo', x: 3, y: 9},{tname: 'lanbo', x: 4, y: 3},{tname: 'lanbo', x: 4, y: 4},
         {tname: 'lanbo', x: 14, y: 4},{tname: 'lanbo', x: 14, y: 5},{tname: 'lanbo', x: 14, y: 8},{tname: 'huonan', x: 8, y: 6},{tname: 'huonan', x: 8, y: 5},{tname: 'huonan', x: 10, y: 6},

@@ -29,10 +29,8 @@ export type GameConfigType = {
 export type GameBaseData = {
   /** 终点位置 */
   terminal?: {x: number, y: number},
-  /** 地板：大小 数量 */
-  floorTile: {size: number, num: number},
-  /** 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，t(有塔防：10塔防一，11塔防二...) ]] */
-  gridInfo: { x_num: number, y_num: number, size: number, arr: (number | string)[][] },
+  /** 格子数量信息 */
+  gridInfo: { x_num: number, y_num: number, size: number },
   /** 游戏结束 */
   isGameOver: boolean
   /** 设置游戏的暂停 */
@@ -45,12 +43,7 @@ export type GameBaseData = {
   hp: number
   /** 金钱 */
   money: number
-  /** 敌人生成间隔时间 */
-  intervalTime: number
 }
-
-/** 格子的二维数组的值 */
-export type GridValue = 'floor' | 't'
 
 /** 敌人的类型 */
 export type EnemyStateType = {

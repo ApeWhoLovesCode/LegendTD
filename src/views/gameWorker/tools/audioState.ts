@@ -1,6 +1,6 @@
 import audioData from "@/dataSource/audioData"
 import { GameAudio } from "@/type/game"
-import { reactive, nextTick } from "vue"
+import { reactive } from "vue"
 
 export default function useAudioState() {
   const audioState = reactive<GameAudio>({

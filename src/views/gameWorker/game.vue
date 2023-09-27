@@ -123,13 +123,6 @@ function initWorker() {
       case 'onWorkerReady': {
         onWorkerReady(); break;
       }
-      case 'initMovePathCallback': {
-        baseDataState.terminal = {
-          x: levelData[source.mapLevel].end!.x * gameConfigState.size,
-          y: levelData[source.mapLevel].end!.y * gameConfigState.size,
-        }; 
-        break;
-      }
       case 'onProgress': {
         state.progress = param; break;
       }
@@ -152,6 +145,10 @@ function onLevelChange(level: number) {
   }
 }
 function onWorkerReady() {
+  baseDataState.terminal = {
+    x: levelData[source.mapLevel].end!.x * gameConfigState.size,
+    y: levelData[source.mapLevel].end!.y * gameConfigState.size,
+  }; 
   gameConfigState.loadingDone = true;
 }
 function gamePause(val?: boolean) {
@@ -184,11 +181,11 @@ function onGameOver() {
   keepInterval.clear()
 }
 async function uploadScore() {
+  playAudio('ma-gameover', 'Skill')
+  onGameOver()
   if(levelData[source.mapLevel].type !== LevelDataItemEnum.Normal) {
     return
   }
-  playAudio('ma-gameover', 'Skill')
-  onGameOver()
   const {userInfo} = userInfoStore
   if(userInfo) {
     if(!baseDataState.level) {
@@ -208,7 +205,7 @@ async function uploadScore() {
 }
 /** 点击建造塔防 */
 function buildTower(tname: TowerName) {
-  if(baseDataState.money < source.towerSource![tname].money) return
+  if(baseDataState.money! < source.towerSource![tname].money) return
   let {left: x, top: y} = towerState.building
   onWorkerPostFn('buildTower', {x, y, tname})
 }
@@ -301,7 +298,7 @@ function startMoneyTimer() {
 /** 点击了生产出来的金钱 */
 function proMoneyClick() {
   gameSkillState.proMoney.isShow = false
-  baseDataState.money += gameSkillState.proMoney.money
+  baseDataState.money! += gameSkillState.proMoney.money
   startMoneyTimer()
 }
 
@@ -362,8 +359,8 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
         <!-- 游戏底部技能区 -->
         <Skill 
           :skillList="gameSkillState.skillList" 
-          :money="baseDataState.money" 
-          :isPause="baseDataState.isPause" 
+          :money="baseDataState.money!" 
+          :isPause="baseDataState.isPause!" 
           @handleSkill="handleSkill" 
         />
         <!-- 终点 -->

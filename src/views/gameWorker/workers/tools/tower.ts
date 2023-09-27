@@ -2,9 +2,8 @@ import { TowerStateType } from "@/type/game"
 import { TargetCircleInfo, addMoney, baseDataState, checkValInCircle, gameConfigState, onWorkerPostFn, setting, source } from "./baseData"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"
-import { TowerName } from "@/dataSource/towerData"
 import { powAndSqrt } from "@/utils/tools"
-import _, { size } from "lodash"
+import _ from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
 import { BuildTowerParams } from "../type/tower"
@@ -49,7 +48,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
   towerMap.set(tower.id, tower)
   if(!setting.isTowerCover) {
     // 用于标记是哪个塔防 10 + index
-    baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
+    baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 'tower'
   }
   drawTower(tower)
   onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
@@ -113,7 +112,7 @@ function removeTower(towerId: string, isSale = true) {
   if(!tower) return
   const {x, y, saleMoney, id} = tower
   gameConfigState.ctx.clearRect(x, y, size, size);
-  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = ''
   if(isSale) {
     addMoney(saleMoney)
   }

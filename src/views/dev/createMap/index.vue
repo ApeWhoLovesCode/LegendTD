@@ -295,7 +295,6 @@ function exportData() {
       row = item.row
       col = item.col
       const direction = getDirection(state.gridArr, row, col, _flagIndex, end.value);
-      // console.log(flagIndex, row, col, direction?.xy);
       if(!direction) return ElMessage.warning('请将所有地板格子相连~')
       if(direction.xy === 'end') break; // 该路径到达终点
       _flagIndex = direction.flagIndex // 如果路径不同就被修改到其他的路径上了
