@@ -2,6 +2,8 @@ import { requireCDN } from "@/utils/handleImg"
 
 /** 用于canvas的图片数据 */
 const otherImgData = {
+  /** 起点 */
+  start: requireCDN('start.jpg'),
   /** 地板 */
   floor: requireCDN('floor-tile.png'),
   /** 金币 */

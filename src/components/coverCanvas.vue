@@ -2,6 +2,7 @@
 import imgSource from '@/dataSource/imgSource';
 import levelData from '@/dataSource/levelData';
 import { GridInfo } from '@/dataSource/mapData';
+import otherImgData from '@/dataSource/otherImgData';
 import { useSourceStore } from '@/stores/source';
 import { loadImage, requireCDN } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
@@ -84,11 +85,30 @@ function initMovePath() {
   }, 10);
 }
 
+/** 画起点 */
+async function drawStart() {
+  const size = state.size
+  let startImg = source.othOnloadImg?.start
+  if(!startImg) {
+    startImg = await loadImage(otherImgData.start)
+  }
+  levelData[props.index].start.forEach(s => {
+    let {x, y} = s
+    switch(s.x_y) {
+      case 1: x++; break;
+      case 2: y++; break;
+      case 3: x--; break;
+      case 4: y--; break;
+    }
+    state.ctx!.drawImage(startImg!, x * size, y * size, size, size)
+  })
+}
+
 /** 画地板 */
 async function drawFloorTile() {
   let floor = source.othOnloadImg?.floor
   if(!floor) {
-    floor = await loadImage(requireCDN('floor-tile.png'))
+    floor = await loadImage(otherImgData.floor)
   }
   const size = state.size
   state.ctx?.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
@@ -97,6 +117,8 @@ async function drawFloorTile() {
       state.ctx?.drawImage(floor!, f.x * size, f.y * size, size, size)
     }
   })
+  drawStart()
+  /** 画终点 */
   const end = levelData[props.index].end
   const x = end ? end.x * size : state.movePath[0].at(-1)!.x * size
   const y = end ? end.y * size : state.movePath[0].at(-1)!.y * size

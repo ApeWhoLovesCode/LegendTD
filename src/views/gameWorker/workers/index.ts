@@ -146,7 +146,7 @@ function drawStart() {
       case 3: x--; break;
       case 4: y--; break;
     }
-    gameConfigState.ctx.drawImage(source.othOnloadImg.star!, x * size, y * size, size, size)
+    gameConfigState.ctx.drawImage(source.othOnloadImg.start!, x * size, y * size, size, size)
     baseDataState.gridInfo.arr[y][x] = 'start'
   })
 }
