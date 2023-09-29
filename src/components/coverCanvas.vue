@@ -94,12 +94,6 @@ async function drawStart() {
   }
   levelData[props.index].start.forEach(s => {
     let {x, y} = s
-    switch(s.x_y) {
-      case 1: x++; break;
-      case 2: y++; break;
-      case 3: x--; break;
-      case 4: y--; break;
-    }
     state.ctx!.drawImage(startImg!, x * size, y * size, size, size)
   })
 }
