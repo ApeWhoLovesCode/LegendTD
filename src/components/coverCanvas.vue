@@ -4,6 +4,7 @@ import levelData from '@/dataSource/levelData';
 import { GridInfo } from '@/dataSource/mapData';
 import otherImgData from '@/dataSource/otherImgData';
 import { useSourceStore } from '@/stores/source';
+import { addRowColArr } from '@/utils/direction';
 import { loadImage, requireCDN } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
@@ -63,6 +64,9 @@ function initMovePath() {
     const movePathItem: GridInfo & {num?: number} = JSON.parse(
       JSON.stringify(levelStart)
     )
+    const {addRow, addCol} = addRowColArr[movePathItem.x_y - 1]
+    movePathItem.x += addCol;
+    movePathItem.y += addRow;
     const length = movePathItem.num!
     delete movePathItem.num
     const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]

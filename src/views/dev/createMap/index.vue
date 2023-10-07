@@ -6,17 +6,17 @@ import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { GridItem, MouseImgType } from './type';
 import { loadImage } from '@/utils/handleImg'
 import { ElButton, ElMessage, ElSpace, ElTooltip } from 'element-plus';
-import { EraserIcon, FlagIcon, AddAndMinusIcon } from './imgSource'
-import type {MapDataItem, MapGridInfo} from '@/dataSource/mapData'
+import { EraserIcon, AddAndMinusIcon } from './imgSource'
+import type {DirectionType, MapDataItem, MapGridInfo} from '@/dataSource/mapData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
 import { range } from '@/utils/format';
 import otherImgData from '@/dataSource/otherImgData';
-import { START_MAX_COUNT, startColors, startColors2 } from './config';
+import { START_MAX_COUNT, getFlagImg, startColors, startColors2 } from './config';
 import ImgSource from '@/dataSource/imgSource';
+import { addRowColArr } from '@/utils/direction';
 
 const floorImgList = [otherImgData.floor]
 let floorOnloadImgs: HTMLImageElement[] = []
-let flagOnloadImg: HTMLImageElement | undefined = void 0
 let terminalOnloadImg: HTMLImageElement | undefined = void 0
 const source = useSourceStore()
 const canvasWrapRef = ref<HTMLDivElement>()
@@ -66,8 +66,16 @@ const startFlag = reactive<{
 /** 起点 */
 const end = ref<{row: number, col: number}>()
 
+const flagIconSrc = computed(() => {
+  let i = state.curFlagIndex
+  return getFlagImg(i > 3 ? 0 : i, false) as string
+})
+
 const mouseIcons = computed(() => {
-  return [...floorImgList, FlagIcon, EraserIcon, ImgSource.TerminalImg, AddAndMinusIcon][mouseImg.imgIndex]
+  if(mouseImg.type === 'flag') {
+    return flagIconSrc.value
+  }
+  return [...floorImgList, EraserIcon, ImgSource.TerminalImg, AddAndMinusIcon][mouseImg.imgIndex]
 })
 
 onMounted(() => {
@@ -86,6 +94,7 @@ async function init() {
   state.ctx = canvasRef.value!.getContext("2d") as CanvasRenderingContext2D;
   getCanvasWrapInfo()
   await initData()
+  // devTry()
   setTimeout(() => {
     startDraw()
   }, 0);
@@ -93,23 +102,40 @@ async function init() {
 
 async function initData() {
   floorOnloadImgs = await Promise.all(floorImgList.map(img => loadImage(img)))
-  flagOnloadImg = await loadImage(FlagIcon)
   terminalOnloadImg = await loadImage(ImgSource.TerminalImg)
 }
 
 function startDraw() {
   state.ctx.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
-  // devTry()
   drawLine()
   drawAllGrid()
   drawAllFlagAndEnd()
 }
 
 /** 点击拖拽 */
-function onClickDrag(e: MouseEvent, i: number, type: MouseImgType) {
+function onClickDrag(e: MouseEvent, type: MouseImgType, i?: number) {
   mouseImg.type = type
   document.addEventListener("mousemove", onMouseMove);
-  mouseImg.imgIndex = i
+  switch(type) {
+    case 'floor': {
+      mouseImg.imgIndex = i!
+      break;
+    }
+    case 'eraser': {
+      mouseImg.imgIndex = floorImgList.length
+      break;
+    }
+    case 'end': {
+      mouseImg.imgIndex = floorImgList.length + 1
+      break;
+    }
+    case 'oneselfAdd':
+    case 'oneselfMinus':
+    case 'nextAdd': {
+      mouseImg.imgIndex = floorImgList.length + 2
+      break;
+    }
+  }
   mouseImg.x = e.clientX - state.size / 4
   mouseImg.y = e.clientY - state.size / 4
 }
@@ -186,7 +212,7 @@ function onDrawMouseImg(e: MouseEvent) {
       startFlag.push({row, col})
       state.curFlagIndex = startFlag.length - 1
       item.v = -1
-      drawFlag(row, col)
+      drawFlag(row, col, state.curFlagIndex)
       return
     }
     case 'end': {
@@ -213,7 +239,11 @@ function onDrawMouseImg(e: MouseEvent) {
       } else if(item.v === -2) {
         end.value = void 0
       }
-      state.floorNumList[curIndex] = Math.max(state.floorNumList[curIndex] - 1, 0)
+      item.i.forEach(((v, i) => {
+        if(v !== void 0) {
+          state.floorNumList[i] = Math.max(state.floorNumList[i] - 1, 0)
+        }
+      }))
       state.ctx.clearRect(x, y, gridW, gridW)
       item.v = 0
       item.i = []
@@ -271,43 +301,6 @@ function getGridInside(col: number, row: number) {
     x: col * state.size + lineW / 2,
     y: row * state.size + lineW / 2,
   }
-}
-
-/** 导出数据 */
-function exportData() {
-  if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
-  if(!end.value) return ElMessage.warning('请选择萝卜作为敌人终点~')
-  const res: MapDataItem = {start: [], map: [], end: {x: end.value.col, y: end.value.row}} 
-  for(let flagIndex = 0; flagIndex < startFlag.length; flagIndex++) {
-    res.map.push({})
-    let {row, col} = startFlag[flagIndex]
-    let item = getStartDirection(state.gridArr, row, col)
-    let xy = item?.xy
-    if(!item) return ElMessage.warning('旗子附近没有地板~')
-    row = item.row
-    col = item.col
-    const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: xy ?? 1, num: 0}
-    let i = 1;
-    // 当前遍历的路径，可能会由于当前路径不足以到终点，走其他路径的路
-    let _flagIndex = flagIndex
-    while(row !== end.value.row || col !== end.value.col) {
-      const item = getDirectionVal(state.gridArr, row, col, xy!)
-      row = item.row
-      col = item.col
-      const direction = getDirection(state.gridArr, row, col, _flagIndex, end.value);
-      if(!direction) return ElMessage.warning('请将所有地板格子相连~')
-      if(direction.xy === 'end') break; // 该路径到达终点
-      _flagIndex = direction.flagIndex // 如果路径不同就被修改到其他的路径上了
-      if(direction.xy !== xy) {
-        xy = direction.xy
-        res.map[flagIndex][i] = direction.xy
-      }
-      i++;
-    }
-    mapInfoItem.num = i
-    res.start.push(mapInfoItem)
-  }
-  console.log(res);
 }
 
 /** ------ 绘画 ------ */
@@ -428,16 +421,19 @@ function drawAllGrid() {
   }
 }
 function drawAllFlagAndEnd() {
-  startFlag.forEach(flag => {
-    drawFlag(flag.row, flag.col)
+  startFlag.forEach((flag, i) => {
+    drawFlag(flag.row, flag.col, i)
   })
   if(end.value?.row) {
     drawEnd(end.value.row, end.value.col)
   }
 }
-function drawFlag(row: number, col: number) {
+function drawFlag(row: number, col: number, i: number) {
   const {x, y, gridW} = getGridInside(col, row)
-  state.ctx.drawImage(flagOnloadImg!, x, y, gridW, gridW)
+  const flagImg = getFlagImg(i) as HTMLImageElement
+  flagImg.onload = () => {
+    state.ctx.drawImage(flagImg, x, y, gridW, gridW)
+  }
 }
 function drawEnd(row: number, col: number) {
   const {x, y, gridW} = getGridInside(col, row)
@@ -484,28 +480,96 @@ function getCanvasWrapInfo() {
   state.canvasInfo.lineW = lineW
 }
 
-function devTry() {
-  // 路径一
-  startFlag[0] = {row: 2, col: 2}
-  end.value = {row: 8, col: 7}
-  for(let i = 0; i < 5; i++) {
-    state.gridArr[2][3 + i].v = 1
-    state.gridArr[2][3 + i].i[0] = i
-    state.floorNumList[0]++
+/** 导出数据 */
+function exportData() {
+  if(!startFlag.length) return ElMessage.warning('请选择旗子作为敌人起点~')
+  if(!end.value) return ElMessage.warning('请选择萝卜作为敌人终点~')
+  const res: MapDataItem = {start: [], map: [], end: {x: end.value.col, y: end.value.row}} 
+  for(let flagIndex = 0; flagIndex < startFlag.length; flagIndex++) {
+    res.map.push({})
+    let {row, col} = startFlag[flagIndex]
+    const mapInfoItem: MapGridInfo = {x: col, y: row, x_y: 1, num: 0}
+    let item = getStartDirection(state.gridArr, row, col, flagIndex)
+    let xy = item?.xy
+    if(!item) return ElMessage.warning('旗子附近没有地板~')
+    row = item.row
+    col = item.col
+    mapInfoItem.x_y = xy ?? 1
+    let i = 1;
+    // 当前遍历的路径，可能会由于当前路径不足以到终点，走其他路径的路
+    let _flagIndex = flagIndex
+    while(row !== end.value.row || col !== end.value.col) {
+      const item = getDirectionVal(state.gridArr, row, col, xy!)
+      row = item.row
+      col = item.col
+      const direction = getDirection(state.gridArr, row, col, _flagIndex, end.value);
+      if(!direction) return ElMessage.warning('请将所有地板格子相连~')
+      if(direction.xy === 'end') break; // 该路径到达终点
+      _flagIndex = direction.flagIndex // 如果路径不同就被修改到其他的路径上了
+      if(direction.xy !== xy) {
+        xy = direction.xy
+        res.map[flagIndex][i] = direction.xy
+      }
+      i++;
+    }
+    mapInfoItem.num = i
+    res.start.push(mapInfoItem)
   }
-  for(let i = 0; i < 5; i++) {
-    state.gridArr[3 + i][7].v = 1
-    state.gridArr[3 + i][7].i[0] = 5 + i
-    state.floorNumList[0]++
+  console.log(res);
+}
+
+/** 尝试绘画新路径 */
+function devTryNewPath({row, col, path}: {
+  row: number
+  col: number
+  /** d: 方向 n: 遍历次数 */
+  path: {d: DirectionType, n: number}[]
+}) {
+  // 设置起点
+  startFlag.push({row, col})
+  state.gridArr[row][col].v = -1;
+  // 设置后续的格子
+  function addGridArr(row: number, col: number, i: number) {
+    state.gridArr[row][col].v = 1
+    state.gridArr[row][col].i[startFlag.length - 1] = i
+    state.floorNumList[startFlag.length - 1]++;
   }
-  // 路径二
-  startFlag[1] = {row: 2, col: 11}
-  for(let i = 0; i < 4; i++) {
-    state.gridArr[2][10 - i].v = 1
-    state.gridArr[2][10 - i].i[1] = i
-    state.floorNumList[1]++
+  let sum = 0;
+  path.forEach(({d, n: forNum}) => {
+    const {addRow, addCol} = addRowColArr[d - 1]
+    for(let i = 0; i < forNum; i++) {
+      addGridArr(row += addRow, col += addCol, sum++)
+    }
+  })
+  // 第一条路径的尽头就是终点
+  if(startFlag.length === 1) {
+    const {addRow, addCol} = addRowColArr[(path.at(-1)?.d ?? 1) - 1]
+    row += addRow;
+    col += addCol;
+    state.gridArr[row][col].v = -2
+    end.value = {row, col}
   }
 }
+
+function devTry() {
+  // 路径一
+  devTryNewPath({
+    row: 5,
+    col: 10,
+    path: [
+      {d: 3, n: 3}, {d: 2, n: 3}, {d: 1, n: 5}, {d: 4, n: 3}
+    ]
+  })
+  // 路径一
+  devTryNewPath({
+    row: 6,
+    col: 11,
+    path: [
+      {d: 3, n: 2}, {d: 4, n: 3}, {d: 1, n: 5}, {d: 2, n: 2}
+    ]
+  })
+}
+
 
 </script>
 
@@ -519,24 +583,24 @@ function devTry() {
             :key="i" 
             class="floor"
           >
-            <img :src="floor" class="floorImg" @mousedown="onClickDrag($event, i, 'floor')">
+            <img :src="floor" class="floorImg" @mousedown="onClickDrag($event, 'floor', i)">
           </div>
         </div>
         <div class="right">
           <ElSpace class="tools">
             <ElSpace class="toolsLeft">
               <ElTooltip content="起点的标志" placement="top">
-                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length, 'flag')">
-                  <img :src="FlagIcon" alt="" class="iconImg">
+                <div class="iconWrap" @click="onClickDrag($event, 'flag')">
+                  <img :src="flagIconSrc" alt="" class="iconImg">
                 </div>
               </ElTooltip>
               <ElTooltip content="清除某个格子" placement="top">
-                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 1, 'eraser')">
+                <div class="iconWrap" @click="onClickDrag($event, 'eraser')">
                   <img :src="EraserIcon" alt="" class="iconImg">
                 </div>
               </ElTooltip>
               <ElTooltip content="终点的标志" placement="top">
-                <div class="iconWrap" @click="onClickDrag($event, floorImgList.length + 2, 'end')">
+                <div class="iconWrap" @click="onClickDrag($event, 'end')">
                   <img :src="ImgSource.TerminalImg" alt="" class="iconImg">
                 </div>
               </ElTooltip>
@@ -550,17 +614,17 @@ function devTry() {
             </ElSpace>
             <ElSpace>
               <ElTooltip content="以该格为索引起始，移动为后面的格子赋值" placement="top">
-                <ElButton type="primary" @click="onClickDrag($event, floorImgList.length + 3, 'nextAdd')">
+                <ElButton type="primary" @click="onClickDrag($event, 'nextAdd')">
                   Next +1
                 </ElButton>
               </ElTooltip>
               <ElTooltip content="使该格索引加一" placement="top">
-                <ElButton @click="onClickDrag($event, floorImgList.length + 3, 'oneselfAdd')">
+                <ElButton @click="onClickDrag($event, 'oneselfAdd')">
                   索引 +1
                 </ElButton>
               </ElTooltip>
               <ElTooltip content="使该格索引减一" placement="top">
-                <ElButton @click="onClickDrag($event, floorImgList.length + 3, 'oneselfMinus')">
+                <ElButton @click="onClickDrag($event, 'oneselfMinus')">
                   索引 -1
                 </ElButton>
               </ElTooltip>

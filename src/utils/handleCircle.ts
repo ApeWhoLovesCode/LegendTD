@@ -4,8 +4,6 @@
  *  const deg_30 = 180 * Math.asin(1 / 2) / Math.PI  // 30 求 角度
  */
 
-import { powAndSqrt } from "./tools";
-
 /** 传入两个坐标，返回弧度 */
 export const getPointsRadian = (start: Location, end: Location) => {
   const _x = end.x - start.x, _y = end.y - start.y;

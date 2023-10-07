@@ -12,6 +12,7 @@ import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, in
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
 import levelData from "@/dataSource/levelData";
+import { addRowColArr } from "@/utils/direction";
 
 addEventListener('message', e => {
   const { data } = e;
@@ -88,7 +89,7 @@ async function init() {
     makeEnemy()
     startAnimation()
   }
-  onWorkerPostFn('onWorkerReady')
+  onWorkerPostFn('onWorkerReady', baseDataState.end)
 }
 
 /** 开启动画绘画 */
@@ -139,15 +140,8 @@ function startDraw() {
 function drawStart() {
   const size = gameConfigState.size
   levelData[source.mapLevel].start.forEach(s => {
-    let {x, y} = s
-    switch(s.x_y) {
-      case 1: x++; break;
-      case 2: y++; break;
-      case 3: x--; break;
-      case 4: y--; break;
-    }
-    gameConfigState.ctx.drawImage(source.othOnloadImg.start!, x * size, y * size, size, size)
-    baseDataState.gridInfo.arr[y][x] = 'start'
+    gameConfigState.ctx.drawImage(source.othOnloadImg.start!, s.x * size, s.y * size, size, size)
+    baseDataState.gridInfo.arr[s.y][s.x] = 'start'
   })
 }
 
@@ -163,14 +157,15 @@ function drawFloorTile() {
 
 /** 初始化行动轨迹 */
 function initMovePath() {
+  const size = gameConfigState.size
   levelData[source.mapLevel].start.forEach((levelStart, startIndex) => {
     const movePathItem = JSON.parse(JSON.stringify(
       !setting.isTowerCover ? levelStart : towerCanvasMapGridInfo
     ))
-    movePathItem.x *= gameConfigState.size
-    movePathItem.y *= gameConfigState.size
+    const {addRow, addCol} = addRowColArr[movePathItem.x_y - 1]
+    movePathItem.x = (movePathItem.x + addCol) * size;
+    movePathItem.y = (movePathItem.y + addRow) * size;
     baseDataState.floorTile.num = movePathItem.num
-    const size = gameConfigState.size
     // 刚开始就右移了，所以该初始格不会算上去
     const length = movePathItem.num!
     delete movePathItem.num
@@ -193,9 +188,17 @@ function initMovePath() {
     }
     enemyState.movePath.push(movePath)
   })
-  if(levelData[source.mapLevel].end) { // 为终点赋值
-    baseDataState.gridInfo.arr[levelData[source.mapLevel].end!.y][levelData[source.mapLevel].end!.x] = 'end'
+  // 为终点赋值
+  let end = levelData[source.mapLevel].end
+  if(!end) {
+    const lastItem = enemyState.movePath.at(-1)?.at(-1)
+    end = {
+      x: Math.floor(lastItem!.x / size),
+      y: Math.floor(lastItem!.y / size),
+    }
   }
+  baseDataState.end = end
+  baseDataState.gridInfo.arr[end!.y][end!.x] = 'end'
 }
 
 /** 点击获取鼠标位置 操作塔防 */

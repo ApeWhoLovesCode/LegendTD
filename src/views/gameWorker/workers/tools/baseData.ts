@@ -39,6 +39,8 @@ const baseDataState = {
   money: 5000,
   // 敌人生成间隔时间
   intervalTime: 900,
+  /** 终点的位置 */
+  end: {x: 0, y: 0},
 }
 
 const gameConfigState = {

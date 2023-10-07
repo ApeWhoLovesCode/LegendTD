@@ -68,6 +68,7 @@ const getCardText = (i: number) => {
   <div class='page-index'>
     <ScrollCircle 
       :list-length="levelData.length" 
+      :init-cart-num="6"
       @on-page-change="onPageChange"
     >
       <ScrollCircleItem 
@@ -86,7 +87,7 @@ const getCardText = (i: number) => {
       </ScrollCircleItem>
     </ScrollCircle>
     <UserBall />
-    <SelectTips @click-content="onCardClick(0)" />
+    <!-- <SelectTips @click-content="onCardClick(0)" /> -->
   </div>
 </template>
 

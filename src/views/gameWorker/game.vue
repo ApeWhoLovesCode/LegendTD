@@ -121,7 +121,7 @@ function initWorker() {
         onHpChange(param); break;
       }
       case 'onWorkerReady': {
-        onWorkerReady(); break;
+        onWorkerReady(param); break;
       }
       case 'onProgress': {
         state.progress = param; break;
@@ -144,10 +144,10 @@ function onLevelChange(level: number) {
     audioLevelRef.value?.play()
   }
 }
-function onWorkerReady() {
+function onWorkerReady(end: {x: number, y: number}) {
   baseDataState.terminal = {
-    x: levelData[source.mapLevel].end!.x * gameConfigState.size,
-    y: levelData[source.mapLevel].end!.y * gameConfigState.size,
+    x: end.x * gameConfigState.size,
+    y: end.y * gameConfigState.size,
   }; 
   gameConfigState.loadingDone = true;
 }

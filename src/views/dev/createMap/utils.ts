@@ -1,16 +1,13 @@
 import { DirectionType } from "@/dataSource/mapData";
 import { GridItem } from "./type";
+import { addRowColArr } from "@/utils/direction";
 
 /** 获取起点格子的方向并移动 */
-export function getStartDirection(arr: Array<GridItem[]>, row: number, col: number) {
-  const array = [
-    {addRow: 0, addCol: -1},
-    {addRow: -1, addCol: 0},
-    {addRow: 0, addCol: 1},
-    {addRow: 1, addCol: 0},
-  ]
+export function getStartDirection(arr: Array<GridItem[]>, row: number, col: number, flagIndex: number) {
+  const array = addRowColArr
   for(let i = 0; i < array.length; i++) {
-    if(arr[row + array[i].addRow][col + array[i].addCol].v) {
+    const item = arr[row + array[i].addRow][col + array[i].addCol]
+    if(item.v > 0 && item.i?.[flagIndex] !== void 0) {
       return {xy: i + 1 as DirectionType, row: row + array[i].addRow, col: col + array[i].addCol}
     }
   }
@@ -20,12 +17,7 @@ export function getStartDirection(arr: Array<GridItem[]>, row: number, col: numb
 export function getDirection(
   arr: Array<GridItem[]>, row: number, col: number, flagIndex: number, end: {row: number, col: number}
 ): {xy: DirectionType | 'end', flagIndex: number} | undefined {
-  const array = [
-    {addRow: 0, addCol: -1},
-    {addRow: -1, addCol: 0},
-    {addRow: 0, addCol: 1},
-    {addRow: 1, addCol: 0},
-  ]
+  const array = addRowColArr
   for(let i = 0; i < array.length; i++) {
     const cur = arr[row][col]
     const nextRow = row + array[i].addRow, nextCol = col + array[i].addCol
