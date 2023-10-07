@@ -68,7 +68,6 @@ const getCardText = (i: number) => {
   <div class='page-index'>
     <ScrollCircle 
       :list-length="levelData.length" 
-      :init-cart-num="6"
       @on-page-change="onPageChange"
     >
       <ScrollCircleItem 
