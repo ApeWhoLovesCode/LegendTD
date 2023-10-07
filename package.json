@@ -14,7 +14,6 @@
     "element-plus": "^2.3.0",
     "less": "^3.13.1",
     "lhh-utils": "^1.0.6",
-    "libgif": "0.0.3",
     "lodash": "^4.17.21",
     "pinia": "^2.0.28",
     "pinia-plugin-persist": "^1.0.0",

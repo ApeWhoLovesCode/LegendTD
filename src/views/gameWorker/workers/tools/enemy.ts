@@ -12,18 +12,19 @@ import { range } from "@/utils/format"
 import { limitRange, powAndSqrt } from "@/utils/tools"
 import { getEndXy, isLineInRect } from "./compute"
 import { getPointsCos } from "@/utils/handleCircle"
+import levelData from "@/dataSource/levelData"
+import { towerCanvasMapGridInfo } from "@/dataSource/mapData"
 
 const enemyMap: Map<string, EnemyStateType> = new Map()
 const enemyState: EnemyState = {
   levelEnemy: [],
   createdEnemyNum: 0,
-  // 敌人的移动轨迹 x坐标, y坐标, x_y(方向): 1:左 2:下 3:右 4:上
   movePath: [],
 }
 
 /** 随着关卡增加敌人等级提升 */
 const addEnemyLevel = () => range(Math.ceil(
-  (baseDataState.level + 1 - (isInfinite() ? 5 : 20)) / 5
+  (baseDataState.level + 1 - (isInfinite ? 5 : 20)) / 5
 ), 0, ENEMY_MAX_LEVEL)
 
 function allEnemyIn() {
@@ -62,7 +63,7 @@ function makeEnemy() {
       keepInterval.delete(KeepIntervalKey.makeEnemy)
     } else {
       setEnemy()
-      if(setting.isLevelLock) setting.isLevelLock = false
+      setting.isLevelLock = false
     }
   }, baseDataState.intervalTime)
 }
@@ -110,12 +111,13 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0}
+  const movePathIndex = Math.floor(Math.random() * levelData[source.mapLevel].start.length)
+  const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, curFloorI: 0, framesNum: 0, movePathIndex}
   const {audioKey, name, w, h} = enemyItem
-  const {x, y} = baseDataState.mapGridInfoItem
+  const {x, y} = !setting.isTowerCover ? levelData[source.mapLevel].start[movePathIndex] : towerCanvasMapGridInfo
   // 设置敌人的初始位置
-  enemyItem.x = x - w / 4
-  enemyItem.y = y - h / 2
+  enemyItem.x = x * size - w / 4
+  enemyItem.y = y * size - h / 2
   enemyMap.set(enemyItem.id, enemyItem)
   enemyState.createdEnemyNum++
   handleEnemySkill(name, id)
@@ -161,6 +163,7 @@ function enemySkillDance(e_id: string) {
   const total = baseDataState.floorTile.num - 1
   for(let i = 0; i < 4; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[12])
+    newEnemy.movePathIndex = enemy.movePathIndex
     switch (i) {
       case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
       case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
@@ -180,6 +183,7 @@ function enemySkillFulisha(e_id: string) {
   const total = baseDataState.floorTile.num - 1
   for(let i = 0; i < 2; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[13])
+    newEnemy.movePathIndex = enemy.movePathIndex
     switch (i) {
       case 0: newEnemy.curFloorI = limitRange(curFloorI - 2, 1, total); break;
       case 1: newEnemy.curFloorI = limitRange(curFloorI - 1, 1, total); break;
@@ -277,8 +281,8 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
 }
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyStateType, i: number) {
-  const { curFloorI, audioKey } = newEnemy
-  const { x, y } = enemyState.movePath[curFloorI - 1]
+  const { curFloorI, audioKey, movePathIndex } = newEnemy
+  const { x, y } = enemyState.movePath[movePathIndex][curFloorI - 1]
   const id = randomStr(`callenemy-${i}`)
   const size = gameConfigState.size
   newEnemy.w *= size
@@ -300,23 +304,22 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
 
 /** 敌人移动 */
 function moveEnemy(enemy: EnemyStateType) {
-  const { curSpeed, speed, curFloorI, isForward, isFlip, id, w, h } = enemy
+  const { curSpeed, speed, curFloorI, isForward, movePathIndex, isFlip, id, w, h } = enemy
   let newIndex = curFloorI
   // 敌人到达终点
   if(!setting.isTowerCover) {
-    if(curFloorI === baseDataState.floorTile.num - 1) {
+    if(curFloorI === levelData[source.mapLevel].start[movePathIndex].num + 1) {
       removeEnemy([id])
       onReduceHp(1)
       return true
     }
-  } else {
-    if(newIndex === baseDataState.mapGridInfoItem.num) {
+  } else { // 塔防展示组件才需要
+    if(newIndex === towerCanvasMapGridInfo.num) {
       newIndex = 0
     }
   }
   // 将格子坐标同步到敌人的坐标
-  const { x, y, x_y } = enemyState.movePath[newIndex]
-  const _x = x - w / 4, _y = y - h / 2
+  const { x, y, x_y } = enemyState.movePath[movePathIndex][newIndex]
   switch (x_y) {
     case 1: {
       enemy.x -= curSpeed;
@@ -336,8 +339,9 @@ function moveEnemy(enemy: EnemyStateType) {
     case 4: enemy.y += curSpeed; break;
   }
   const { x: eX, y: eY } = enemy
+  const _x = x - w / 4, _y = y - h / 2
   // 敌人到达下一个格子
-  if((eX >= _x && eX <= _x + speed) && (eY >= _y && eY <= _y + speed)) {
+  if((_x - speed <= eX && eX <= _x + speed) && (_y - speed <= eY && eY <= _y + speed)) {
     if(!setting.isTowerCover) {
       enemy.curFloorI++
     } else {

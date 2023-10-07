@@ -6,15 +6,6 @@ const routes = [
     name: 'index',
     component: () => import('../views/index.vue') 
   },
-  // {
-  //   path: '/gameVue',
-  //   redirect: '/gameVue/1'
-  // },
-  // {
-  //   path: '/gameVue/:id',
-  //   name: 'gameVue',
-  //   component: () => import('../views/game/index.vue') 
-  // },
   {
     path: '/test',
     name: 'test',

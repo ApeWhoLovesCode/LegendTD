@@ -4,9 +4,10 @@ import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
-import levelData from "@/dataSource/levelData";
-import mapData from "@/dataSource/mapData";
+import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 import { TowerName } from "@/dataSource/towerData";
+import levelEnemyArr from "@/dataSource/levelEnemyArr";
+import { GridValue } from "../type/baseData";
 
 const source = sourceInstance.state
 
@@ -28,8 +29,8 @@ const setting = {
 const baseDataState = {
   // 地板：大小 数量
   floorTile: {size: 50, num: 83},
-  // 格子数量信息 arr: [[ 0:初始值(可以放塔)，1:地板，2:有阻挡物，10(有塔防：10塔防一，11塔防二...) ]]
-  gridInfo: { x_num: 20, y_num: 12, arr: [] as (string | number)[][] },
+  // 格子数量信息
+  gridInfo: { x_num: 20, y_num: 12, arr: [] as GridValue[][] },
   // 等级
   level: 0,
   // 生命值
@@ -38,8 +39,8 @@ const baseDataState = {
   money: 5000,
   // 敌人生成间隔时间
   intervalTime: 900,
-  // 当前关卡地图信息
-  mapGridInfoItem: {x: 0, y: 9, x_y: 1, num: 0}
+  /** 终点的位置 */
+  end: {x: 0, y: 0},
 }
 
 const gameConfigState = {
@@ -55,17 +56,19 @@ const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
+/** 是否是体验模式 */
+const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
-const isInfinite = () => source.mapLevel === mapData.length - 1
+const isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
 
 /** 初始化所有格子 */
 function initAllGrid() {
   const { x_num, y_num } = baseDataState.gridInfo
-  const arr: number[][] = []
-  for(let i = 0; i < x_num; i++) {
+  const arr: GridValue[][] = []
+  for(let i = 0; i < y_num; i++) {
     arr.push([])
-    for(let j = 0; j < y_num; j++) {
-      arr[i][j] = 0
+    for(let j = 0; j < x_num; j++) {
+      arr[i][j] = ''
     }
   }
   baseDataState.gridInfo.arr = arr
@@ -75,27 +78,16 @@ function onLevelChange() {
   const level = baseDataState.level
   setTimeout(() => {
     enemyState.createdEnemyNum = 0
-    // 处理地图关卡中的敌人数据
-    let enemyDataArr: Array<number[]> | undefined
-    for(let i = 0; i < source.mapLevel; i++) { 
-      if(levelData[source.mapLevel]?.enemyArr) {
-        enemyDataArr = levelData[source.mapLevel].enemyArr
-        break
-      }
-    }
-    if(!enemyDataArr) {
-      enemyDataArr = levelData[0].enemyArr
-    }
+    const enemyDataArr = levelData[source.mapLevel]?.enemyArr ?? levelEnemyArr[0]
     // 获取地图关卡中的敌人数据
-    if(level < enemyDataArr.length && !isInfinite()) {
-      enemyState.levelEnemy = enemyDataArr[level]
-    } else {
-      if(isInfinite()) {
-        // 无限火力 第一关 每个怪兽都遍历生成一次
-        enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
+    if(!isInfinite) {
+      if(level < enemyDataArr.length) {
+        enemyState.levelEnemy = enemyDataArr[level]
       } else {
         enemyState.levelEnemy = randomNumList(level)
       }
+    } else { // 无限火力 第一关 每个怪兽都遍历生成一次
+      enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
     }
     if(level) {
       addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))
@@ -154,6 +146,7 @@ export {
   gameConfigState,
   canvasInfo,
   isInfinite,
+  isExperience,
   initAllGrid,
   onLevelChange,
   checkValInCircle,

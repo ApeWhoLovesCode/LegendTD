@@ -2,21 +2,22 @@ import { TowerStateType } from "@/type/game"
 import { TargetCircleInfo, addMoney, baseDataState, checkValInCircle, gameConfigState, onWorkerPostFn, setting, source } from "./baseData"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"
-import { TowerName } from "@/dataSource/towerData"
 import { powAndSqrt } from "@/utils/tools"
 import _ from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
+import { BuildTowerParams } from "../type/tower"
+import levelData from "@/dataSource/levelData"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
 /** 点击建造塔防 */
-function buildTower({x, y, tname}: {
-  x: number, y: number, tname: TowerName
-}, isMusic = true) {
+function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = true) {
   const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
-  if(baseDataState.money < money) return
-  addMoney(-money)
+  if(isMoney) {
+    if(baseDataState.money < money) return
+    addMoney(-money)
+  }
   if(setting.isDevTestMode) {
     ret.damage /= 10
   }
@@ -47,13 +48,22 @@ function buildTower({x, y, tname}: {
   towerMap.set(tower.id, tower)
   if(!setting.isTowerCover) {
     // 用于标记是哪个塔防 10 + index
-    baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 't' + tname
+    baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 'tower'
   }
   drawTower(tower)
   onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
   if(isMusic) {
     onWorkerPostFn('playDomAudio', {id: tower.id})
   }
+}
+
+/** 初始化建造塔防 */
+function initBuildTowers() {
+  levelData[source.mapLevel].towerArr?.forEach(t => {
+    t.x *= gameConfigState.size
+    t.y *= gameConfigState.size
+    buildTower(t, false, false)
+  })
 }
 
 function drawTowerMap() {
@@ -102,7 +112,7 @@ function removeTower(towerId: string, isSale = true) {
   if(!tower) return
   const {x, y, saleMoney, id} = tower
   gameConfigState.ctx.clearRect(x, y, size, size);
-  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 0
+  baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = ''
   if(isSale) {
     addMoney(saleMoney)
   }
@@ -167,6 +177,7 @@ function enterAttackScopeList(target: TargetCircleInfo) {
 export {
   towerMap,
   buildTower,
+  initBuildTowers,
   drawTowerMap,
   damageTower,
   removeTower,

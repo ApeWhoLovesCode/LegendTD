@@ -1,10 +1,12 @@
 <script setup lang='ts'>
 import imgSource from '@/dataSource/imgSource';
-import mapData, { GridInfo, mapGridInfoList } from '@/dataSource/mapData';
+import levelData from '@/dataSource/levelData';
+import { GridInfo } from '@/dataSource/mapData';
+import otherImgData from '@/dataSource/otherImgData';
 import { useSourceStore } from '@/stores/source';
+import { addRowColArr } from '@/utils/direction';
 import { loadImage, requireCDN } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
-import { size } from 'lodash';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 const props = defineProps<{
@@ -18,7 +20,7 @@ const state = reactive({
   canvasInfo: {w: 0, h: 0},
   /** 地板大小 */
   size: 10,
-  movePath: [] as GridInfo[]
+  movePath: [] as GridInfo[][]
 })
 
 onMounted(() => {
@@ -36,7 +38,7 @@ onUnmounted(() => {
 const resizeFn = () => {
   getCanvasWH()
   setTimeout(() => {
-    initMovePath()
+    drawFloorTile()
   }, 10);
 }
 
@@ -57,46 +59,69 @@ function getCanvasWH() {
 
 /** 初始化行动轨迹 */
 function initMovePath() {
-  const size = state.size
-  if(!mapGridInfoList[props.index]) return
-  const movePathItem: GridInfo & {num?: number} = JSON.parse(JSON.stringify(mapGridInfoList[props.index]))
-  movePathItem.x *= size
-  movePathItem.y = movePathItem.y * size
-  const length = movePathItem.num!
-  delete movePathItem.num
-  const movePath: GridInfo[]  = []
-  // 控制x y轴的方向 1:左 2:下 3:右 4:上
-  let x_y = movePathItem.x_y
-  for(let i = 0; i < length; i++) {
-    const newXY = mapData[props.index][i]
-    if(newXY) {
-      x_y = newXY
+  if(!levelData[props.index].start) return
+  levelData[props.index].start.forEach((levelStart, startIndex) => {
+    const movePathItem: GridInfo & {num?: number} = JSON.parse(
+      JSON.stringify(levelStart)
+    )
+    const {addRow, addCol} = addRowColArr[movePathItem.x_y - 1]
+    movePathItem.x += addCol;
+    movePathItem.y += addRow;
+    const length = movePathItem.num!
+    delete movePathItem.num
+    const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
+    // 控制x y轴的方向 1:左 2:下 3:右 4:上
+    let x_y = movePathItem.x_y
+    for(let i = 0; i < length; i++) {
+      const newXY = levelData[props.index].map[startIndex][i]
+      if(newXY) {
+        x_y = newXY
+      }
+      if(x_y % 2) movePathItem.x += x_y === 3 ? 1 : -1
+      else movePathItem.y += x_y === 4 ? 1 : -1
+      movePathItem.x_y = x_y
+      movePath.push(JSON.parse(JSON.stringify(movePathItem)))
     }
-    if(x_y % 2) movePathItem.x += x_y === 3 ? size : -size
-    else movePathItem.y += x_y === 4 ? size : -size
-    movePathItem.x_y = x_y
-    movePath.push(JSON.parse(JSON.stringify(movePathItem)))
-  }
-  state.movePath = movePath
+    state.movePath.push(movePath)
+  })
   setTimeout(() => {
     drawFloorTile()
   }, 10);
+}
+
+/** 画起点 */
+async function drawStart() {
+  const size = state.size
+  let startImg = source.othOnloadImg?.start
+  if(!startImg) {
+    startImg = await loadImage(otherImgData.start)
+  }
+  levelData[props.index].start.forEach(s => {
+    let {x, y} = s
+    state.ctx!.drawImage(startImg!, x * size, y * size, size, size)
+  })
 }
 
 /** 画地板 */
 async function drawFloorTile() {
   let floor = source.othOnloadImg?.floor
   if(!floor) {
-    floor = await loadImage(requireCDN('floor-tile.png'))
+    floor = await loadImage(otherImgData.floor)
   }
   const size = state.size
-  state.ctx?.clearRect(0, 0, size, size)
-  for(let f of state.movePath) {
-    state.ctx?.drawImage(floor, f.x, f.y, size, size)
-  }
-  const terminal = state.movePath.at(-1)!
+  state.ctx?.clearRect(0, 0, state.canvasInfo.w, state.canvasInfo.h)
+  state.movePath.forEach(pathArr => {
+    for(let f of pathArr) {
+      state.ctx?.drawImage(floor!, f.x * size, f.y * size, size, size)
+    }
+  })
+  drawStart()
+  /** 画终点 */
+  const end = levelData[props.index].end
+  const x = end ? end.x * size : state.movePath[0].at(-1)!.x * size
+  const y = end ? end.y * size : state.movePath[0].at(-1)!.y * size
   loadImage(imgSource.TerminalImg).then((terminalImg) => {
-    state.ctx?.drawImage(terminalImg, terminal.x - 0.35 * size, terminal.y - 1.42 * size, size * 1.8, size * 2.48)
+    state.ctx?.drawImage(terminalImg, x - 0.35 * size, y - 1.42 * size, size * 1.8, size * 2.48)
   })
 }
 

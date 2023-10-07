@@ -3,12 +3,12 @@ import Worker from "./workers/index.ts?worker"
 import { useSourceStore } from '@/stores/source';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
-import GameNavBar from '../game/components/gameNavBar.vue'
-import StartAndEnd from '../game/components/startAndEnd.vue';
-import TowerBuild from '../game/components/towerBuild.vue';
-import Skill from '../game/components/skill.vue'
-import Terminal from "../game/components/terminal.vue";
-import ProgressBar from '@/components/progressBar.vue';
+import GameNavBar from './components/gameNavBar.vue'
+import StartAndEnd from './components/startAndEnd.vue';
+import TowerBuild from './components/towerBuild.vue';
+import Skill from './components/skill.vue'
+import Terminal from "./components/terminal.vue";
+import ProgressBar from './components/progressBar.vue';
 
 import useDomRef from './tools/domRef';
 import useGameConfig from './tools/gameConfig';
@@ -27,6 +27,7 @@ import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
 import { waitTime } from "@/utils/tools";
 import { useSettingStore } from "@/stores/setting";
+import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -120,10 +121,7 @@ function initWorker() {
         onHpChange(param); break;
       }
       case 'onWorkerReady': {
-        onWorkerReady(); break;
-      }
-      case 'initMovePathCallback': {
-        baseDataState.terminal = param; break;
+        onWorkerReady(param); break;
       }
       case 'onProgress': {
         state.progress = param; break;
@@ -146,7 +144,11 @@ function onLevelChange(level: number) {
     audioLevelRef.value?.play()
   }
 }
-function onWorkerReady() {
+function onWorkerReady(end: {x: number, y: number}) {
+  baseDataState.terminal = {
+    x: end.x * gameConfigState.size,
+    y: end.y * gameConfigState.size,
+  }; 
   gameConfigState.loadingDone = true;
 }
 function gamePause(val?: boolean) {
@@ -181,6 +183,9 @@ function onGameOver() {
 async function uploadScore() {
   playAudio('ma-gameover', 'Skill')
   onGameOver()
+  if(levelData[source.mapLevel].type !== LevelDataItemEnum.Normal) {
+    return
+  }
   const {userInfo} = userInfoStore
   if(userInfo) {
     if(!baseDataState.level) {
@@ -200,7 +205,7 @@ async function uploadScore() {
 }
 /** 点击建造塔防 */
 function buildTower(tname: TowerName) {
-  if(baseDataState.money < source.towerSource![tname].money) return
+  if(baseDataState.money! < source.towerSource![tname].money) return
   let {left: x, top: y} = towerState.building
   onWorkerPostFn('buildTower', {x, y, tname})
 }
@@ -293,7 +298,7 @@ function startMoneyTimer() {
 /** 点击了生产出来的金钱 */
 function proMoneyClick() {
   gameSkillState.proMoney.isShow = false
-  baseDataState.money += gameSkillState.proMoney.money
+  baseDataState.money! += gameSkillState.proMoney.money
   startMoneyTimer()
 }
 
@@ -354,8 +359,8 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
         <!-- 游戏底部技能区 -->
         <Skill 
           :skillList="gameSkillState.skillList" 
-          :money="baseDataState.money" 
-          :isPause="baseDataState.isPause" 
+          :money="baseDataState.money!" 
+          :isPause="baseDataState.isPause!" 
           @handleSkill="handleSkill" 
         />
         <!-- 终点 -->

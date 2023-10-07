@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { nextTick, onMounted, reactive } from 'vue';
+import { computed, nextTick, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElPopconfirm, ElMessage } from 'element-plus';
 import ProtectTheHorse from './game.vue'
@@ -7,13 +7,29 @@ import UserBall from '@/components/userBall.vue'
 import _ from 'lodash'
 import { useSourceStore } from '@/stores/source';
 import { requireCDN } from '@/utils/handleImg';
+import levelData, { LevelDataItemEnum } from '@/dataSource/levelData';
 
 const source = useSourceStore()
 const route = useRoute()
 const router = useRouter()
 
+const gameTitle = computed(() => {
+  let tips = ''
+  switch(levelData[source.mapLevel].type) {
+    case LevelDataItemEnum.Experience: {
+      tips = '试玩'; break;
+    }
+    case LevelDataItemEnum.Endless: {
+      tips = '卍'; break;
+    }
+    default: {
+      tips = `第${source.mapLevel}关`
+    }
+  }
+  return `塔防联盟 (${tips})`
+})
+
 const state = reactive({
-  title: '塔防联盟',
   // 控制游戏区域的显示与隐藏
   isProtectTheHorse: true,
 })
@@ -38,6 +54,10 @@ function reStart() {
 
 onMounted(() => {
   source.mapLevel = +(route.params.id ?? 1) - 1
+  if(!levelData[source.mapLevel]) {
+    state.isProtectTheHorse = false
+    return
+  }
   init()
 })
 
@@ -49,7 +69,7 @@ onMounted(() => {
       <template #reference>
         <div class="title">
           <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
-          <span>{{state.title}}</span>
+          <span>{{ gameTitle }}</span>
         </div>
       </template>
     </ElPopconfirm>
