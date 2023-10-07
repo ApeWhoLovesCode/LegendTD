@@ -73,7 +73,7 @@ const getCardText = (i: number) => {
     <div class="selectLevelPop-area">
       <ScrollCircle 
         :list-length="levelData.length" 
-        :init-cart-num="cardIndex(i)"
+        :init-cart-num="source.mapLevel"
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >
