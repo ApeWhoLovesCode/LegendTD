@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElPopconfirm, ElMessage } from 'element-plus';
 import ProtectTheHorse from './game.vue'
 import UserBall from '@/components/userBall.vue'
+import GitHubBall from '@/components/gitHubBall.vue';
 import _ from 'lodash'
 import { useSourceStore } from '@/stores/source';
 import { requireCDN } from '@/utils/handleImg';
@@ -78,6 +79,7 @@ onMounted(() => {
       @re-start="reStart"
     />
     <UserBall :itemsNum="4" @switchMapLevel="switchMapLevel" @re-start="reStart" />
+    <GitHubBall />
   </div>
 </template>
 

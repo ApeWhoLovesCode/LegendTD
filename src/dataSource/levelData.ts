@@ -10,6 +10,15 @@ export enum LevelDataItemEnum {
   Endless = "Endless",
 }
 
+export type LevelDataItem = {
+  /** 关卡类型 */
+  type: LevelDataItemEnum
+  /** 关卡索引，只有特殊关卡才需要区分 */
+  typeIndex?: number
+  /** 是否禁用 */
+  disable?: boolean
+} & MapDataItem
+
 const levelData: LevelDataItem[] = [
   // 体验关卡
   {
@@ -48,12 +57,3 @@ export const levelNullItem: LevelDataItem = {
   map: [],
   disable: true
 }
-
-export type LevelDataItem = {
-  /** 关卡类型 */
-  type: LevelDataItemEnum
-  /** 关卡索引，只有特殊关卡才需要区分 */
-  typeIndex?: number
-  /** 是否禁用 */
-  disable?: boolean
-} & MapDataItem
