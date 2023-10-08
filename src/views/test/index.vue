@@ -5,6 +5,7 @@ import { useUserInfoStore } from '@/stores/userInfo';
 import { onMounted, reactive, ref } from 'vue';
 import TowerCanvas from '@/components/towerCanvas.vue';
 import CoverCanvas from '@/components/coverCanvas.vue';
+import SelectTips from '@/components/selectTips.vue';
 
 const source = useSourceStore()
 
@@ -27,6 +28,7 @@ onMounted(() => {
         tname='ejiate' 
         :enemy-list="[{i: 1, level: 2},{i: 1, level: 2},{i: 1, level: 2}]"
       /> -->
+      <SelectTips />
     </div>
   </div>
 </template>
@@ -35,7 +37,7 @@ onMounted(() => {
 .test {
   width: 100vw;
   height: 100vh;
-  background-color: #aaa;
+  background: linear-gradient(skyblue, green);
   @gridSize: 2.3rem;
   .towerImg {
     width: calc(9 * @gridSize);
