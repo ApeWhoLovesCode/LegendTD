@@ -101,7 +101,7 @@ const onAnimationEnd = () => {
     }
   }
   .animation {
-    animation-duration: 1s;
+    animation-duration: 0.8s;
     animation-timing-function: ease-out;
     &Left {
       box-shadow: calc(-100vw - @contentSize / 2) 0 0 100vw @shadow1;
