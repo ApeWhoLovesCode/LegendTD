@@ -1,10 +1,13 @@
 <script setup lang='ts'>
+import { useSourceStore } from '@/stores/source';
 import { ref } from 'vue';
 
 const emit = defineEmits<{
   (event: 'clickMask'): void
   (event: 'clickContent'): boolean
 }>()
+
+const source = useSourceStore()
 
 const isShow = ref(true)
 const isAnimationEnd = ref(false)
@@ -34,7 +37,7 @@ const onAnimationEnd = () => {
   <div v-if="isShow" class='selectTips' @click="clickMaskFn">
     <template v-if="isAnimationEnd">
       <div class="mask content" :class="{'contentShow': isContentShow}" @click="clickContentFn"></div>
-      <div class="tips">
+      <div class="tips" :class="{'tipsMobile': source.isMobile}">
         <div class="info">点击关卡试玩，享受游戏吧 ~</div>
         <div class="info2">点击其他区域关闭引导层</div>
       </div>
@@ -94,6 +97,9 @@ const onAnimationEnd = () => {
     font-size: 1rem;
     cursor: pointer;
     animation: tipsShow .5s ease-in;
+    &Mobile {
+      left: calc(50% - @contentSize / 4);
+    }
     .info2 {
       margin-top: 10px;
       font-size: 0.9rem;

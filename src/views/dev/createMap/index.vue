@@ -135,6 +135,10 @@ function onClickDrag(e: MouseEvent, type: MouseImgType, i?: number) {
       mouseImg.imgIndex = floorImgList.length + 2
       break;
     }
+    case 'zeroing': {
+      mouseImg.imgIndex = floorImgList.length + 2
+      break;
+    }
   }
   mouseImg.x = e.clientX - state.size / 4
   mouseImg.y = e.clientY - state.size / 4
@@ -255,6 +259,10 @@ function onDrawMouseImg(e: MouseEvent) {
     }
     case 'oneselfMinus': {
       handleAndDrawGridVal(item, item.i[curIndex] - 1, row, col)
+      return
+    }
+    case 'zeroing': {
+      handleAndDrawGridVal(item, 0, row, col)
       return
     }
     case 'nextAdd': {
@@ -618,13 +626,18 @@ function devTry() {
                   Next +1
                 </ElButton>
               </ElTooltip>
+              <ElTooltip content="使该格索引置为零" placement="top">
+                <ElButton size="small" @click="onClickDrag($event, 'zeroing')">
+                  索引置 0
+                </ElButton>
+              </ElTooltip>
               <ElTooltip content="使该格索引加一" placement="top">
-                <ElButton @click="onClickDrag($event, 'oneselfAdd')">
+                <ElButton size="small" @click="onClickDrag($event, 'oneselfAdd')">
                   索引 +1
                 </ElButton>
               </ElTooltip>
               <ElTooltip content="使该格索引减一" placement="top">
-                <ElButton @click="onClickDrag($event, 'oneselfMinus')">
+                <ElButton size="small" @click="onClickDrag($event, 'oneselfMinus')">
                   索引 -1
                 </ElButton>
               </ElTooltip>
