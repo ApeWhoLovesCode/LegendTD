@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import FloatingBall from '@/components/floating-ball';
+import FloatingBall from '@/components/floatingBall';
 import { ElDropdown, ElDropdownItem, ElMessage, ElMessageBox } from 'element-plus';
 import Login from '@/components/login.vue';
 import { useUserInfoStore } from '@/stores/userInfo';
@@ -247,4 +247,4 @@ onBeforeUnmount(clearBallSleep)
     }
   }
 }
-</style>
+</style>@/components/floatingBall

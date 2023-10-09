@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { computed, ref } from 'vue';
-import FloatingBall from './floating-ball';
+import FloatingBall from './floatingBall';
 import { useSourceStore } from '@/stores/source';
 import GithubIcon from '@/assets/img/github.svg'
 
@@ -54,4 +54,4 @@ const toGithub = () => {
     -webkit-user-drag: none;
   }
 }
-</style>
+</style>./floatingBall

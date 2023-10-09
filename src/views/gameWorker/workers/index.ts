@@ -1,18 +1,21 @@
-import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
-import { waitTime } from "@/utils/tools";
+import _ from "lodash";
 import sourceInstance from '@/stores/sourceInstance'
+import { WorkerFnName } from "./type/worker";
+
 import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
-import keepInterval from "@/utils/keepInterval";
-import _ from "lodash";
-import { WorkerFnName } from "./type/worker";
 import testBuildData from "./tools/testBuild";
-import { range } from "@/utils/format";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
-import levelData from "@/dataSource/levelData";
+
+import { waitTime } from "@/utils/tools";
+import keepInterval from "@/utils/keepInterval";
+import { range } from "@/utils/format";
 import { addRowColArr } from "@/utils/direction";
+
+import levelData from "@/dataSource/levelData";
+import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
 
 addEventListener('message', e => {
   const { data } = e;

@@ -6,8 +6,8 @@ import { powAndSqrt } from "@/utils/tools"
 import _ from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
-import { BuildTowerParams } from "../type/tower"
 import levelData from "@/dataSource/levelData"
+import { BuildTowerParams } from "@/dataSource/mapData"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
