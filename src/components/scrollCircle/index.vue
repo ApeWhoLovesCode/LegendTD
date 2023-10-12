@@ -206,7 +206,6 @@ const onTouchMove = (event: MouseEvent | TouchEvent) => {
 }
 const onTouchEnd = (event: MouseEvent | TouchEvent) => {
   event.stopPropagation()
-  const e = changeEvent(event)
   if (!isMobile()) {
     document.removeEventListener('mousemove', onTouchMove, true);
     document.removeEventListener('mouseup', onTouchEnd, true);

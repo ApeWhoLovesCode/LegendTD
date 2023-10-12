@@ -10,12 +10,12 @@ import Skill from './components/skill.vue'
 import Terminal from "./components/terminal.vue";
 import ProgressBar from './components/progressBar.vue';
 
-import useDomRef from './tools/domRef';
-import useGameConfig from './tools/gameConfig';
-import useBaseData from './tools/baseData';
-import useAudioState from './tools/audioState';
-import useGameSkill from "./tools/gameSkill";
-import useTower from "./tools/tower";
+import useDomRef from './hooks/useDomRef';
+import useGameConfig from './hooks/useGameConfig';
+import useBaseData from './hooks/useBaseData';
+import useAudioState from './hooks/useAudioState';
+import useGameSkill from "./hooks/useGameSkill";
+import useTower from "./hooks/useTower";
 
 import { ElMessage } from "element-plus";
 import { KeepIntervalKey } from "@/utils/keepInterval";
@@ -429,4 +429,4 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
     transform: rotate(90deg);
   }
 }
-</style>
+</style>./hooks/domRef./hooks/gameConfig./hooks/baseData./hooks/audioState./hooks/gameSkill./hooks/tower./hooks/useAudioState./hooks/useBaseData./hooks/useTower./hooks/useGameSkill./hooks/useDomRef./hooks/useGameConfig

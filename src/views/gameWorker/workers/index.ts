@@ -1,18 +1,22 @@
-import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
-import { waitTime } from "@/utils/tools";
+import _ from "lodash";
 import sourceInstance from '@/stores/sourceInstance'
+import { WorkerFnName } from "./type/worker";
+
 import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
-import keepInterval from "@/utils/keepInterval";
-import _ from "lodash";
-import { WorkerFnName } from "./type/worker";
 import testBuildData from "./tools/testBuild";
-import { range } from "@/utils/format";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
-import levelData from "@/dataSource/levelData";
+
+import { waitTime } from "@/utils/tools";
+import keepInterval from "@/utils/keepInterval";
+import { range } from "@/utils/format";
 import { addRowColArr } from "@/utils/direction";
+
+import levelData from "@/dataSource/levelData";
+import { GridInfo, MapGridInfo, towerCanvasMapData } from "@/dataSource/mapData";
+import { WithPartial } from "@/type";
 
 addEventListener('message', e => {
   const { data } = e;
@@ -122,7 +126,9 @@ function startAnimationLockFrame() {
 /** 开始绘画 */
 function startDraw() {
   gameConfigState.ctx.clearRect(0, 0, canvasInfo.offscreen.width, canvasInfo.offscreen.height);
-  drawStart()
+  if(!setting.isTowerCover) {
+    drawStart()
+  } 
   drawFloorTile()
   drawTowerMap()
   drawEnemyMap()
@@ -139,7 +145,7 @@ function startDraw() {
 /** 画起点 */
 function drawStart() {
   const size = gameConfigState.size
-  levelData[source.mapLevel].start.forEach(s => {
+  baseDataState.mapItem.start.forEach(s => {
     gameConfigState.ctx.drawImage(source.othOnloadImg.start!, s.x * size, s.y * size, size, size)
     baseDataState.gridInfo.arr[s.y][s.x] = 'start'
   })
@@ -158,23 +164,20 @@ function drawFloorTile() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const size = gameConfigState.size
-  levelData[source.mapLevel].start.forEach((levelStart, startIndex) => {
-    const movePathItem = JSON.parse(JSON.stringify(
-      !setting.isTowerCover ? levelStart : towerCanvasMapGridInfo
-    ))
+  baseDataState.mapItem = !setting.isTowerCover ? levelData[source.mapLevel] : towerCanvasMapData
+  baseDataState.mapItem.start.forEach((levelStart, startIndex) => {
+    const movePathItem: WithPartial<MapGridInfo, 'num'> = JSON.parse(JSON.stringify(levelStart))
     const {addRow, addCol} = addRowColArr[movePathItem.x_y - 1]
     movePathItem.x = (movePathItem.x + addCol) * size;
     movePathItem.y = (movePathItem.y + addRow) * size;
-    baseDataState.floorTile.num = movePathItem.num
     // 刚开始就右移了，所以该初始格不会算上去
     const length = movePathItem.num!
     delete movePathItem.num
-    const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].map[startIndex] : towerCanvasMapData
     const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
     // 控制x y轴的方向 1:左 2:下 3:右 4:上
     let x_y = movePathItem.x_y
     for(let i = 0; i < length; i++) {
-      const newXY = _mapData[i]
+      const newXY = baseDataState.mapItem.map[startIndex][i]
       if(newXY) {
         x_y = newXY
       }
@@ -188,17 +191,19 @@ function initMovePath() {
     }
     enemyState.movePath.push(movePath)
   })
-  // 为终点赋值
-  let end = levelData[source.mapLevel].end
-  if(!end) {
-    const lastItem = enemyState.movePath.at(-1)?.at(-1)
-    end = {
-      x: Math.floor(lastItem!.x / size),
-      y: Math.floor(lastItem!.y / size),
+  if(!setting.isTowerCover) {
+    // 为终点赋值
+    let end = baseDataState.mapItem.end
+    if(!end) {
+      const lastItem = enemyState.movePath.at(-1)?.at(-1)
+      end = {
+        x: Math.floor(lastItem!.x / size),
+        y: Math.floor(lastItem!.y / size),
+      }
     }
+    baseDataState.end = end
+    baseDataState.gridInfo.arr[end!.y][end!.x] = 'end'
   }
-  baseDataState.end = end
-  baseDataState.gridInfo.arr[end!.y][end!.x] = 'end'
 }
 
 /** 点击获取鼠标位置 操作塔防 */

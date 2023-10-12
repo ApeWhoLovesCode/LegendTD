@@ -11,7 +11,7 @@ import Loading from "./loading.vue";
 const props = withDefaults(defineProps<{
   tname: TowerName;
   enemyList?: {i: number, level?: number}[];
-  isPause: boolean;
+  isPause?: boolean;
 }>(), {
   enemyList: () => [{i: 1}],
   isPause: false,
@@ -57,6 +57,9 @@ function init() {
 
 function initWorker() {
   const canvasBitmap = document.querySelector(`.${idRef.value} canvas`) as HTMLCanvasElement;
+  if(!canvasBitmap) {
+    return
+  }
   const offscreen = canvasBitmap.transferControlToOffscreen();
   const worker = new Worker()
   workerRef.value = worker

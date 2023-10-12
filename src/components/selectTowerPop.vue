@@ -26,7 +26,7 @@ const state = reactive({
   // 遍历的数据列表
   items: [] as TowerType[],
   pageNum: 1,
-  pageSize: 15,
+  pageSize: Object.keys(towerData).length,
 })
 
 const towerList = computed(() => {
@@ -113,7 +113,7 @@ onMounted(() => {
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
-        :list-length="state.items.length" 
+        :list-length="towerList.length" 
         @on-page-change="onPageChange"
         :card-add-deg="3"
       >

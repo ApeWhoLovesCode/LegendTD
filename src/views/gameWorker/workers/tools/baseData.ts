@@ -8,6 +8,7 @@ import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
 import { TowerName } from "@/dataSource/towerData";
 import levelEnemyArr from "@/dataSource/levelEnemyArr";
 import { GridValue } from "../type/baseData";
+import { MapDataItem } from "@/dataSource/mapData";
 
 const source = sourceInstance.state
 
@@ -27,8 +28,8 @@ const setting = {
 }
 
 const baseDataState = {
-  // 地板：大小 数量
-  floorTile: {size: 50, num: 83},
+  /** 当前的地图数据 */
+  mapItem: {} as MapDataItem,
   // 格子数量信息
   gridInfo: { x_num: 20, y_num: 12, arr: [] as GridValue[][] },
   // 等级

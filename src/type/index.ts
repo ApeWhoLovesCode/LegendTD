@@ -10,3 +10,6 @@ export type IndexType = {
 export type ImgLoadType = {
   [key: string]: CanvasImageSource
 }
+
+/** 让类型的部分转化为可选 */
+export type WithPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
