@@ -1,4 +1,4 @@
-import { TowerStateType } from "@/type/game"
+import { EnemyStateType, TowerStateType } from "@/type/game"
 import { TargetCircleInfo, addMoney, baseDataState, checkValInCircle, gameConfigState, onWorkerPostFn, setting, source } from "./baseData"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"
@@ -160,14 +160,20 @@ function checkEnemyAndTower() {
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  const arr: {curFloorI: number, id: string}[] = []
+  const arr: EnemyStateType[] = []
   enemyMap.forEach(enemy => {
     if(checkValInCircle(enemy, target)) {
-      arr.push({curFloorI: enemy.curFloorI, id: enemy.id})
+      arr.push(enemy)
     }
   })
   if(!arr.length) return
-  arr.sort((a, b) => b.curFloorI - a.curFloorI)
+  arr.sort((a, b) => {
+    const val = a.endDistance - b.endDistance
+    if(val === 0) { // 当所处格子相同时，比较当前格子的行进距离
+      return b.gridDistance - a.gridDistance
+    }
+    return val
+  })
   if(target.targetNum) {
     return arr.splice(0, target.targetNum).map(item => item.id)
   }

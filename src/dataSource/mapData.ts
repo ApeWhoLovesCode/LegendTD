@@ -173,8 +173,10 @@ export const othMapData = {
 }
 
 /** 塔防展示组件的地图数据 */
-export const towerCanvasMapData: {[key in number]: DirectionType} = {6: 2, 10: 1, 16: 4}
-export const towerCanvasMapGridInfo: MapGridInfo = {x: 1, y: 5, x_y: 3, num: 20}
+export const towerCanvasMapData: MapDataItem = {
+  start: [{x: 0, y: 5, x_y: 3, num: 20}],
+  map: [{6: 2, 10: 1, 16: 4}],
+}
 
 export type MapDataItem = {
   /** 初始格子的格子位置信息和总格子数量 (刚开始的值是，xy方向上的第几格) */

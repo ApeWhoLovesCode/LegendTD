@@ -46,8 +46,16 @@ const onAnimationEnd = () => {
       <div 
         class="mask animation animationLeft" 
         @animationend="onAnimationEnd"
-      ></div>
-      <div class="mask animation animationRight"></div>
+      >
+        <div class="boxShadowWrap">
+          <div class="boxShadowArea"></div>
+        </div>
+      </div>
+      <div class="mask animation animationRight">
+        <div class="boxShadowWrap">
+          <div class="boxShadowArea"></div>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -70,9 +78,9 @@ const onAnimationEnd = () => {
     transform: translate(-50%, -50%);
     width: @contentSize;
     height: @contentSize;
-    border-radius: 50%;
   }
   .content {
+    border-radius: 50%;
     transition: box-shadow 0.8s;
     box-shadow: 0 0 0 100vw @shadow1, 
       inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
@@ -109,6 +117,19 @@ const onAnimationEnd = () => {
   .animation {
     animation-duration: 0.8s;
     animation-timing-function: ease-out;
+    .boxShadow {
+      &Wrap {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      &Area {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        box-shadow: calc(-@contentSize * 1.45) 0 0 @contentSize @shadow1;
+      }
+    }
     &Left {
       box-shadow: calc(-100vw - @contentSize / 2) 0 0 100vw @shadow1;
       animation-name: maskLeft;
@@ -116,6 +137,9 @@ const onAnimationEnd = () => {
     &Right {
       box-shadow: calc(100vw + @contentSize / 2) 0 0 100vw @shadow1;
       animation-name: maskRight;
+      .boxShadowArea {
+        box-shadow: calc(@contentSize * 1.45) 0 0 @contentSize @shadow1;
+      }
     }
   }
 }
