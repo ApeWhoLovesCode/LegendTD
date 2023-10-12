@@ -1,7 +1,7 @@
 /** 游戏详情页类型 */
 
 import { EnemyType } from "@/dataSource/enemyData"
-import { GridInfo, MapGridInfo } from "@/dataSource/mapData"
+import { GridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
 import { TowerSlowType, TowerType } from "@/dataSource/towerData"
 import { DebouncedFunc } from "lodash"
@@ -52,8 +52,10 @@ export type EnemyStateType = {
   poison?: EnemyPoison
   /** 减速类型 */
   slowType?: TowerSlowType
-  /** 当前僵尸所在的索引 */
-  curFloorI: number
+  /** 距离终点还有多少格 */
+  endDistance: number
+  /** 在当前格行进的距离 */
+  gridDistance: number
   /** gif图遍历的帧数的索引 */
   framesNum: number
   /** 当前绘画到的图片索引，用于gif图 */

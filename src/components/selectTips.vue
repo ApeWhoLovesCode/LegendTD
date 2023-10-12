@@ -1,10 +1,13 @@
 <script setup lang='ts'>
+import { useSourceStore } from '@/stores/source';
 import { ref } from 'vue';
 
 const emit = defineEmits<{
   (event: 'clickMask'): void
   (event: 'clickContent'): boolean
 }>()
+
+const source = useSourceStore()
 
 const isShow = ref(true)
 const isAnimationEnd = ref(false)
@@ -34,7 +37,7 @@ const onAnimationEnd = () => {
   <div v-if="isShow" class='selectTips' @click="clickMaskFn">
     <template v-if="isAnimationEnd">
       <div class="mask content" :class="{'contentShow': isContentShow}" @click="clickContentFn"></div>
-      <div class="tips">
+      <div class="tips" :class="{'tipsMobile': source.isMobile}">
         <div class="info">点击关卡试玩，享受游戏吧 ~</div>
         <div class="info2">点击其他区域关闭引导层</div>
       </div>
@@ -43,8 +46,16 @@ const onAnimationEnd = () => {
       <div 
         class="mask animation animationLeft" 
         @animationend="onAnimationEnd"
-      ></div>
-      <div class="mask animation animationRight"></div>
+      >
+        <div class="boxShadowWrap">
+          <div class="boxShadowArea"></div>
+        </div>
+      </div>
+      <div class="mask animation animationRight">
+        <div class="boxShadowWrap">
+          <div class="boxShadowArea"></div>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -67,9 +78,9 @@ const onAnimationEnd = () => {
     transform: translate(-50%, -50%);
     width: @contentSize;
     height: @contentSize;
-    border-radius: 50%;
   }
   .content {
+    border-radius: 50%;
     transition: box-shadow 0.8s;
     box-shadow: 0 0 0 100vw @shadow1, 
       inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
@@ -94,6 +105,9 @@ const onAnimationEnd = () => {
     font-size: 1rem;
     cursor: pointer;
     animation: tipsShow .5s ease-in;
+    &Mobile {
+      left: calc(50% - @contentSize / 4);
+    }
     .info2 {
       margin-top: 10px;
       font-size: 0.9rem;
@@ -103,6 +117,19 @@ const onAnimationEnd = () => {
   .animation {
     animation-duration: 0.8s;
     animation-timing-function: ease-out;
+    .boxShadow {
+      &Wrap {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      &Area {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        box-shadow: calc(-@contentSize * 1.45) 0 0 @contentSize @shadow1;
+      }
+    }
     &Left {
       box-shadow: calc(-100vw - @contentSize / 2) 0 0 100vw @shadow1;
       animation-name: maskLeft;
@@ -110,6 +137,9 @@ const onAnimationEnd = () => {
     &Right {
       box-shadow: calc(100vw + @contentSize / 2) 0 0 100vw @shadow1;
       animation-name: maskRight;
+      .boxShadowArea {
+        box-shadow: calc(@contentSize * 1.45) 0 0 @contentSize @shadow1;
+      }
     }
   }
 }
