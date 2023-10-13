@@ -155,6 +155,7 @@ export const othMapData = {
         {tname: 'huonan', x: 10, y: 5},{tname: 'delaiwen', x: 0, y: 2},{tname: 'delaiwen', x: 0, y: 6},{tname: 'ez', x: 19, y: 11},{tname: 'ez', x: 17, y: 0},
         {tname: 'twitch', x: 7, y: 8},{tname: 'twitch', x: 13, y: 4},{tname: 'twitch', x: 15, y: 10},{tname: 'jin', x: 10, y: 8},{tname: 'jin', x: 10, y: 7},
         {tname: 'delaiwen', x: 6, y: 10},{tname: 'delaiwen', x: 6, y: 11},
+        {tname: 'huonan', x: 14, y: 2},{tname: 'huonan', x: 15, y: 2},
       ],
       enemyArr: [
         [0,17,17,16,16,16,11,11,14,14,7,7,7,7,10,9,8,6,5,4,3,2,1],

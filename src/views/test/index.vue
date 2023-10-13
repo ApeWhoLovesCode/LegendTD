@@ -2,6 +2,7 @@
 import { useSourceStore } from '@/stores/source';
 import { onMounted, ref } from 'vue';
 import TowerCanvas from '@/components/towerCanvas.vue';
+import SelectTips from '@/components/selectTips.vue';
 
 const source = useSourceStore()
 
@@ -17,13 +18,13 @@ onMounted(() => {
 
 <template>
   <div class='test'>
-    <div class="towerImg"> 
-      <!-- :enemy-list="[{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}]" -->
+    <!-- <div class="towerImg"> 
       <TowerCanvas 
         tname='nanqiang' 
         :enemy-list="[{i: 1, level: 2}]"
       />
-    </div>
+    </div> -->
+    <SelectTips />
   </div>
 </template>
 

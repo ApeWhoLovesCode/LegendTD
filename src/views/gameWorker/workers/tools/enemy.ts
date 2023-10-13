@@ -311,7 +311,7 @@ function moveEnemy(enemy: EnemyStateType) {
   const total = baseDataState.mapItem.start[movePathIndex].num
   // 敌人到达终点
   if(!setting.isTowerCover) {
-    if(endDistance <= 0) {
+    if(endDistance < 0) {
       removeEnemy([id])
       onReduceHp(1)
       return true

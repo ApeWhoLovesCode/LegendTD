@@ -358,8 +358,8 @@ function devTry() {
     }
     .createMap-canvasWrap {
       // 20 / 12
-      width: 80vw;
-      height: 48vw;
+      width: 80vmin;
+      height: 48vmin;
       border: 1px solid #ccc;
     }
     .mouseImg {
@@ -379,4 +379,4 @@ function devTry() {
     justify-content: space-between;
   }
 }
-</style>./hooks/baseData./hooks/useMouseImg
+</style>
