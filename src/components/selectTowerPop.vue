@@ -90,14 +90,15 @@ onMounted(() => {
   <ElDrawer 
     :model-value="visible"
     class='selectTowerPop' 
+    :class="{'selectTowerPopMobile': source.isMobile}"
     :with-header="false"
-    size="80vh"
+    size="90vh"
     direction="btt"
     @close="emit('update:visible', false)"
   >
     <div class="selectTowerPop-header">
-      <div class="mask mask-left"></div>
       <div class="selectTowerPop-header-content">
+        <div class="mask mask-left"></div>
         <div 
           v-for="key in userStore.towerSelectList" 
           :key="towerData[key]?.name" 
@@ -107,15 +108,16 @@ onMounted(() => {
           <div class="towerName">{{ towerStaticData[towerData[key]?.name]?.name }}</div>
           <span class="closeIcon iconfont icon-close" @click="handleSelectTower(key)"></span>
         </div>
+        <div class="mask mask-right"></div>
       </div>
-      <div class="mask mask-right"></div>
       <div class="selectNum">{{ userStore.towerSelectList.length }} / 8</div>
     </div>
     <div class="selectTowerPop-content">
       <ScrollCircle 
         :list-length="towerList.length" 
-        @on-page-change="onPageChange"
         :card-add-deg="3"
+        :center-point="source.isMobile ? 'bottom' : 'center'"
+        @on-page-change="onPageChange"
       >
         <ScrollCircleItem 
           v-for="(item, i) in state.items" 
@@ -148,18 +150,23 @@ onMounted(() => {
   background-image: radial-gradient(circle 350px at center, #bcf1f3 0%, #95e0f3 47%, #68baf5 100%);
   .el-drawer__body {
     padding: 0;
+    display: flex;
   }
-  @headerHeight: 7rem;
   &-header {
-    @maskWidth: 50px;
     position: relative;
-    height: @headerHeight;
+    display: flex;
+    flex-direction: column-reverse;
+    width: 15vw;
+    height: 100%;
+    @headerPadding: 0.8rem;
+    @cardSize: calc(15vw - @headerPadding * 2);
     &-content {
+      flex: 1;
       display: flex;
-      height: 100%;
-      overflow-x: scroll;
-      padding: 0 @maskWidth;
-      border-bottom: 2px solid @red;
+      flex-direction: column;
+      overflow-y: scroll;
+      padding: @headerPadding;
+      border-right: 2px solid @red;
       &::-webkit-scrollbar {
         display: none!important;
         width: 0px;  
@@ -169,8 +176,8 @@ onMounted(() => {
         flex-shrink: 0;
         position: relative;
         box-sizing: border-box;
-        width: @headerHeight;
-        height: 100%;
+        width: @cardSize;
+        height: @cardSize;
         border: 2px solid @yellow;
         border-bottom: none;
         margin-right: 12px;
@@ -181,6 +188,8 @@ onMounted(() => {
           width: 100%;
           height: 100%;
           display: block;
+          user-select: none;
+          -webkit-user-drag: none;
         }
         .towerName {
           position: absolute;
@@ -213,49 +222,44 @@ onMounted(() => {
     }
     .mask {
       position: absolute;
-      top: 0;
-      width: @maskWidth;
-      height: 100%;
-    }
-    .mask-left {
       left: 0;
-      background: linear-gradient(to right, #68baf5, rgba(255, 255, 255, 0));
-    }
-    .mask-right {
-      right: 0;
-      background: linear-gradient(to left, #68baf5, rgba(255, 255, 255, 0));
+      width: 100%;
+      height: calc(@headerPadding * 4);
+      z-index: 1;
+      &-left {
+        top: 3rem;
+        background: linear-gradient(to bottom, #68baf5, rgba(255, 255, 255, 0));
+      }
+      &-right {
+        bottom: 0;
+        background: linear-gradient(to top, #68baf5, rgba(255, 255, 255, 0));
+      }
     }
     .selectNum {
-      position: absolute;
-      bottom: -40px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100px;
-      height: 36px;
-      line-height: 32px;
-      font-size: 18px;
+      width: 100%;
+      height: 3rem;
+      line-height: 2.8rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: #fff;
       text-align: center;
       border-radius: 18px;
       border: 2px solid @theme3;
-      background-color: #1781c2;
-      box-shadow: 2px 2px 12px 1px #1781c2,
-      inset 2px 2px 6px #082a74;
+      box-shadow: inset 2px 2px 6px #082a74;
     }
   }
   &-content {
-    width: 100%;
-    height: calc(80vh - @headerHeight);
-    @gridSize: 36px;
+    width: 85vw;
+    @gridSize: 20px;
+    @cardContentHeight: 6rem;
     .card {
       position: relative;
       box-sizing: border-box;
-      width: calc(9 * @gridSize + 32px);
-      height: calc(7 * @gridSize + 160px);
+      width: calc(9 * @gridSize + 8px);
+      height: calc(7 * @gridSize + @cardContentHeight);
       border: 2px solid @yellow;
       background-color: @black;
-      padding: 16px;
+      padding: 2px;
       cursor: pointer;
       user-select: none;
       -webkit-user-drag: none;
@@ -268,11 +272,10 @@ onMounted(() => {
       }
       .nameWrap {
         font-weight: bold;
-        line-height: 16px;
         color: #fff;
-        margin-top: 16px;
-        padding: 16px 0 12px;
+        margin-top: 2px;
         border-top: 2px solid @yellow;
+        height: @cardContentHeight;
         .name {
           font-size: 16px;
           margin-right: 12px;
@@ -284,8 +287,8 @@ onMounted(() => {
       }
       .explain {
         color: #fff;
-        font-size: 14px;
-        line-height: 22px;
+        font-size: 12px;
+        line-height: 16px;
       }
       &-select {
         position: absolute;
@@ -302,6 +305,45 @@ onMounted(() => {
         background: @red;
         transform: rotate(45deg);
         filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+      }
+    }
+  }
+}
+/** 移动端的样式 */
+.selectTowerPopMobile {
+  flex-direction: column;
+  .selectTowerPop {
+    @headerHeight: 7rem;
+    &-header {
+      @maskWidth: 30px;
+      &-content {
+        height: calc(@headerHeight / 8);
+        flex-direction: row;
+        height: 100%;
+        overflow-x: scroll;
+        padding: 0 @maskWidth;
+        border-bottom: 2px solid @red;
+        padding: @maskWidth 0;
+      }
+    }
+    &-content {
+      width: 100%;
+      top: 0;
+      height: calc(90vh - @headerHeight);
+      .mask {
+        top: 0;
+        width: 2rem;
+        height: 100%;
+        &-left {
+          top: auto;
+          left: 0;
+          background: linear-gradient(to right, #68baf5, rgba(255, 255, 255, 0));
+        }
+        &-right {
+          bottom: auto;
+          right: 0;
+          background: linear-gradient(to left, #68baf5, rgba(255, 255, 255, 0));
+        }
       }
     }
   }

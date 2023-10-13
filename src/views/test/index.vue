@@ -3,6 +3,7 @@ import { useSourceStore } from '@/stores/source';
 import { onMounted, ref } from 'vue';
 import TowerCanvas from '@/components/towerCanvas.vue';
 import SelectTips from '@/components/selectTips.vue';
+import UserBall from '@/components/userBall.vue';
 
 const source = useSourceStore()
 
@@ -24,7 +25,7 @@ onMounted(() => {
         :enemy-list="[{i: 1, level: 2}]"
       />
     </div> -->
-    <SelectTips />
+    <UserBall />
   </div>
 </template>
 
