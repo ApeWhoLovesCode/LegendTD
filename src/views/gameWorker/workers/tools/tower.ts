@@ -31,6 +31,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
   tower.bSize.w *= size
   tower.bSize.h *= size
   tower.hp.injuryTime = 0
+  tower.enemySkill = []
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
     tower.isToTimeShoot = true
@@ -125,6 +126,13 @@ function removeTower(towerId: string, isSale = true) {
 function checkEnemyAndTower() {
   if(!enemyMap.size) return
   towerMap.forEach(t => {
+    if(t.enemySkill) {
+      for(const eSkill of t.enemySkill) {
+        if(eSkill.type === 'frozen' && !eSkill.time) {
+          return // 塔防被冰冻，无法攻击
+        }
+      }
+    }
     if(t.name === 'huonan') {
       const targetIdList = enterAttackScopeList(t)
       if(targetIdList) t.targetIdList = targetIdList

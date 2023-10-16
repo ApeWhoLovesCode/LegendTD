@@ -4,7 +4,7 @@ import sourceInstance from "@/stores/sourceInstance"
 import { EnemyState, EnemyStateType } from "@/type/game"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
-import { addMoney, baseDataState, canvasInfo, gameConfigState, isInfinite, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
+import { addMoney, baseDataState, canvasInfo, checkValInCircle, gameConfigState, isInfinite, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
 import { drawLinearGradientRoundRect } from "./canvas"
 import { damageTower, towerMap } from "./tower"
 import { randomStr } from "@/utils/random"
@@ -110,6 +110,7 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
+  if(item.skill?.r) item.skill.r *= size
   const movePathIndex = Math.floor(Math.random() * baseDataState.mapItem.start.length)
   const startInfo = baseDataState.mapItem.start[movePathIndex]
   const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, endDistance: startInfo.num, gridDistance: 0, framesNum: 0, movePathIndex}
@@ -148,6 +149,7 @@ function handleEnemySkill(enemyName: string, e_id: string) {
     case 'kunkun': skillFn = enemySkillKunkun; break;
     case 'rabbish-2': skillFn = enemySkillRabbish2; break;
     case 'godzilla': skillFn = enemySkillGodzilla; break;
+    case 'ice-car': skillFn = enemySkillIceCar; break;
   };
   if(skillFn) { // 有技能的敌人
     keepInterval.set(e_id, () => {
@@ -278,6 +280,38 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
       }
     }
   })
+}
+/** 冰车技能 */
+function enemySkillIceCar(e_id: string) {
+  if(!towerMap.size) return
+  const enemy = enemyMap.get(e_id)
+  if(!enemy) return
+  const size = gameConfigState.size
+  towerMap.forEach(t => {
+    if(checkValInCircle(
+      {x: t.x, y: t.y, w: size, h: size}, 
+      {x: enemy.x, y: enemy.y, r: enemy.skill?.r}
+    )) {
+      const index = t.enemySkill!.findIndex(e => e.type === 'frozen')
+      if(index === -1) {
+        t.enemySkill!.push({
+          type: 'frozen',
+          time: enemy.skill!.keepTime!
+        })
+      } else {
+        t.enemySkill![index].time = enemy.skill!.keepTime!
+      }
+      keepInterval.set(`${KeepIntervalKey.frozenTower}-${t.id}`, () => {
+        
+      }, enemy.skill!.keepTime!)
+      damageTower(t)
+    }
+  })
+  slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
+}
+/** 冰车在冻结塔防 */
+function enemyIceCarFrozenTower() {
+
 }
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyStateType, i: number) {

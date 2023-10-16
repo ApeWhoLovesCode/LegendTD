@@ -1,4 +1,4 @@
-import { EnemyStateType } from "@/type/game";
+import { EnemyStateType, TargetInfo } from "@/type/game";
 import { powAndSqrt, randomNumList } from "@/utils/tools";
 import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
@@ -99,8 +99,8 @@ function onLevelChange() {
 }
 
 /** 判断值是否在圆内 */
-function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
-  const {x, y, w, h} = enemy
+function checkValInCircle(current: TargetInfo, target: TargetCircleInfo) {
+  const {x, y, w, h} = current
   const angleList = [
     calculateDistance(target, x, y),
     calculateDistance(target, x + w, y),
