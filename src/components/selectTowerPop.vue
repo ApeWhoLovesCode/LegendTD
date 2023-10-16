@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, reactive, computed } from 'vue';
-import { ElDrawer, ElMessage, ElMessageBox } from 'element-plus';
+import { ElDrawer, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
 import towerData, { TowerType, towerStaticData, TowerName } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
@@ -92,9 +92,13 @@ onMounted(() => {
     class='selectTowerPop' 
     :class="{'selectTowerPopMobile': source.isMobile}"
     :with-header="false"
-    size="90vh"
+    :size="source.isMobile ? '80vh' : '90vh'"
     direction="btt"
     @close="emit('update:visible', false)"
+    :style="{ 
+      '--selectCardSize': source.isMobile ? '10vh' : '12vw',
+      '--cardGridSize': source.isMobile ? '6vw' : '16px',
+    }"
   >
     <div class="selectTowerPop-header">
       <div class="selectTowerPop-header-content">
@@ -105,7 +109,9 @@ onMounted(() => {
           class="towerBox" 
         >
           <img :src="towerData[key]?.img" alt="" class="towerImg">
-          <div class="towerName">{{ towerStaticData[towerData[key]?.name]?.name }}</div>
+          <ElTooltip :content="towerStaticData[towerData[key]?.name]?.explain">
+            <div class="towerName">{{ towerStaticData[towerData[key]?.name]?.name }}</div>
+          </ElTooltip>
           <span class="closeIcon iconfont icon-close" @click="handleSelectTower(key)"></span>
         </div>
         <div class="mask mask-right"></div>
@@ -116,7 +122,7 @@ onMounted(() => {
       <ScrollCircle 
         :list-length="towerList.length" 
         :card-add-deg="3"
-        :center-point="source.isMobile ? 'bottom' : 'center'"
+        :center-point="source.isMobile ? 'right' : 'center'"
         @on-page-change="onPageChange"
       >
         <ScrollCircleItem 
@@ -141,6 +147,7 @@ onMounted(() => {
         </ScrollCircleItem>
       </ScrollCircle>
     </div>
+    <span class="close" @click="emit('update:visible', false)">×</span>
   </ElDrawer>
 </template>
 
@@ -156,10 +163,10 @@ onMounted(() => {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
-    width: 15vw;
+    width: var(--selectCardSize);
     height: 100%;
     @headerPadding: 0.8rem;
-    @cardSize: calc(15vw - @headerPadding * 2);
+    @selectCardSize: calc(var(--selectCardSize) - 2 * @headerPadding);
     &-content {
       flex: 1;
       display: flex;
@@ -176,13 +183,12 @@ onMounted(() => {
         flex-shrink: 0;
         position: relative;
         box-sizing: border-box;
-        width: @cardSize;
-        height: @cardSize;
+        width: @selectCardSize;
+        height: @selectCardSize;
         border: 2px solid @yellow;
-        border-bottom: none;
-        margin-right: 12px;
+        margin-bottom: 10px;
         &:last-of-type {
-          margin-right: 0;
+          margin-bottom: 0;
         }
         .towerImg {
           width: 100%;
@@ -201,6 +207,7 @@ onMounted(() => {
           line-height: 1.8rem;
           background-color: rgba(0, 0, 0, .4);
           color: #fff;
+          user-select: none;
         }
         .closeIcon {
           position: absolute;
@@ -249,14 +256,12 @@ onMounted(() => {
     }
   }
   &-content {
-    width: 85vw;
-    @gridSize: 20px;
-    @cardContentHeight: 6rem;
+    flex: 1;
+    @gridSize: var(--cardGridSize);
     .card {
       position: relative;
       box-sizing: border-box;
       width: calc(9 * @gridSize + 8px);
-      height: calc(7 * @gridSize + @cardContentHeight);
       border: 2px solid @yellow;
       background-color: @black;
       padding: 2px;
@@ -275,10 +280,9 @@ onMounted(() => {
         color: #fff;
         margin-top: 2px;
         border-top: 2px solid @yellow;
-        height: @cardContentHeight;
         .name {
-          font-size: 16px;
-          margin-right: 12px;
+          font-size: 12px;
+          margin-right: 10px;
         }
         .money {
           font-size: 12px;
@@ -287,18 +291,24 @@ onMounted(() => {
       }
       .explain {
         color: #fff;
-        font-size: 12px;
-        line-height: 16px;
+        font-size: 10px;
+        line-height: 14px;
+        height: 28px;
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
       &-select {
         position: absolute;
-        right: -32px;
+        right: -24px;
         top: 16px;
-        width: 120px;
-        height: 32px;
-        line-height: 32px;
+        width: 100px;
+        height: 24px;
+        line-height: 24px;
         text-align: center;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: bold;
         letter-spacing: 8px;
         color: #fff;
@@ -308,31 +318,44 @@ onMounted(() => {
       }
     }
   }
+  .close {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    font-size: 2rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 /** 移动端的样式 */
 .selectTowerPopMobile {
-  flex-direction: column;
+  .el-drawer__body {
+    flex-direction: column;
+  }
   .selectTowerPop {
-    @headerHeight: 7rem;
     &-header {
-      @maskWidth: 30px;
+      width: 100%;
+      height: 10vh;
+      @maskWidth: 2rem;
       &-content {
-        height: calc(@headerHeight / 8);
         flex-direction: row;
+        align-items: center;
+        width: 100%;
         height: 100%;
         overflow-x: scroll;
-        padding: 0 @maskWidth;
+        padding: 0 calc(0.8 * @maskWidth);
         border-bottom: 2px solid @red;
-        padding: @maskWidth 0;
+        .towerBox {
+          margin-right: 10px;
+          margin-bottom: 0;
+          &:last-of-type {
+            margin-right: 0;
+          }
+        }
       }
-    }
-    &-content {
-      width: 100%;
-      top: 0;
-      height: calc(90vh - @headerHeight);
       .mask {
         top: 0;
-        width: 2rem;
+        width: @maskWidth;
         height: 100%;
         &-left {
           top: auto;
@@ -341,11 +364,47 @@ onMounted(() => {
         }
         &-right {
           bottom: auto;
+          left: auto;
           right: 0;
           background: linear-gradient(to left, #68baf5, rgba(255, 255, 255, 0));
         }
       }
+      .selectNum {
+        position: absolute;
+        top: calc(100% + 1.2rem);
+        left: 1.2rem;
+        width: fit-content;
+        padding: 0 20px;
+      }
     }
+    &-content {
+      width: 100%;
+      top: 0;
+      flex: 1;
+      .card {
+        .nameWrap {
+          font-size: 14px;
+        }
+        .explain {
+          font-size: 12px;
+          line-height: 16px;
+          height: 32px;
+        }
+        &-select {
+          position: absolute;
+          right: -32px;
+          top: 16px;
+          width: 120px;
+          height: 32px;
+          line-height: 32px;
+          font-size: 16px;
+        }
+      }
+
+    }
+  }
+  .close {
+    top: calc(10vh + 1.2rem);
   }
 }
 </style>
