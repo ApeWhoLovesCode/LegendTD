@@ -24,6 +24,8 @@ const otherImgData = {
   sun: requireCDN('sun.png'),
   /** 回血 */
   returnBlood: requireCDN('return-blood.png'),
+  /** 敌人冰冻塔防技能 */
+  frozen: requireCDN('frozen.png'),
 }
 
 export default otherImgData

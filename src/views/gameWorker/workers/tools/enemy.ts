@@ -1,4 +1,4 @@
-import { ENEMY_MAX_LEVEL, enemyHpColors } from "@/dataSource/enemyData"
+import { ENEMY_MAX_LEVEL, EnemyType, enemyHpColors } from "@/dataSource/enemyData"
 import { TowerSlow } from "@/dataSource/towerData"
 import sourceInstance from "@/stores/sourceInstance"
 import { EnemyState, EnemyStateType } from "@/type/game"
@@ -110,7 +110,6 @@ function setEnemy() {
   if(level > 1) {
     item.hp.sum *= (level + 1) / 2
   }
-  if(item.skill?.r) item.skill.r *= size
   const movePathIndex = Math.floor(Math.random() * baseDataState.mapItem.start.length)
   const startInfo = baseDataState.mapItem.start[movePathIndex]
   const enemyItem: EnemyStateType = {...item, id, level, imgIndex: 0, endDistance: startInfo.num, gridDistance: 0, framesNum: 0, movePathIndex}
@@ -292,21 +291,21 @@ function enemySkillIceCar(e_id: string) {
       {x: t.x, y: t.y, w: size, h: size}, 
       {x: enemy.x, y: enemy.y, r: enemy.skill?.r}
     )) {
-      const index = t.enemySkill!.findIndex(e => e.type === 'frozen')
-      if(index === -1) {
-        t.enemySkill!.push({
-          type: 'frozen',
-          time: enemy.skill!.keepTime!
-        })
+      const id = `${KeepIntervalKey.frozenTower}-${t.id}`
+      if(!t.enemySkill?.frozen) {
+        t.enemySkill!.frozen = {id}
       } else {
-        t.enemySkill![index].time = enemy.skill!.keepTime!
+        t.enemySkill!.frozen.id = id
       }
-      keepInterval.set(`${KeepIntervalKey.frozenTower}-${t.id}`, () => {
-        
+      keepInterval.set(id, () => {
+        if(t.enemySkill?.frozen) {
+          t.enemySkill.frozen = void 0
+        }
       }, enemy.skill!.keepTime!)
       damageTower(t)
     }
   })
+  enemy.skill!.animation!.cur = 0
   slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
 }
 /** 冰车在冻结塔防 */
@@ -533,37 +532,51 @@ function drawEnemySkill(enemy: EnemyStateType) {
   const { name, skill, x, y, w, h } = enemy
   const ctx = gameConfigState.ctx
   const othOnloadImg = sourceInstance.state.othOnloadImg
-  if(name === 'rabbish-2') { // 画兔子回血效果
-    const {cur, sum} = skill!.animation!
-    if(cur === sum) return
-    skill!.animation!.cur++
-    ctx.save()
-    const globalAlphaVal = Math.min(cur, sum - cur)
-    ctx.globalAlpha = globalAlphaVal / 20
-    const scale = 1 + cur / sum
-    ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
-    ctx.scale(scale, scale)
-    ctx.drawImage(othOnloadImg.returnBlood!, x, y, w, w)
-    ctx.restore()
-  } else if(name === 'godzilla') { // 画哥斯拉原子吐息
-    const {cur, sum} = skill!.animation!
-    if(cur === sum) return
-    skill!.animation!.cur++
-    const t = enemy.skill!.direction!
-    const size = gameConfigState.size
-    const thickness = ((cur + sum) / (sum * 2)) * size
-    drawLinearGradientRoundRect({
-      ctx, thickness, thicknessPre: 0,
-      x: x + w / 2, y: y + h / 2, tx: t.x, ty: t.y,
-      linearGradient: [
-        {value: 0, color: '#de5332'},
-        {value: 0.4, color: '#f3c105'},
-        {value: 0.5, color: '#ffc800'},
-        {value: 0.6, color: '#f3c105'},
-        {value: 1, color: '#de5332'},
-      ]
-    })
+  switch(name) {
+    case 'rabbish-2': { // 画兔子回血效果
+      drawZoomEnemySkill(enemy, othOnloadImg.returnBlood!)
+      break;
+    }
+    case 'godzilla': { // 画哥斯拉原子吐息
+      const {cur, sum} = skill!.animation!
+      if(cur === sum) return
+      skill!.animation!.cur++
+      const t = enemy.skill!.direction!
+      const size = gameConfigState.size
+      const thickness = ((cur + sum) / (sum * 2)) * size
+      drawLinearGradientRoundRect({
+        ctx, thickness, thicknessPre: 0,
+        x: x + w / 2, y: y + h / 2, tx: t.x, ty: t.y,
+        linearGradient: [
+          {value: 0, color: '#de5332'},
+          {value: 0.4, color: '#f3c105'},
+          {value: 0.5, color: '#ffc800'},
+          {value: 0.6, color: '#f3c105'},
+          {value: 1, color: '#de5332'},
+        ]
+      })
+      break;
+    }
+    case 'ice-car': { // 绘画冰车的放大技能
+      drawZoomEnemySkill(enemy, othOnloadImg.frozen!)
+      break;
+    }
   }
+}
+/** 绘画敌人的放大技能 */
+function drawZoomEnemySkill(enemy: EnemyStateType, img: CanvasImageSource) {
+  const { skill, x, y, w, h } = enemy
+  const {cur, sum} = skill!.animation!
+  if(cur === sum) return
+  const ctx = gameConfigState.ctx
+  skill!.animation!.cur++
+  ctx.save()
+  ctx.globalAlpha = Math.min(cur, sum - cur) / sum
+  const scale = skill!.r! * (cur / sum)
+  ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
+  ctx.scale(scale, scale)
+  ctx.drawImage(img, x, y, w, w)
+  ctx.restore()
 }
 /** 绘画生命值 */
 function drawEnemyHp(enemy: EnemyStateType) {

@@ -137,10 +137,7 @@ export type TowerStateType = {
   /** 之前的伤害 */
   preDamage?: number
   /** 受敌人技能影响 */
-  enemySkill?: {
-    type: TowerEnemySkillType
-    time: number
-  }[]
+  enemySkill?: {[key in TowerEnemySkillType]?: {id: string}}
 } & TowerType
 /** 塔防的数据 */
 export type TowerState = {
