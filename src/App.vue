@@ -11,7 +11,7 @@ const setting = useSettingStore()
 const init = () => {
   source.isMobile = !!isMobile()
   source.ratio = window.devicePixelRatio ?? 1
-  setting.getFpx()
+  setting.getFps()
 }
 
 onBeforeMount(() => {

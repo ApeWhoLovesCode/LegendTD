@@ -57,6 +57,8 @@ const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
+/** 是否是正常模式 */
+const isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
 /** 是否是体验模式 */
 const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
@@ -146,6 +148,7 @@ export {
   baseDataState,
   gameConfigState,
   canvasInfo,
+  isNormalMode,
   isInfinite,
   isExperience,
   initAllGrid,
