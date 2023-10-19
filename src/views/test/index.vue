@@ -4,6 +4,9 @@ import { onMounted, ref } from 'vue';
 import TowerCanvas from '@/components/towerCanvas.vue';
 import SelectTips from '@/components/selectTips.vue';
 import UserBall from '@/components/userBall.vue';
+import ToolsFolder from '@/components/toolsFolder/index.vue';
+import GithubWhiteIcon from '@/assets/img/githubWhite.svg';
+import MyToolsFolder from '@/components/toolsFolder/myToolsFolder.vue';
 
 const source = useSourceStore()
 
@@ -25,7 +28,8 @@ onMounted(() => {
         :enemy-list="[{i: 1, level: 2}]"
       />
     </div> -->
-    <UserBall />
+    <!-- <UserBall /> -->
+    <MyToolsFolder />
   </div>
 </template>
 
@@ -33,8 +37,8 @@ onMounted(() => {
 .test {
   width: 100vw;
   height: 100vh;
-  // background: linear-gradient(skyblue, green);
   @gridSize: 2.3rem;
+  background-color: #ccc;
   .towerImg {
     width: calc(9 * @gridSize);
     height: calc(7 * @gridSize);

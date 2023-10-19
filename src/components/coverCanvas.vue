@@ -5,7 +5,7 @@ import { GridInfo } from '@/dataSource/mapData';
 import otherImgData from '@/dataSource/otherImgData';
 import { useSourceStore } from '@/stores/source';
 import { addRowColArr } from '@/utils/direction';
-import { loadImage, requireCDN } from '@/utils/handleImg';
+import { loadImage } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 

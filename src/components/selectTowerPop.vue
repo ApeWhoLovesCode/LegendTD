@@ -76,6 +76,10 @@ const selectTower = (name: TowerName) => {
   }
 }
 
+const onClose = () => {
+  emit('update:visible', false)
+}
+
 const init = () => {
   const preIndex = (state.pageNum - 1) * state.pageSize
   state.items = towerList.value.slice(preIndex, preIndex + state.pageSize)
@@ -94,7 +98,7 @@ onMounted(() => {
     :with-header="false"
     :size="source.isMobile ? '80vh' : '90vh'"
     direction="btt"
-    @close="emit('update:visible', false)"
+    @close="onClose"
     :style="{ 
       '--selectCardSize': source.isMobile ? '10vh' : '12vw',
       '--cardGridSize': source.isMobile ? '6vw' : '16px',
@@ -147,7 +151,7 @@ onMounted(() => {
         </ScrollCircleItem>
       </ScrollCircle>
     </div>
-    <span class="close" @click="emit('update:visible', false)">×</span>
+    <span class="close" @click="onClose">×</span>
   </ElDrawer>
 </template>
 
