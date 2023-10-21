@@ -6,6 +6,7 @@ import { loadImage } from '@/utils/handleImg'
 import { ElButton, ElMessage, ElSpace, ElTooltip } from 'element-plus';
 import { EraserIcon, AddAndMinusIcon } from './imgSource'
 import type {DirectionType, MapDataItem, MapGridInfo} from '@/dataSource/mapData'
+import otherImgData from '@/dataSource/otherImgData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
 import { getFlagImg, startColors } from './config';
 import { addRowColArr } from '@/utils/direction';
