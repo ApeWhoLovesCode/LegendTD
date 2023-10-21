@@ -12,6 +12,7 @@ import RankListIcon from '@/assets/img/rankList.svg';
 import TowerLogoIcon from '@/assets/img/towerLogo.svg';
 import JuejinIcon from '@/assets/img/juejin.svg';
 import LTDIcon from '@/assets/img/LTDIcon.png';
+import otherImgData from '@/dataSource/otherImgData';
 
 const rankListVisible = ref(false)
 const selectTowerVisible = ref(false)
@@ -37,6 +38,7 @@ const onClickItem = (item: ToolsFolderItem) => {
       {icon: ComponentIcon, title: '个人组件库', url: 'http://lhhui.codeape.site/'},
       {icon: MyGameIcon, title: '小游戏平台', url: 'http://mygame.codeape.site/'},
       {icon: LTDIcon, title: 'LegendTD', url: 'http://game.codeape.site/'},
+      {icon: otherImgData.start, title: '起点logo'},
     ]" 
     @on-click-item="onClickItem"
   />

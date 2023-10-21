@@ -35,12 +35,12 @@ const ballStyle = computed(() => {
 })
 
 const onClickItem = (item: ToolsFolderItem) => {
-  if(item.url) {
-    if(Date.now() - ballClickTime.value < 300 || isShowMore.value) {
+  if(Date.now() - ballClickTime.value < 300 || isShowMore.value) {
+    if(item.url) {
       window.open(item.url)
     }
+    emits('onClickItem', item)
   }
-  emits('onClickItem', item)
 }
 
 const onShowMore = () => {
@@ -225,6 +225,7 @@ const onHideMore = () => {
         font-size: 10px;
         color: #fff;
         text-align: center;
+        user-select: none;
       }
     }
   }
