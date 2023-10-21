@@ -48,6 +48,10 @@ export type GameBaseData = {
 /** 敌人的类型 */
 export type EnemyStateType = {
   id: string
+  x: number
+  y: number
+  /** 敌人等级 */
+  level: number
   /** 中毒 */
   poison?: EnemyPoison
   /** 减速类型 */
@@ -136,6 +140,8 @@ export type TowerStateType = {
   thickness?: number
   /** 之前的伤害 */
   preDamage?: number
+  /** 受敌人技能影响 */
+  enemySkill?: {[key in TowerEnemySkillType]?: {ids: string[]}}
 } & TowerType
 /** 塔防的数据 */
 export type TowerState = {
@@ -144,6 +150,8 @@ export type TowerState = {
   /** 塔防的攻击范围 */
   buildingScope: BuildingScope
 }
+/** 塔防受敌人技能影响的类型 */
+export type TowerEnemySkillType = 'frozen' 
 export type BuildingScope = {
   left: number, 
   top: number, 

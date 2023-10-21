@@ -4,7 +4,7 @@ import sourceInstance from "@/stores/sourceInstance"
 import { EnemyState, EnemyStateType } from "@/type/game"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
-import { addMoney, baseDataState, canvasInfo, gameConfigState, isInfinite, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
+import { addMoney, baseDataState, canvasInfo, checkValInCircle, gameConfigState, isNormalMode, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
 import { drawLinearGradientRoundRect } from "./canvas"
 import { damageTower, towerMap } from "./tower"
 import { randomStr } from "@/utils/random"
@@ -23,7 +23,7 @@ const enemyState: EnemyState = {
 
 /** 随着关卡增加敌人等级提升 */
 const addEnemyLevel = () => range(Math.ceil(
-  (baseDataState.level + 1 - (isInfinite ? 5 : 20)) / 5
+  (baseDataState.level + 1 - (isNormalMode ? 20 : 5)) / 5
 ), 0, ENEMY_MAX_LEVEL)
 
 function allEnemyIn() {
@@ -43,10 +43,14 @@ function watchEnemyList() {
 
 function watchEnemySkill() {
   enemyMap.forEach(enemy => {
+    const animation = enemy.skill?.animation
     if(enemy.name === 'godzilla') {
-      const animation = enemy.skill!.animation
       if(animation && animation.cur < animation.sum) {
         enemyGodzillaRemoveTower(enemy)
+      }
+    } else if(enemy.name === 'ice-car') {
+      if(animation && animation.cur < animation.sum) {
+        enemyIceCarPlayingSkill(enemy)
       }
     }
   })
@@ -104,7 +108,7 @@ function setEnemy() {
   item.speed *= size
   item.hp.size *= size
   const id = randomStr(item.audioKey)
-  const level = towerCanvasEnemy?.level ?? item.level + addEnemyLevel()
+  const level = towerCanvasEnemy?.level ?? 1 + addEnemyLevel()
   item.hp.cur = item.hp.sum * (level + 1) / 2 
   item.hp.level = level
   if(level > 1) {
@@ -141,25 +145,27 @@ function damageTheEnemy(enemy: EnemyStateType, damage: number) {
 function handleEnemySkill(enemyName: string, e_id: string) {
   const enemy = enemyMap.get(e_id)!
   if(!enemy.skill) return
-  let skillFn: ((e_id: string) => void) | undefined
+  let skillFn: ((enemy: EnemyStateType) => void) | undefined
   switch (enemyName) {
     case 'zombies-dance': skillFn = enemySkillDance; break;
     case 'fulisha': skillFn = enemySkillFulisha; break;
     case 'kunkun': skillFn = enemySkillKunkun; break;
     case 'rabbish-2': skillFn = enemySkillRabbish2; break;
     case 'godzilla': skillFn = enemySkillGodzilla; break;
+    case 'ice-car': skillFn = enemySkillIceCar; break;
   };
   if(skillFn) { // 有技能的敌人
     keepInterval.set(e_id, () => {
-      skillFn!(e_id)
+      const enemy = enemyMap.get(e_id)
+      if(enemy) {
+        skillFn!(enemy)
+      }
     }, enemy.skill!.time)
   }
 }
 /** 舞王技能 */
-function enemySkillDance(e_id: string) {
-  const enemy = enemyMap.get(e_id)
-  if(!enemy) return
-  const {endDistance, movePathIndex} = enemy
+function enemySkillDance(enemy: EnemyStateType) {
+  const {id, endDistance, movePathIndex} = enemy
   const total = baseDataState.mapItem.start[movePathIndex].num - 1
   for(let i = 0; i < 4; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[12])
@@ -173,13 +179,11 @@ function enemySkillDance(e_id: string) {
     const callEnemyItem = callEnemy(newEnemy, i)
     enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
-  onWorkerPostFn('playDomAudio', {id: e_id, volume: 1})
+  onWorkerPostFn('playDomAudio', {id, volume: 1})
 }
 /** 弗利萨技能 */
-function enemySkillFulisha(e_id: string) {
-  const enemy = enemyMap.get(e_id)
-  if(!enemy) return
-  const {endDistance, movePathIndex} = enemy
+function enemySkillFulisha(enemy: EnemyStateType) {
+  const {id, endDistance, movePathIndex} = enemy
   const total = baseDataState.mapItem.start[movePathIndex].num - 1
   for(let i = 0; i < 2; i++) {
     const newEnemy = _.cloneDeep(source.enemySource[13])
@@ -191,21 +195,17 @@ function enemySkillFulisha(e_id: string) {
     const callEnemyItem = callEnemy(newEnemy, i)
     enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
-  onWorkerPostFn('playDomAudio', {id: e_id, volume: 0.7})
+  onWorkerPostFn('playDomAudio', {id, volume: 0.7})
 }
 /** 坤坤技能 */
-function enemySkillKunkun(e_id: string) {
-  const enemy = enemyMap.get(e_id)
-  if(!enemy) return
-  const {hp} = enemy
+function enemySkillKunkun(enemy: EnemyStateType) {
+  const {id, hp} = enemy
   const newHp = hp.cur + 200
   enemy.hp.cur = limitRange(newHp, newHp, hp.sum)
-  onWorkerPostFn('playDomAudio', {id: e_id, volume: 0.5})
+  onWorkerPostFn('playDomAudio', {id, volume: 0.5})
 }
 /** 2号兔子技能 */
-function enemySkillRabbish2(e_id: string) {
-  const enemy = enemyMap.get(e_id)
-  if(!enemy) return
+function enemySkillRabbish2(enemy: EnemyStateType) {
   // 兔子和隔壁一格内的怪全部回5%的血
   enemyMap.forEach(e => {
     if(Math.abs(enemy.endDistance - e.endDistance) <= 1) {
@@ -215,10 +215,8 @@ function enemySkillRabbish2(e_id: string) {
   enemy.skill!.animation!.cur = 0
 }
 /** 哥斯拉技能 */
-function enemySkillGodzilla(e_id: string) {
+function enemySkillGodzilla(enemy: EnemyStateType) {
   if(!towerMap.size) return
-  const enemy = enemyMap.get(e_id)
-  if(!enemy) return
   const size = gameConfigState.size
   const x = enemy.x + enemy.w / 2, y = enemy.y + enemy.h / 2;
   const tartget = {distance: Infinity, id: ''}
@@ -267,15 +265,41 @@ function enemySkillGodzilla(e_id: string) {
 function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
   towerMap.forEach(t => {
     if(enemy.skill!.towerIds?.includes(t.id)) {
-      if(!t.hp.isShow) {
-        t.hp.isShow = true
+      const {cur, sum} = enemy.skill!.animation!
+      // 每隔 sum(50) / damage(5) = 10 掉一次血 
+      if(cur > 0 && !(cur % Math.floor(sum / enemy.skill!.damage!))) {
         damageTower(t)
-      } else {
-        // 200毫秒掉一次血，这里暂停卡bug的话，当继续游戏时就会触发伤害
-        if(Date.now() - t.hp.injuryTime! > 200) {
-          damageTower(t)
-        }
       }
+    }
+  })
+}
+/** 冰车技能 */
+function enemySkillIceCar(enemy: EnemyStateType) {
+  enemy.skill!.animation!.cur = 0
+  slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
+}
+/** 冰车释放技能中 */
+function enemyIceCarPlayingSkill(enemy: EnemyStateType) {
+  const size = gameConfigState.size
+  towerMap.forEach(t => {
+    const id = `${KeepIntervalKey.frozenTower}-${t.id}-${enemy.id}`
+    if(t.enemySkill?.frozen?.ids.includes(id)) return // 已经被当前敌人冰冻过了
+    const r = enemy.skill!.r! * size * (enemy.skill!.animation!.cur / enemy.skill!.animation!.sum)
+    if(checkValInCircle(
+      {x: t.x, y: t.y, w: size, h: size}, 
+      {x: enemy.x, y: enemy.y, r: r}
+    )) {
+      if(!t.enemySkill?.frozen) {
+        t.enemySkill!.frozen = {ids: [id]}
+      } else {
+        t.enemySkill!.frozen.ids.push(id)
+      }
+      keepInterval.set(id, () => {
+        if(t.enemySkill?.frozen) {
+          t.enemySkill.frozen = void 0
+        }
+      }, enemy.skill!.keepTime!)
+      damageTower(t)
     }
   })
 }
@@ -295,6 +319,7 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
   newEnemy.hp.level = 1
   return {
     ...newEnemy,
+    level: 1,
     imgIndex: 0,
     framesNum: 0,
     gridDistance: 0,
@@ -311,7 +336,7 @@ function moveEnemy(enemy: EnemyStateType) {
   const total = baseDataState.mapItem.start[movePathIndex].num
   // 敌人到达终点
   if(!setting.isTowerCover) {
-    if(endDistance <= 0) {
+    if(endDistance < 0) {
       removeEnemy([id])
       onReduceHp(1)
       return true
@@ -499,37 +524,52 @@ function drawEnemySkill(enemy: EnemyStateType) {
   const { name, skill, x, y, w, h } = enemy
   const ctx = gameConfigState.ctx
   const othOnloadImg = sourceInstance.state.othOnloadImg
-  if(name === 'rabbish-2') { // 画兔子回血效果
-    const {cur, sum} = skill!.animation!
-    if(cur === sum) return
-    skill!.animation!.cur++
-    ctx.save()
-    const globalAlphaVal = Math.min(cur, sum - cur)
-    ctx.globalAlpha = globalAlphaVal / 20
-    const scale = 1 + cur / sum
-    ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
-    ctx.scale(scale, scale)
-    ctx.drawImage(othOnloadImg.returnBlood!, x, y, w, w)
-    ctx.restore()
-  } else if(name === 'godzilla') { // 画哥斯拉原子吐息
-    const {cur, sum} = skill!.animation!
-    if(cur === sum) return
-    skill!.animation!.cur++
-    const t = enemy.skill!.direction!
-    const size = gameConfigState.size
-    const thickness = ((cur + sum) / (sum * 2)) * size
-    drawLinearGradientRoundRect({
-      ctx, thickness, thicknessPre: 0,
-      x: x + w / 2, y: y + h / 2, tx: t.x, ty: t.y,
-      linearGradient: [
-        {value: 0, color: '#de5332'},
-        {value: 0.4, color: '#f3c105'},
-        {value: 0.5, color: '#ffc800'},
-        {value: 0.6, color: '#f3c105'},
-        {value: 1, color: '#de5332'},
-      ]
-    })
+  switch(name) {
+    case 'rabbish-2': { // 画兔子回血效果
+      drawZoomEnemySkill(enemy, othOnloadImg.returnBlood!)
+      break;
+    }
+    case 'godzilla': { // 画哥斯拉原子吐息
+      const {cur, sum} = skill!.animation!
+      if(cur === sum) return
+      skill!.animation!.cur++
+      const t = enemy.skill!.direction!
+      const size = gameConfigState.size
+      const thickness = ((cur + sum) / (sum * 2)) * size
+      drawLinearGradientRoundRect({
+        ctx, thickness, thicknessPre: 0, globalAlpha: 0.9,
+        x: x + w / 2, y: y + h / 2, tx: t.x, ty: t.y,
+        linearGradient: [
+          {value: 0, color: '#de5332'},
+          {value: 0.4, color: '#f3c105'},
+          {value: 0.5, color: '#ffc800'},
+          {value: 0.6, color: '#f3c105'},
+          {value: 1, color: '#de5332'},
+        ]
+      })
+      break;
+    }
+    case 'ice-car': { // 绘画冰车的放大技能
+      drawZoomEnemySkill(enemy, othOnloadImg.frozen!)
+      break;
+    }
   }
+}
+/** 绘画敌人的放大技能 */
+function drawZoomEnemySkill(enemy: EnemyStateType, img: CanvasImageSource) {
+  const { skill, x, y, w, h } = enemy
+  const {cur, sum} = skill!.animation!
+  if(cur === sum) return
+  const ctx = gameConfigState.ctx
+  skill!.animation!.cur++
+  ctx.save()
+  ctx.globalAlpha = Math.min(0.3, Math.min(cur, sum - cur) / sum)
+  // 0.3 是为了让技能扩展得更大，让效果接触触发更合理
+  const scale = skill!.r! * (cur / sum) + 0.3
+  ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
+  ctx.scale(scale, scale)
+  ctx.drawImage(img, x, y, w, w)
+  ctx.restore()
 }
 /** 绘画生命值 */
 function drawEnemyHp(enemy: EnemyStateType) {

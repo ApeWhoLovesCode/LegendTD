@@ -1,11 +1,10 @@
 <script setup lang='ts'>
-import imgSource from '@/dataSource/imgSource';
 import levelData from '@/dataSource/levelData';
 import { GridInfo } from '@/dataSource/mapData';
 import otherImgData from '@/dataSource/otherImgData';
 import { useSourceStore } from '@/stores/source';
 import { addRowColArr } from '@/utils/direction';
-import { loadImage, requireCDN } from '@/utils/handleImg';
+import { loadImage } from '@/utils/handleImg';
 import { randomStr } from '@/utils/random';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
@@ -120,7 +119,7 @@ async function drawFloorTile() {
   const end = levelData[props.index].end
   const x = end ? end.x * size : state.movePath[0].at(-1)!.x * size
   const y = end ? end.y * size : state.movePath[0].at(-1)!.y * size
-  loadImage(imgSource.TerminalImg).then((terminalImg) => {
+  loadImage(otherImgData.terminal).then((terminalImg) => {
     state.ctx?.drawImage(terminalImg, x - 0.35 * size, y - 1.42 * size, size * 1.8, size * 2.48)
   })
 }

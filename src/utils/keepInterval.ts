@@ -17,6 +17,8 @@ export const KeepIntervalKey = {
   twitchDelete: 'twitchDelete',
   /** 老鼠中毒间隔函数 */
   poisonFun: 'poisonFun',
+  /** 冰冻塔防 */
+  frozenTower: 'frozenTower'
 }
 
 class KeepInterval {

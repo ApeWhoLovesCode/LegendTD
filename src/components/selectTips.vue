@@ -82,15 +82,15 @@ const onAnimationEnd = () => {
   .content {
     border-radius: 50%;
     transition: box-shadow 0.8s;
-    box-shadow: 0 0 0 100vw @shadow1, 
+    box-shadow: 0 0 0 100vmax @shadow1, 
       inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
     &Show {
-      box-shadow: 0 0 0 100vw @shadow2, 
+      box-shadow: 0 0 0 100vmax @shadow2, 
         inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
     }
     &:hover {
       cursor: pointer;
-      box-shadow: 0 0 0 100vw @shadow3, 
+      box-shadow: 0 0 0 100vmax @shadow3, 
         inset 2px -5px 3rem rgba(0, 0, 0, 0.9);
     }
   }
@@ -131,11 +131,11 @@ const onAnimationEnd = () => {
       }
     }
     &Left {
-      box-shadow: calc(-100vw - @contentSize / 2) 0 0 100vw @shadow1;
+      box-shadow: calc(-100vmax - @contentSize / 2) 0 0 100vmax @shadow1;
       animation-name: maskLeft;
     }
     &Right {
-      box-shadow: calc(100vw + @contentSize / 2) 0 0 100vw @shadow1;
+      box-shadow: calc(100vmax + @contentSize / 2) 0 0 100vmax @shadow1;
       animation-name: maskRight;
       .boxShadowArea {
         box-shadow: calc(@contentSize * 1.45) 0 0 @contentSize @shadow1;
@@ -153,7 +153,7 @@ const onAnimationEnd = () => {
 }
 @keyframes maskLeft {
   0% {
-    transform: translate(calc(-100vw - 50%), -50%);
+    transform: translate(calc(-100vmax - 50%), -50%);
   }
   100% {
     transform: translate(-50%, -50%);
@@ -161,7 +161,7 @@ const onAnimationEnd = () => {
 }
 @keyframes maskRight {
   0% {
-    transform: translate(calc(100vw - 50%), -50%);
+    transform: translate(calc(100vmax - 50%), -50%);
   }
   100% {
     transform: translate(-50%, -50%);

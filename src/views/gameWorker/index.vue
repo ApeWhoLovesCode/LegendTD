@@ -35,10 +35,18 @@ const state = reactive({
   isProtectTheHorse: true,
 })
 
+function showMesage() {
+  if(levelData[source.mapLevel].type === LevelDataItemEnum.Normal) {
+    ElMessage.info('登录后才会记录分数');
+  } else {
+    ElMessage.info('当前关卡不记录分数');
+  }
+}
+
 /** 初始化加载图片等内容 */
-async function init() {
+function init() {
   source.loadingAllImg()
-  ElMessage.info('登录后才能上传成绩噢~~')
+  showMesage()
 }
 /** 切换地图 */
 function switchMapLevel(index: number) {
@@ -46,6 +54,7 @@ function switchMapLevel(index: number) {
   source.mapLevel = index
   router.push(`/game/${index + 1}`)
   reStart()
+  showMesage()
 }
 /** 重新开始 */
 function reStart() {
@@ -70,6 +79,7 @@ onMounted(() => {
       <template #reference>
         <div class="title">
           <img :src="requireCDN('LTD.png')" alt="" class="title-icon">
+          <br v-if="source.isMobile" />
           <span>{{ gameTitle }}</span>
         </div>
       </template>

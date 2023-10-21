@@ -2,7 +2,7 @@
 import { useSourceStore } from '@/stores/source';
 import { GameBaseData, GameConfigType, GameMasterSkill } from '@/type/game';
 import { computed } from 'vue';
-import imgSource from '@/dataSource/imgSource';
+import otherImgData from '@/dataSource/otherImgData';
 
 const props = defineProps<{
   baseDataState: GameBaseData
@@ -34,11 +34,11 @@ function transRatio(v: number) {
 <template>
   <div v-if="baseDataState.terminal" class="terminal" :style="terminalStyle">
     <div class="hp" :class="{'hp-mobile': source.isMobile}">{{baseDataState.hp}}</div>
-    <img class="terminal-icon" :src="imgSource.TerminalImg" alt="">
+    <img class="terminal-icon" :src="otherImgData.terminal" alt="">
     <img 
       v-show="gameSkillState.proMoney.isShow" 
       class="money-icon" 
-      :src="imgSource.SunImg" 
+      :src="otherImgData.sunGif" 
       alt=""
       @click="emit('proMoneyClick')"
     >

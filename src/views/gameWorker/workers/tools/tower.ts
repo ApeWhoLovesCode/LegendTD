@@ -8,6 +8,7 @@ import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
 import levelData from "@/dataSource/levelData"
 import { BuildTowerParams } from "@/dataSource/mapData"
+import sourceInstance from "@/stores/sourceInstance"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
@@ -31,6 +32,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
   tower.bSize.w *= size
   tower.bSize.h *= size
   tower.hp.injuryTime = 0
+  tower.enemySkill = {}
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
     tower.isToTimeShoot = true
@@ -74,9 +76,10 @@ function drawTowerMap() {
 /** 画塔防 */
 function drawTower(tower: TowerStateType) {
   const size = gameConfigState.size
-  gameConfigState.ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
-  if(tower.hp.isShow && tower.hp.injuryTime! + 1500 > Date.now()) {
-    const ctx = gameConfigState.ctx
+  const ctx = gameConfigState.ctx
+  ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
+  // 画塔防的生命值
+  if(tower.hp.isShow && tower.hp.injuryTime! + 2000 > Date.now()) {
     const { x, y, hp } = tower
     const hpSize = size / 7
     // 血条背景色
@@ -94,12 +97,22 @@ function drawTower(tower: TowerStateType) {
   } else {
     tower.hp.isShow = false
   }
+  // 画塔防受到敌人技能的效果
+  for(const ekey in tower.enemySkill) {
+    if(ekey === 'frozen' && tower.enemySkill.frozen) {
+      ctx.save()
+      ctx.globalAlpha = 0.8
+      ctx.drawImage(sourceInstance.state.othOnloadImg.snow!, tower.x + size / 4, tower.y + size / 4, size / 2, size / 2)
+      ctx.restore()
+    }
+  }
 }
 
 /** 伤害塔防 */
-function damageTower(t: TowerStateType) {
+function damageTower(t: TowerStateType, damage = 1) {
   t.hp.injuryTime = Date.now()
-  t.hp.cur -= 1
+  t.hp.cur -= damage
+  t.hp.isShow = true
   if(t.hp.cur <= 0) {
     removeTower(t.id, false)
   }
@@ -121,10 +134,22 @@ function removeTower(towerId: string, isSale = true) {
   onWorkerPostFn('saleTowerCallback', id)
 }
 
+/** 检查塔防是否受到敌人技能影响 */
+function isTowerSufferEnemy(enemySkill: TowerStateType['enemySkill']) {
+  for(const ekey in enemySkill) {
+    if(ekey === 'frozen' && enemySkill.frozen) {
+      return true // 塔防被冰冻，无法攻击
+    }
+  }
+}
+
 /** 处理敌人的移动，进入塔防的范围 */
 function checkEnemyAndTower() {
   if(!enemyMap.size) return
   towerMap.forEach(t => {
+    if(isTowerSufferEnemy(t.enemySkill)) {
+      return
+    }
     if(t.name === 'huonan') {
       const targetIdList = enterAttackScopeList(t)
       if(targetIdList) t.targetIdList = targetIdList
@@ -188,4 +213,5 @@ export {
   damageTower,
   removeTower,
   checkEnemyAndTower,
+  isTowerSufferEnemy,
 }
