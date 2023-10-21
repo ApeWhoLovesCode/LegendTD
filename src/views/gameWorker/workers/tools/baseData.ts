@@ -1,4 +1,4 @@
-import { EnemyStateType } from "@/type/game";
+import { EnemyStateType, TargetInfo } from "@/type/game";
 import { powAndSqrt, randomNumList } from "@/utils/tools";
 import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
@@ -57,6 +57,8 @@ const canvasInfo = {
   offscreen: void 0 as unknown as OffscreenCanvas,
 }
 
+/** 是否是正常模式 */
+const isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
 /** 是否是体验模式 */
 const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
@@ -99,8 +101,8 @@ function onLevelChange() {
 }
 
 /** 判断值是否在圆内 */
-function checkValInCircle(enemy: EnemyStateType, target: TargetCircleInfo) {
-  const {x, y, w, h} = enemy
+function checkValInCircle(current: TargetInfo, target: TargetCircleInfo) {
+  const {x, y, w, h} = current
   const angleList = [
     calculateDistance(target, x, y),
     calculateDistance(target, x + w, y),
@@ -146,6 +148,7 @@ export {
   baseDataState,
   gameConfigState,
   canvasInfo,
+  isNormalMode,
   isInfinite,
   isExperience,
   initAllGrid,

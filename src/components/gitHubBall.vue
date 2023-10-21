@@ -29,7 +29,6 @@ const toGithub = () => {
   <FloatingBall
     magnetic="x"
     :style="ballStyle"
-    @on-offset-change=""
   >
     <div class="ballWrap" @mousedown="ballClickTime = Date.now()" @click="toGithub">
       <img :src="GithubIcon" alt="" class="githubIcon">
@@ -54,4 +53,4 @@ const toGithub = () => {
     -webkit-user-drag: none;
   }
 }
-</style>./floatingBall
+</style>

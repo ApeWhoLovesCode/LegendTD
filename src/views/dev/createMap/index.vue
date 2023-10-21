@@ -8,7 +8,6 @@ import { EraserIcon, AddAndMinusIcon } from './imgSource'
 import type {DirectionType, MapDataItem, MapGridInfo} from '@/dataSource/mapData'
 import { getDirection, getDirectionVal, getStartDirection } from './utils';
 import { getFlagImg, startColors } from './config';
-import ImgSource from '@/dataSource/imgSource';
 import { addRowColArr } from '@/utils/direction';
 import useMouseImg from './hooks/useMouseImg';
 import { floorImgList, state, onloadImg, end, startFlag } from './hooks/baseData';
@@ -29,7 +28,7 @@ const mouseIcons = computed(() => {
   if(mouseImg.type === 'flag') {
     return flagIconSrc.value
   }
-  return [...floorImgList, EraserIcon, ImgSource.TerminalImg, AddAndMinusIcon][mouseImg.imgIndex]
+  return [...floorImgList, EraserIcon, otherImgData.terminal, AddAndMinusIcon][mouseImg.imgIndex]
 })
 
 onMounted(() => {
@@ -56,7 +55,7 @@ async function init() {
 
 async function initData() {
   onloadImg.floor = await Promise.all(floorImgList.map(img => loadImage(img)))
-  onloadImg.terminal = await loadImage(ImgSource.TerminalImg)
+  onloadImg.terminal = await loadImage(otherImgData.terminal)
 }
 
 function startDraw() {
@@ -230,7 +229,7 @@ function devTry() {
               </ElTooltip>
               <ElTooltip content="终点的标志" placement="top">
                 <div class="iconWrap" @click="onClickDrag($event, 'end')">
-                  <img :src="ImgSource.TerminalImg" alt="" class="iconImg">
+                  <img :src="otherImgData.terminal" alt="" class="iconImg">
                 </div>
               </ElTooltip>
             </ElSpace>
@@ -358,8 +357,8 @@ function devTry() {
     }
     .createMap-canvasWrap {
       // 20 / 12
-      width: 80vw;
-      height: 48vw;
+      width: 80vmin;
+      height: 48vmin;
       border: 1px solid #ccc;
     }
     .mouseImg {
@@ -379,4 +378,4 @@ function devTry() {
     justify-content: space-between;
   }
 }
-</style>./hooks/baseData./hooks/useMouseImg
+</style>

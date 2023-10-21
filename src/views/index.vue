@@ -8,7 +8,7 @@ import { useSourceStore } from '@/stores/source';
 import { useRouter } from 'vue-router';
 import UserBall from '@/components/userBall.vue'
 import SelectTips from '@/components/selectTips.vue';
-import GitHubBall from '@/components/gitHubBall.vue';
+import MyTools from '@/components/toolsFolder/myToolsFolder.vue';
 
 const source = useSourceStore()
 const router = useRouter()
@@ -87,7 +87,8 @@ const getCardText = (i: number) => {
       </ScrollCircleItem>
     </ScrollCircle>
     <UserBall />
-    <GitHubBall />
+    <!-- <GitHubBall /> -->
+    <MyTools />
     <SelectTips @click-content="onCardClick(0)" />
   </div>
 </template>

@@ -7,19 +7,21 @@ type LinearGradientRoundRectParams = {
   y: number
   tx: number
   ty: number
+  globalAlpha?: number
   thickness: number
   thicknessPre: number
   linearGradient: {value: number, color: string}[]
 }
 /** 绘画渐变色 */
 export function drawLinearGradientRoundRect({
-  ctx, x, y, tx, ty, thickness, thicknessPre, linearGradient: linearGradientArr
+  ctx, x, y, tx, ty, thickness, thicknessPre, linearGradient: linearGradientArr, globalAlpha = 1
 }: LinearGradientRoundRectParams) {
   const deg = getAngle({x, y}, {x: tx, y: ty})
   const xy = powAndSqrt(x - tx, y - ty)
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(deg * Math.PI / 180)
+  ctx.globalAlpha = globalAlpha
   ctx.translate(-x, -y)
   const newY = y - (thickness - thicknessPre) / 2
   // 设置渐变色
