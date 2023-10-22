@@ -563,7 +563,7 @@ function drawZoomEnemySkill(enemy: EnemyStateType, img: CanvasImageSource) {
   const ctx = gameConfigState.ctx
   skill!.animation!.cur++
   ctx.save()
-  ctx.globalAlpha = Math.min(0.3, Math.min(cur, sum - cur) / sum)
+  ctx.globalAlpha = Math.min(0.5, Math.min(cur, sum - cur) / sum)
   // 0.3 是为了让技能扩展得更大，让效果接触触发更合理
   const scale = skill!.r! * (cur / sum) + 0.3
   ctx.translate((x + w / 2) * (1 - scale), (y + h / 2) * (1 - scale))
