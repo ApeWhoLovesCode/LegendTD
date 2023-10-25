@@ -66,6 +66,8 @@ export type EnemyStateType = {
   imgIndex: number
   /** 敌人移动路径(会有多个路径的情况)的索引 */
   movePathIndex: number
+  /** 敌人是否已经死亡 */
+  isDead: boolean
 } & EnemyType
 
 /** 敌人数据 */

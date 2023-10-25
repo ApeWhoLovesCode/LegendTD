@@ -74,6 +74,14 @@ class SourceClass {
           const img = await loadImageWorker(enemy.imgSource)
           this.state.enemyImgSource[enemy.name] = {img}
         }
+        if(enemy.skill?.img) { // 加载敌人技能图片
+          const list = await gifToStaticImgList(enemy.skill.img, true)
+          this.state.enemyImgSource[enemy.name].skill = {list, total: list.reduce((pre, cur) => pre += cur.delay, 0)}
+        }
+        if(enemy.dieImg) { // 加载敌人死亡图片
+          const list = await gifToStaticImgList(enemy.dieImg, true)
+          this.state.enemyImgSource[enemy.name].die = {list, total: list.reduce((pre, cur) => pre += cur.delay, 0)}
+        }
         this.state.progress += step
         fn(this.state.progress)
       }

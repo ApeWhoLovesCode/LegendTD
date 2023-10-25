@@ -187,7 +187,7 @@ function checkEnemyAndTower() {
 function enterAttackScopeList(target: TargetCircleInfo) {
   const arr: EnemyStateType[] = []
   enemyMap.forEach(enemy => {
-    if(checkValInCircle(enemy, target)) {
+    if(!enemy.isDead && checkValInCircle(enemy, target)) {
       arr.push(enemy)
     }
   })

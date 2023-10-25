@@ -11,6 +11,8 @@ export type TowerSource = {[key in TowerName]: TowerStateType}
 
 export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
 
+export type SourceImgItem = {list: SourceImgObj[], total: number}
+
 export type SourceStateType = {
   /** 游戏页面是否初始化完成 */
   isGameInit: boolean
@@ -23,6 +25,10 @@ export type SourceStateType = {
     [key in string]: {
       img?: HTMLImageElement | ImageBitmap
       imgList?: SourceImgObj[]
+      /** 技能图片 */
+      skill?: SourceImgItem
+      /** 死亡图片 */
+      die?: SourceImgItem
     }
   }
   /** 塔防处理好的静态资源 */
