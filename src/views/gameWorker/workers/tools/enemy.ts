@@ -43,6 +43,7 @@ function watchEnemyList() {
 
 function watchEnemySkill() {
   enemyMap.forEach(enemy => {
+    checkTriggerEnemySkill(enemy)
     const animation = enemy.skill?.animation
     if(enemy.name === 'godzilla') {
       if(animation && animation.cur < animation.sum) {
@@ -106,7 +107,6 @@ function setEnemy() {
   item.h *= size
   item.curSpeed *= size
   item.speed *= size
-  item.hp.size *= size
   const id = randomStr(item.audioKey)
   const level = towerCanvasEnemy?.level ?? 1 + addEnemyLevel()
   item.hp.cur = item.hp.sum * (level + 1) / 2 
@@ -148,23 +148,38 @@ function handleEnemySkill(enemyName: string, e_id: string) {
   if(!enemy.skill) return
   let skillFn: ((enemy: EnemyStateType) => void) | undefined
   switch (enemyName) {
-    case 'zombies-dance': skillFn = enemySkillDance; break;
+    case 'zombie-dance': skillFn = enemySkillDance; break;
     case 'fulisha': skillFn = enemySkillFulisha; break;
     case 'kunkun': skillFn = enemySkillKunkun; break;
     case 'rabbish-2': skillFn = enemySkillRabbish2; break;
     case 'godzilla': skillFn = enemySkillGodzilla; break;
     case 'ice-car': skillFn = enemySkillIceCar; break;
-    case 'zomebies-boom': skillFn = enemySkillBoom; break;
   };
-  if(skillFn) { // 有技能的敌人
-    keepInterval.set(e_id, () => {
-      const enemy = enemyMap.get(e_id)
-      if(enemy) {
-        enemy.skill!.count!++
-        skillFn!(enemy)
+  setEnemySkill(enemy, skillFn)
+}
+/** 检查是否触发技能 */
+function checkTriggerEnemySkill(enemy: EnemyStateType) {
+  if(enemy.skill?.isTriggle) return
+  switch (enemy.name) {
+    case 'zombie-boom': {
+      if(enemy.hp.cur < enemy.hp.sum / 2) {
+        setEnemySkill(enemy, enemySkillBoom)
       }
-    }, enemy.skill!.time)
-  }
+      break;
+    }
+  };
+}
+/** 设置技能 */
+function setEnemySkill(enemy: EnemyStateType, skillFn?: ((enemy: EnemyStateType) => void)) {
+  if(!skillFn) return
+  enemy.skill!.isTriggle = true
+  keepInterval.set(enemy.id, () => {
+    const _enemy = enemyMap.get(enemy.id)
+    if(_enemy) {
+      _enemy.skill!.count!++
+      skillFn!(_enemy)
+    }
+  }, enemy.skill!.time)
 }
 /** 舞王技能 */
 function enemySkillDance(enemy: EnemyStateType) {
@@ -303,7 +318,7 @@ function enemyIceCarPlayingSkill(enemy: EnemyStateType) {
         if(t.enemySkill?.frozen) {
           t.enemySkill.frozen = void 0
         }
-      }, enemy.skill!.keepTime!)
+      }, enemy.skill!.keepTime!, {isTimeOut: true})
       damageTower(t)
     }
   })
@@ -339,7 +354,6 @@ function callEnemy(newEnemy: EnemyStateType, i: number) {
   newEnemy.h *= size
   newEnemy.curSpeed *= size
   newEnemy.speed *= size
-  newEnemy.hp.size *= size
   newEnemy.hp.cur = newEnemy.hp.sum
   newEnemy.hp.level = 1
   return {
@@ -557,19 +571,20 @@ function drawEnemySlow(enemy: EnemyStateType) {
 }
 /** 画中毒效果 */
 function drawEnemyPoison(enemy: EnemyStateType) {
-  const { x, y, w, hp, poison } = enemy
+  const { x, y, w, h, poison } = enemy
   if(!poison) return
   const ctx = gameConfigState.ctx
   const othOnloadImg = sourceInstance.state.othOnloadImg
   ctx.save()
   ctx.globalAlpha = 0.9
+  const hpSize = h / 10
   if(poison.level === 5) {
-    ctx.drawImage(othOnloadImg.poison!, x + w / 4, y - hp.size - w / 2, w / 2, w / 2)
+    ctx.drawImage(othOnloadImg.poison!, x + w / 4, y - hpSize - w / 2, w / 2, w / 2)
   } else {
     let arr = [3 * w / 8, w / 4, w / 8, 0]
     let poisonX = x + arr[poison.level - 1]
     for(let i = 0; i < poison.level; i++) {
-      ctx.drawImage(othOnloadImg.poison!, poisonX, y - hp.size - w / 4, w / 4, w / 4)
+      ctx.drawImage(othOnloadImg.poison!, poisonX, y - hpSize - w / 4, w / 4, w / 4)
       poisonX += w / 4
     }
   }
@@ -610,7 +625,7 @@ function drawEnemySkillAnimation(enemy: EnemyStateType) {
       drawZoomEnemySkill(enemy, othOnloadImg.frozen!)
       break;
     }
-    case 'zomebies-boom': {
+    case 'zombie-boom': {
       if(skill.count) { 
         if(cur !== sum) { // 开始绘画效果
           skill!.animation!.cur++
@@ -648,32 +663,33 @@ function drawZoomEnemySkill(enemy: EnemyStateType, img: CanvasImageSource) {
 }
 /** 绘画生命值 */
 function drawEnemyHp(enemy: EnemyStateType) {
-  const { x, y, w, hp } = enemy
+  const { x, y, w, h, hp } = enemy
   const ctx = gameConfigState.ctx
-  const w_2 = w - hp.size
+  const h_2 = h / 10 
+  const w_2 = w - h_2
   // 每一条血条的生命值
   const oneHp = hp.sum / hp.level!
   const colorI = Math.ceil(hp.cur / oneHp)
   // 血条背景色
   ctx.fillStyle = enemyHpColors[colorI - 1]
-  ctx.fillRect(x, y - hp.size, w_2, hp.size)
+  ctx.fillRect(x, y - h_2, w_2, h_2)
   // 血条颜色
   ctx.fillStyle = enemyHpColors[colorI]
-  ctx.fillRect(x, y - hp.size, w_2 * (hp.cur - (colorI - 1) * oneHp) / oneHp, hp.size)
+  ctx.fillRect(x, y - h_2, w_2 * (hp.cur - (colorI - 1) * oneHp) / oneHp, h_2)
   // 画边框
   ctx.beginPath();
   ctx.lineWidth = 1;
   ctx.strokeStyle = "#cff1d3"; //边框颜色
-  ctx.rect(x, y - hp.size, w_2, hp.size);  //透明无填充
+  ctx.rect(x, y - h_2, w_2, h_2);  //透明无填充
   ctx.stroke();
 }
 /** 绘画敌人的等级 */
 function drawEnemyLevel(enemy: EnemyStateType) {
-  const { x, y, hp } = enemy
+  const { x, y, h, hp } = enemy
   const ctx = gameConfigState.ctx
   const othOnloadImg = sourceInstance.state.othOnloadImg
+  const levelSize = h / 10
   if(hp.level! < 10) {
-    const levelSize = hp.size
     const moonN = Math.floor(hp.level! / 3)
     const starN = Math.floor(hp.level! % 3)
     let levelX = x - levelSize * 2, levelY = y - levelSize
@@ -701,7 +717,7 @@ function drawEnemyLevel(enemy: EnemyStateType) {
       }
     }
   } else {
-    ctx.drawImage(othOnloadImg.sun!, x - hp.size * 2, y - hp.size * 3 / 2, hp.size * 2, hp.size * 2)
+    ctx.drawImage(othOnloadImg.sun!, x - levelSize * 2, y - levelSize * 3 / 2, levelSize * 2, levelSize * 2)
   }
 }
 

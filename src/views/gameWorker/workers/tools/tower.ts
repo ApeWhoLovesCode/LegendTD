@@ -118,7 +118,7 @@ function damageTower(t: TowerStateType, damage = 1) {
   }
 }
 
-/** 售卖防御塔 */
+/** 移除防御塔 */
 function removeTower(towerId: string, isSale = true) {
   const size = gameConfigState.size
   const tower = towerMap.get(towerId)!
@@ -130,6 +130,9 @@ function removeTower(towerId: string, isSale = true) {
     addMoney(saleMoney)
   }
   keepInterval.delete(`towerShoot-${id}`)
+  tower.enemySkill?.frozen?.ids.forEach(id => {
+    keepInterval.delete(id)
+  })
   towerMap.delete(towerId)
   onWorkerPostFn('saleTowerCallback', id)
 }

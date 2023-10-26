@@ -80,6 +80,10 @@ class SourceClass {
         }
         if(enemy.dieImg) { // 加载敌人死亡图片
           const list = await gifToStaticImgList(enemy.dieImg, true)
+          if(enemy.name === 'zombie-boom') { // 爆炸gif最后两帧是多了的
+            list.pop()
+            list.pop()
+          }
           this.state.enemyImgSource[enemy.name].die = {list, total: list.reduce((pre, cur) => pre += cur.delay, 0)}
         }
         this.state.progress += step
