@@ -67,7 +67,7 @@ addEventListener('message', e => {
 })
 
 async function init() {
-  const params = setting.isTowerCover ? {enemyList: setting.enemyList?.map(e => e.i) ?? [], towerList: [setting.tname]} : void 0
+  const params = setting.isTowerCover ? {enemyList: setting.enemyList?.map(e => e.enemyName) ?? [], towerList: [setting.tname]} : void 0
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   }, params)
@@ -241,7 +241,7 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
 function testBuildTowers() {
   if(!setting.isDevTestMode) return
   addMoney(999999)
-  enemyState.levelEnemy = [11,0,14,11,17,7,9,9,7,7,9,16,17,11,11,7,16,7,10,7,7,7,17,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,17,11,11]
+  enemyState.levelEnemy = ['zombie-dance','zombie-dance','fulisha','fulisha','rabbish-2','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha']
   const size = gameConfigState.size
   testBuildData.forEach(item => {
     item.x *= size

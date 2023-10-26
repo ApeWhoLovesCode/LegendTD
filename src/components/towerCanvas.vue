@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import Worker from "../views/gameWorker/workers/index.ts?worker";
-import { TowerName } from '@/dataSource/towerData';
+import { TowerEnemyItem, TowerName } from '@/dataSource/towerData';
 import { useSettingStore } from "@/stores/setting";
 import { useSourceStore } from '@/stores/source';
 import { randomStr } from '@/utils/random';
@@ -10,10 +10,10 @@ import Loading from "./loading.vue";
 
 const props = withDefaults(defineProps<{
   tname: TowerName;
-  enemyList?: {i: number, level?: number}[];
+  enemyList?: TowerEnemyItem[];
   isPause?: boolean;
 }>(), {
-  enemyList: () => [{i: 1}],
+  enemyList: () => [{enemyName: 'zombie-1'}],
   isPause: false,
 })
 const source = useSourceStore()

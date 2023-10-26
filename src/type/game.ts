@@ -1,6 +1,6 @@
 /** 游戏详情页类型 */
 
-import { EnemyType } from "@/dataSource/enemyData"
+import { EnemyName, EnemyType } from "@/dataSource/enemyData"
 import { GridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
 import { TowerSlowType, TowerType } from "@/dataSource/towerData"
@@ -72,8 +72,8 @@ export type EnemyStateType = {
 
 /** 敌人数据 */
 export type EnemyState = {
-  /** 当前等级需要的敌人索引 */
-  levelEnemy: number[]
+  /** 当前等级需要的敌人 */
+  levelEnemy: EnemyName[]
   /** 已上场的敌人数量 */
   createdEnemyNum: number
   /** 敌人的移动轨迹 x坐标, y坐标, x_y方向 1:左 2:下 3:右 4:上 */

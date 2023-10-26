@@ -96,10 +96,10 @@ function drawEnemy(enemy: EnemyStateType) {
 function setEnemy() {
   const towerCanvasEnemy = setting.enemyList?.[enemyState.createdEnemyNum]
   const item = _.cloneDeep(
-    source.enemySource[
+    source.enemySource![
       !setting.isTowerCover ? (
         enemyState.levelEnemy[enemyState.createdEnemyNum]
-      ) : towerCanvasEnemy.i
+      ) : towerCanvasEnemy.enemyName
     ]
   )
   const size = gameConfigState.size
@@ -186,7 +186,7 @@ function enemySkillDance(enemy: EnemyStateType) {
   const {id, endDistance, movePathIndex} = enemy
   const total = baseDataState.mapItem.start[movePathIndex].num - 1
   for(let i = 0; i < 4; i++) {
-    const newEnemy = _.cloneDeep(source.enemySource[12])
+    const newEnemy = _.cloneDeep(source.enemySource!["dance-little"])
     newEnemy.movePathIndex = enemy.movePathIndex
     newEnemy.level = enemy.level
     switch (i) {
@@ -205,7 +205,7 @@ function enemySkillFulisha(enemy: EnemyStateType) {
   const {id, endDistance, movePathIndex} = enemy
   const total = baseDataState.mapItem.start[movePathIndex].num - 1
   for(let i = 0; i < 2; i++) {
-    const newEnemy = _.cloneDeep(source.enemySource[13])
+    const newEnemy = _.cloneDeep(source.enemySource!['zombie-little'])
     newEnemy.movePathIndex = enemy.movePathIndex
     newEnemy.level = enemy.level
     switch (i) {

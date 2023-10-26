@@ -1,14 +1,15 @@
-import { EnemyStateType, TargetInfo } from "@/type/game";
-import { powAndSqrt, randomNumList } from "@/utils/tools";
+import { TargetInfo } from "@/type/game";
+import { powAndSqrt, randomEnemyNameList } from "@/utils/tools";
 import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
-import { TowerName } from "@/dataSource/towerData";
+import { TowerEnemyItem, TowerName } from "@/dataSource/towerData";
 import levelEnemyArr from "@/dataSource/levelEnemyArr";
 import { GridValue } from "../type/baseData";
 import { MapDataItem } from "@/dataSource/mapData";
+import enemyObj, { EnemyName } from "@/dataSource/enemyData";
 
 const source = sourceInstance.state
 
@@ -24,7 +25,7 @@ const setting = {
   /** 塔防名字 */
   tname: '' as TowerName,
   /** 敌人索引列表 */
-  enemyList: [] as {i: number, level?: number}[],
+  enemyList: [] as TowerEnemyItem[],
 }
 
 const baseDataState = {
@@ -87,10 +88,10 @@ function onLevelChange() {
       if(level < enemyDataArr.length) {
         enemyState.levelEnemy = enemyDataArr[level]
       } else {
-        enemyState.levelEnemy = randomNumList(level)
+        enemyState.levelEnemy = randomEnemyNameList(level)
       }
     } else { // 无限火力 第一关 每个怪兽都遍历生成一次
-      enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
+      enemyState.levelEnemy = level ? randomEnemyNameList(level + 5) : Object.keys(enemyObj) as EnemyName[]
     }
     if(level) {
       addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))

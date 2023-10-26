@@ -1,14 +1,14 @@
-import enemyData from "@/dataSource/enemyData"
+import enemyData, { EnemyName } from "@/dataSource/enemyData"
 import otherImgData, { OnloadImgKey } from "@/dataSource/otherImgData"
 import towerData, { TowerDataObj, TowerName } from "@/dataSource/towerData"
 import { EnemyStateType } from "@/type/game"
 import { gifToStaticImgList, loadImageWorker } from "@/utils/handleImg"
 import _ from "lodash"
-import { SourceStateType, TowerSource } from "./source"
+import { EnemySource, SourceStateType, TowerSource } from "./source"
 
 export type SourceClassType = {
   state: SourceStateType
-  loadingAllImg: (fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: number[]}) => Promise<number>
+  loadingAllImg: (fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: EnemyName[]}) => Promise<number>
   handleEnemyImg: (fn: (progress: number) => void) => Promise<void[]>
   handleTowerImg: () => Promise<void[]>
   handleOtherImg: () => Promise<(void | "")[]>
@@ -18,7 +18,7 @@ class SourceClass {
   public state: SourceStateType = {
     isGameInit: false,
     isGameing: false,
-    enemySource: [],
+    enemySource: void 0,
     enemyImgSource: {},
     towerSource: void 0,
     othOnloadImg: {},
@@ -34,7 +34,7 @@ class SourceClass {
     }
     return this._instance
   }
-  public async loadingAllImg(fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: number[]}) {
+  public async loadingAllImg(fn: (progress: number) => void, params?: {towerList: TowerName[], enemyList: EnemyName[]}) {
     if(this.state.progress >= 100) {
       return 100
     }
@@ -58,14 +58,16 @@ class SourceClass {
    * @param fn 敌人加载的回调
    * @param enemyList 只加载指定的敌人
    */
-  public async handleEnemyImg(fn: (progress: number) => void, enemyList?: number[]) {
-    if(!this.state.enemySource.length) {
-      this.state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
-    }
+  public async handleEnemyImg(fn: (progress: number) => void, enemyList?: EnemyName[]) {
     const _enemyData = enemyList?.map(i => enemyData[i]) ?? enemyData
-    const step = 70 / _enemyData.length
-    return Promise.all(_enemyData.map(async (enemy) => {
-      const item = this.state.enemyImgSource[enemy.name]
+    const arr = Object.keys(_enemyData) as EnemyName[]
+    if(!this.state.enemySource) {
+      this.state.enemySource = _.cloneDeep(_enemyData) as unknown as EnemySource
+    }
+    const step = 70 / arr.length
+    return Promise.all(arr.map(async (enemyName) => {
+      const item = this.state.enemyImgSource[enemyName]
+      const enemy = this.state.enemySource![enemyName]
       if(!item?.imgList?.length && !item?.img) {
         if(enemy.imgType === 'gif') {
           const imgList = await gifToStaticImgList(enemy.imgSource, true)

@@ -1,3 +1,4 @@
+import { EnemyName } from "./enemyData"
 import { TowerName } from "./towerData"
 
 /**
@@ -165,12 +166,12 @@ export const othMapData = {
         {tname: 'huonan', x: 14, y: 2},{tname: 'huonan', x: 15, y: 2},
       ],
       enemyArr: [
-        [0,17,18,17,18,16,16,9,9,11,11,18,14,14,18,7,7,10,9,8,6,5,4,3,2,1],
-        [0,7,16,7,16,7,16,7,16,7,16,7,16,7],
-        [0,9,16,9,16,9,16,9],
-        [0,17,17,17,17,17,17,17,17],
-        [0,14,7,14,7,14,7,14,7,14],
-        [0,15,17,16,14,11,10,9,8,7,6,5,4,3,2,1],
+        ['zombie-flag', 'godzilla', 'zombie-boom', 'godzilla', 'zombie-boom', 'rabbish-2','rabbish','rabbish-2','ice-car','ice-car','fulisha','fulisha','zombie-boom','kunkun','kunkun','zombie-dance','zombie-dance','afu','pole-vault','newspaper','rugby','iron-gate','zombie-3','zombie-2','zombie-1'],
+        ['zombie-flag','zombie-dance','rabbish-2','zombie-dance','rabbish-2','zombie-dance','rabbish-2','zombie-dance','rabbish-2','zombie-dance','rabbish-2','zombie-dance','rabbish-2'],
+        ['zombie-flag','fulisha','rabbish-2','fulisha','rabbish-2','fulisha','rabbish-2','fulisha','rabbish-2','fulisha','rabbish-2','fulisha','rabbish-2'],
+        ['zombie-flag','godzilla','godzilla','godzilla','godzilla','godzilla','godzilla','godzilla','godzilla','godzilla','godzilla'],
+        ['zombie-flag','kunkun','rabbish-2','kunkun','rabbish-2','kunkun','rabbish-2','kunkun','rabbish-2'],
+        ['zombie-flag','zombie-1','zombie-2','zombie-3','iron-gate','rugby','newspaper','zombie-dance','pole-vault','ice-car','afu','fulisha','kunkun','rabbish','rabbish-2','zombie-boom','godzilla'],
       ]
     },
   ] as MapDataItem[],
@@ -198,7 +199,7 @@ export type MapDataItem = {
   /** 初始化建造的塔防 */
   towerArr?: BuildTowerParams[]
   /** 敌人数组 */
-  enemyArr?: Array<number[]>
+  enemyArr?: Array<EnemyName[]>
 }
 
 export type MapDataInfo = {[key in number]: DirectionType}
