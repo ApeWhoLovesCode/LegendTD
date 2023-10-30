@@ -342,6 +342,7 @@ function enemySkillBoom(enemy: EnemyStateType) {
   const total = sourceInstance.state.enemyImgSource[enemy.name].skill!.total
   enemy.skill!.animation!.sum = total
   slowEnemy(enemy.id, {num: 0, time: total * 1000 / 60, type: 'stop'})
+  // onWorkerPostFn('playDomAudio', {id: enemy.id, volume: 0.8})
 }
 /** 召唤敌人的处理 */
 function callEnemy(newEnemy: EnemyStateType, i: number) {

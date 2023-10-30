@@ -2,7 +2,7 @@ import _ from "lodash";
 import sourceInstance from '@/stores/sourceInstance'
 import { WorkerFnName } from "./type/worker";
 
-import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
+import { addMoney, baseDataState, canvasInfo, checkMode, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
 import testBuildData from "./tools/testBuild";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
@@ -72,6 +72,7 @@ async function init() {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
   }, params)
   onWorkerPostFn('onProgress', 100)
+  checkMode()
   if(isExperience) {
     addMoney(10_000)
   } else if(isInfinite) {

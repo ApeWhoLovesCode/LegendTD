@@ -59,11 +59,17 @@ const canvasInfo = {
 }
 
 /** 是否是正常模式 */
-const isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
+let isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
 /** 是否是体验模式 */
-const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
+let isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
-const isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+let isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+
+const checkMode = () => {
+  isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
+  isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
+  isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+}
 
 /** 初始化所有格子 */
 function initAllGrid() {
@@ -152,6 +158,7 @@ export {
   isNormalMode,
   isInfinite,
   isExperience,
+  checkMode,
   initAllGrid,
   onLevelChange,
   checkValInCircle,
