@@ -163,7 +163,7 @@ export const othMapData = {
         {tname: 'huonan', x: 10, y: 5},{tname: 'delaiwen', x: 0, y: 2},{tname: 'delaiwen', x: 0, y: 6},{tname: 'ez', x: 19, y: 11},{tname: 'ez', x: 17, y: 0},
         {tname: 'twitch', x: 7, y: 8},{tname: 'twitch', x: 13, y: 4},{tname: 'twitch', x: 15, y: 10},{tname: 'jin', x: 10, y: 8},{tname: 'jin', x: 10, y: 7},
         {tname: 'delaiwen', x: 6, y: 10},{tname: 'delaiwen', x: 6, y: 11},
-        {tname: 'huonan', x: 14, y: 2},{tname: 'huonan', x: 15, y: 2},
+        {tname: 'huonan', x: 14, y: 2},{tname: 'ejiate', x: 15, y: 2},
       ],
       enemyArr: [
         ['zombie-flag', 'godzilla', 'zombie-boom', 'godzilla', 'zombie-boom', 'rabbish-2','rabbish','rabbish-2','ice-car','ice-car','fulisha','fulisha','zombie-boom','kunkun','kunkun','zombie-dance','zombie-dance','afu','pole-vault','newspaper','rugby','iron-gate','zombie-3','zombie-2','zombie-1'],
