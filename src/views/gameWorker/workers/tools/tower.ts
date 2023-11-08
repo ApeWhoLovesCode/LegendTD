@@ -114,11 +114,15 @@ function damageTower(t: TowerStateType, damage = 1) {
   t.hp.cur -= damage
   t.hp.isShow = true
   if(t.hp.cur <= 0) {
-    removeTower(t.id, false)
+    if(setting.isTowerCover) {
+      t.hp.cur = t.hp.sum
+    } else {
+      removeTower(t.id, false)
+    }
   }
 }
 
-/** 售卖防御塔 */
+/** 移除防御塔 */
 function removeTower(towerId: string, isSale = true) {
   const size = gameConfigState.size
   const tower = towerMap.get(towerId)!
@@ -130,6 +134,9 @@ function removeTower(towerId: string, isSale = true) {
     addMoney(saleMoney)
   }
   keepInterval.delete(`towerShoot-${id}`)
+  tower.enemySkill?.frozen?.ids.forEach(id => {
+    keepInterval.delete(id)
+  })
   towerMap.delete(towerId)
   onWorkerPostFn('saleTowerCallback', id)
 }
@@ -187,7 +194,7 @@ function checkEnemyAndTower() {
 function enterAttackScopeList(target: TargetCircleInfo) {
   const arr: EnemyStateType[] = []
   enemyMap.forEach(enemy => {
-    if(checkValInCircle(enemy, target)) {
+    if(!enemy.isDead && checkValInCircle(enemy, target)) {
       arr.push(enemy)
     }
   })

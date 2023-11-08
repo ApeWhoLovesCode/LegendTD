@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import Worker from "../views/gameWorker/workers/index.ts?worker";
-import { TowerName } from '@/dataSource/towerData';
+import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from '@/dataSource/towerData';
 import { useSettingStore } from "@/stores/setting";
 import { useSourceStore } from '@/stores/source';
 import { randomStr } from '@/utils/random';
@@ -9,11 +9,15 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import Loading from "./loading.vue";
 
 const props = withDefaults(defineProps<{
-  tname: TowerName;
-  enemyList?: {i: number, level?: number}[];
+  /** 只传塔防名字，代表只有一座塔防 */
+  tname?: TowerName;
+  /** 需要建造的塔防 */
+  towerList?: TowerCanvasTower[];
+  /** 生成的敌人 */
+  enemyList?: TowerCanvasEnemy[];
   isPause?: boolean;
 }>(), {
-  enemyList: () => [{i: 1}],
+  enemyList: () => [{enemyName: 'zombie-1'}],
   isPause: false,
 })
 const source = useSourceStore()
@@ -66,8 +70,8 @@ function initWorker() {
   worker.postMessage({
     init: true,
     isTowerCover: true,
-    tname: props.tname,
     enemyList: props.enemyList,
+    towerList: props.tname ? [{x: 4, y: 3, towerName: props.tname}] : props.towerList,
     source: {
       isMobile: source.isMobile,
       ratio: source.ratio,

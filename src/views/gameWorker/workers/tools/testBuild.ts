@@ -1,4 +1,7 @@
 import { TowerName } from "@/dataSource/towerData"
+import { addMoney, gameConfigState, setting } from "./baseData"
+import { enemyState } from "./enemy"
+import { buildTower } from "./tower"
 
 const testBuildData: {x: number, y: number, tname: TowerName}[] = [
   {x: 6, y: 4, tname: 'aixi'},{x: 4, y: 2, tname: 'lanbo'},{x: 4, y: 1, tname: 'delaiwen'},
@@ -11,4 +14,27 @@ const testBuildData: {x: number, y: number, tname: TowerName}[] = [
   {x: 8, y: 9, tname: 'huonan'},{x: 9, y: 9, tname: 'twitch'},{x: 10, y: 9, tname: 'twitch'},{x: 11, y: 9, tname: 'huonan'},
 ]
 
-export default testBuildData
+/** 测试: 建造塔防 */
+export function testBuildTowers() {
+  if(!setting.isDevTestMode) return
+  addMoney(999999)
+  enemyState.levelEnemy = ['zombie-dance','zombie-dance','fulisha','fulisha','rabbish-2','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha']
+  const size = gameConfigState.size
+  testBuildData.forEach(item => {
+    item.x *= size
+    item.y *= size
+    buildTower({...item}, false, false)
+  })
+  for(let i = 0; i < 20; i++) {
+    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false, false)
+  }
+  for(let i = 0; i < 4; i++) {
+    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false, false)
+  }
+  for(let i = 0; i < 4; i++) {
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
+  }
+  for(let i = 6; i < 15; i++) {
+    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
+  }
+}

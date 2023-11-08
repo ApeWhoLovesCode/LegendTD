@@ -1,14 +1,15 @@
-import { EnemyStateType, TargetInfo } from "@/type/game";
-import { powAndSqrt, randomNumList } from "@/utils/tools";
+import { TargetInfo } from "@/type/game";
+import { powAndSqrt, randomEnemyNameList } from "@/utils/tools";
 import { VueFnName } from "../type/worker";
 import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
-import { TowerName } from "@/dataSource/towerData";
+import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from "@/dataSource/towerData";
 import levelEnemyArr from "@/dataSource/levelEnemyArr";
 import { GridValue } from "../type/baseData";
 import { MapDataItem } from "@/dataSource/mapData";
+import enemyObj, { EnemyName } from "@/dataSource/enemyData";
 
 const source = sourceInstance.state
 
@@ -21,10 +22,10 @@ const setting = {
   isDevTestMode: false,
   /** 是否是塔防展示组件 */
   isTowerCover: false,
-  /** 塔防名字 */
-  tname: '' as TowerName,
-  /** 敌人索引列表 */
-  enemyList: [] as {i: number, level?: number}[],
+  /** 封面展示中的敌人列表 */
+  enemyList: [] as TowerCanvasEnemy[],
+  /** 封面展示中的塔防列表 */
+  towerList: [] as TowerCanvasTower[],
 }
 
 const baseDataState = {
@@ -58,11 +59,17 @@ const canvasInfo = {
 }
 
 /** 是否是正常模式 */
-const isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
+let isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
 /** 是否是体验模式 */
-const isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
+let isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
 /** 是否是无限火力模式 */
-const isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+let isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+
+const checkMode = () => {
+  isNormalMode = levelData[source.mapLevel].type === LevelDataItemEnum.Normal
+  isExperience = levelData[source.mapLevel].type === LevelDataItemEnum.Experience
+  isInfinite = levelData[source.mapLevel].type === LevelDataItemEnum.Endless
+}
 
 /** 初始化所有格子 */
 function initAllGrid() {
@@ -87,10 +94,10 @@ function onLevelChange() {
       if(level < enemyDataArr.length) {
         enemyState.levelEnemy = enemyDataArr[level]
       } else {
-        enemyState.levelEnemy = randomNumList(level)
+        enemyState.levelEnemy = randomEnemyNameList(level)
       }
     } else { // 无限火力 第一关 每个怪兽都遍历生成一次
-      enemyState.levelEnemy = level ? randomNumList(level + 5) : Array.from({length: enemyDataArr.length}, (_, i) => i)
+      enemyState.levelEnemy = level ? randomEnemyNameList(level + 5) : Object.keys(enemyObj) as EnemyName[]
     }
     if(level) {
       addMoney((level + 1) * (20 + Math.ceil(Math.random() * Math.ceil(level / 3))))
@@ -151,6 +158,7 @@ export {
   isNormalMode,
   isInfinite,
   isExperience,
+  checkMode,
   initAllGrid,
   onLevelChange,
   checkValInCircle,
