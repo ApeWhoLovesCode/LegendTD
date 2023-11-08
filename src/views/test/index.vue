@@ -22,14 +22,14 @@ onMounted(() => {
 
 <template>
   <div class='test'>
-    <!-- <div class="towerImg"> 
+    <div class="towerImg"> 
       <TowerCanvas 
-        tname='nanqiang' 
-        :enemy-list="[{i: 1, level: 2}]"
+        :enemy-list="[{enemyName: 'godzilla', level: 1}]"
+        :tower-list="[{towerName: 'nanqiang', x: 2, y: 2}, {towerName: 'jin', x: 3, y: 2}]"
       />
-    </div> -->
+    </div>
     <!-- <UserBall /> -->
-    <MyToolsFolder />
+    <!-- <MyToolsFolder /> -->
   </div>
 </template>
 

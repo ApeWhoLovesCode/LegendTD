@@ -1,37 +1,39 @@
 import { requireCDN } from "@/utils/handleImg";
 const  _requireCDN = (url: string) => requireCDN(url, 'zombies')
 
+const enemyObj: EnemyDataObj = {
+  'zombie-flag': {name: 'zombie-flag',   w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 50, hp: {cur: 10, sum: 10}, audioKey: 'pvz-pieces', imgType: 'gif', imgSource: _requireCDN('zombie_0_move.gif'), isForward: true, isFlip: false},
+  'zombie-1': {name: 'zombie-1',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 10, hp: {cur: 10, sum: 10}, audioKey: 'pvz', imgType: 'gif', imgSource: _requireCDN('zombie_1_move.gif'), isForward: true, isFlip: false},
+  'zombie-2': {name: 'zombie-2',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 15, hp: {cur: 25, sum: 25}, audioKey: 'pvz-hat', imgType: 'gif', imgSource: _requireCDN('zombie_2_move.gif'), isForward: true, isFlip: false},
+  'zombie-3': {name: 'zombie-3',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 20, hp: {cur: 40, sum: 40}, audioKey: 'pvz-drum', imgType: 'gif', imgSource: _requireCDN('zombie_3_move.gif'), isForward: true, isFlip: false},
+  'iron-gate': {name: 'iron-gate',      w: 1.5, h: 1.5, curSpeed: 0.04, speed: 0.04, reward: 30, hp: {cur: 60, sum: 60}, audioKey: 'pvz-door', imgType: 'gif', imgSource: _requireCDN('zombie_4_move.gif'), isForward: true, isFlip: false},
+  'rugby': {name: 'rugby',          w: 1.7, h: 1.7, curSpeed: 0.06, speed: 0.06, reward: 40, hp: {cur: 120, sum: 120}, audioKey: 'pvz-armor', imgType: 'gif', imgSource: _requireCDN('zombie_5_move.gif'), isForward: true, isFlip: false},
+  'newspaper': {name: 'newspaper',            w: 1.7, h: 1.7,  curSpeed: 0.06, speed: 0.06, reward: -100, hp: {cur: 30, sum: 30}, audioKey: 'pvz-newspaper', imgType: 'gif', imgSource: _requireCDN('zombie_6_move.gif'), isForward: true, isFlip: false},
+  'zombie-dance': {name: 'zombie-dance',  w: 1.7, h: 1.7, curSpeed: 0.04, speed: 0.04, reward: 80, hp: {cur: 350, sum: 350}, skill: {time: 8000}, audioKey: 'pvz-dance', imgType: 'gif', imgSource: _requireCDN('zombie_7_move.gif'), isForward: true, isFlip: false},
+  'pole-vault': {name: 'pole-vault',            w: 2, h: 1.7, curSpeed: 0.08, speed: 0.08, reward: 30, hp: {cur: 30, sum: 30}, audioKey: 'pvz-rod', imgType: 'gif', imgSource: _requireCDN('zombie_8_move.gif'), isForward: true, isFlip: false},
+  'ice-car': {name: 'ice-car',        w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 110, hp: {cur: 200, sum: 200}, skill: {time: 5000, r: 3, keepTime: 3000, animation: {cur: 120, sum: 120}}, audioKey: 'pvz-ice-car', imgType: 'gif', imgSource: _requireCDN('zombie_9_move.gif'), isForward: true, isFlip: false},
+  'afu': {name: 'afu',            w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 500, sum: 500}, audioKey: 'afu', imgType: 'png', imgSource: _requireCDN('afu.png'), isForward: false, isFlip: true},
+  'fulisha': {name: 'fulisha',        w: 1.8, h: 1.8,  curSpeed: 0.03, speed: 0.03, reward: 150, hp: {cur: 800, sum: 800}, skill: {time: 6000}, audioKey: 'pvz-fulisha', imgType: 'png', imgSource: _requireCDN('fulisha.png'), isForward: true, isFlip: false},
+  'dance-little': {name: 'dance-little',        w: 1.5, h: 1.5,  curSpeed: 0.04, speed: 0.04, reward: 5, hp: {cur: 15, sum: 15}, audioKey: 'pvz-dance-little', imgType: 'gif', imgSource: _requireCDN('zombie_10_move.gif'), isForward: true, isFlip: false},
+  'zombie-little': {name: 'zombie-little',        w: 1.5, h: 1.5,  curSpeed: 0.06, speed: 0.06, reward: 5, hp: {cur: 10, sum: 10}, audioKey: 'pvz-little', imgType: 'gif', imgSource: _requireCDN('zombie_11_move.gif'), isForward: true, isFlip: false},
+  'kunkun': {name: 'kunkun',         w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 160, hp: {cur: 800, sum: 800}, skill: {time: 10000}, audioKey: 'kunkun', imgType: 'gif', imgSource: _requireCDN('kunkun.gif'), isForward: false, isFlip: false},
+  'rabbish': {name: 'rabbish',        w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 50, hp: {cur: 300, sum: 300}, audioKey: 'rabbish', imgType: 'gif', imgSource: _requireCDN('rabbish_1.gif'), isForward: false, isFlip: true},
+  'rabbish-2': {name: 'rabbish-2',    skill: {time: 3000, r:2, animation: {cur: 80, sum: 80}}, w: 1.8, h: 1.8, curSpeed: 0.04, speed: 0.04, reward: 100, hp: {cur: 400, sum: 400}, audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), isForward: false, isFlip: true},
+  'godzilla': {name: 'godzilla',      skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 4}, w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), isForward: false, isFlip: true},
+  'zombie-boom': {name: 'zombie-boom', skill: {time: 3000, r: 2, animation: {cur: 120, sum: 120}, damage: 10, img: _requireCDN('zombie-boom-skill.gif')}, w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 150, sum: 150}, audioKey: 'pvz-boom', imgType: 'gif', imgSource: _requireCDN('zombie-boom.gif'), dieImg: _requireCDN('zombie-boom-skill2.gif'), isForward: true, isFlip: false},
+}
+export default enemyObj
 
+export type EnemyName = 'zombie-flag' | 'zombie-1' | 'zombie-2' | 'zombie-3' | 'iron-gate'
+| 'rugby' | 'newspaper' | 'zombie-dance' | 'pole-vault' | 'ice-car'
+| 'afu' | 'fulisha' | 'dance-little' | 'zombie-little' | 'kunkun'
+| 'rabbish' | 'rabbish-2' | 'godzilla' | 'zombie-boom'
 
+export type EnemyDataObj = {[key in EnemyName]: EnemyType}
 
-
-
-const enemyArr: EnemyType[] = [
-  {name: '旗子',            w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 50, hp: {cur: 10, sum: 10, size: 0.16}, audioKey: 'pvz-pieces', imgType: 'gif', imgSource: _requireCDN('zombies_0_move.gif'), isForward: true, isFlip: false},
-  {name: 'zombies-1',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 10, hp: {cur: 10, sum: 10, size: 0.16}, audioKey: 'pvz', imgType: 'gif', imgSource: _requireCDN('zombies_1_move.gif'), isForward: true, isFlip: false},
-  {name: 'zombies-2',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 15, hp: {cur: 25, sum: 25, size: 0.16}, audioKey: 'pvz-hat', imgType: 'gif', imgSource: _requireCDN('zombies_2_move.gif'), isForward: true, isFlip: false},
-  {name: 'zombies-3',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 20, hp: {cur: 40, sum: 40, size: 0.16}, audioKey: 'pvz-drum', imgType: 'gif', imgSource: _requireCDN('zombies_3_move.gif'), isForward: true, isFlip: false},
-  {name: '铁门',            w: 1.5, h: 1.5, curSpeed: 0.04, speed: 0.04, reward: 30, hp: {cur: 60, sum: 60, size: 0.16}, audioKey: 'pvz-door', imgType: 'gif', imgSource: _requireCDN('zombies_4_move.gif'), isForward: true, isFlip: false},
-  {name: '橄榄球',          w: 1.7, h: 1.7, curSpeed: 0.06, speed: 0.06, reward: 40, hp: {cur: 120, sum: 120, size: 0.16}, audioKey: 'pvz-armor', imgType: 'gif', imgSource: _requireCDN('zombies_5_move.gif'), isForward: true, isFlip: false},
-  {name: '报纸',            w: 1.7, h: 1.7,  curSpeed: 0.06, speed: 0.06, reward: -100, hp: {cur: 30, sum: 30, size: 0.16}, audioKey: 'pvz-newspaper', imgType: 'gif', imgSource: _requireCDN('zombies_6_move.gif'), isForward: true, isFlip: false},
-  {name: 'zombies-dance',  w: 1.7, h: 1.7, curSpeed: 0.04, speed: 0.04, reward: 80, hp: {cur: 350, sum: 350, size: 0.16}, skill: {time: 10000}, audioKey: 'pvz-dance', imgType: 'gif', imgSource: _requireCDN('zombies_7_move.gif'), isForward: true, isFlip: false},
-  {name: '撑杆',            w: 2, h: 1.7, curSpeed: 0.08, speed: 0.08, reward: 30, hp: {cur: 30, sum: 30, size: 0.16}, audioKey: 'pvz-rod', imgType: 'gif', imgSource: _requireCDN('zombies_8_move.gif'), isForward: true, isFlip: false},
-  {name: 'ice-car',        w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 110, hp: {cur: 200, sum: 200, size: 0.16}, skill: {time: 5000, r: 3, keepTime: 3000, animation: {cur: 120, sum: 120}}, audioKey: 'pvz-ice-car', imgType: 'gif', imgSource: _requireCDN('zombies_9_move.gif'), isForward: true, isFlip: false},
-  {name: 'afu',            w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 500, sum: 500, size: 0.16}, audioKey: 'afu', imgType: 'png', imgSource: _requireCDN('afu.png'), isForward: false, isFlip: true},
-  {name: 'fulisha',        w: 1.8, h: 1.8,  curSpeed: 0.03, speed: 0.03, reward: 150, hp: {cur: 800, sum: 800, size: 0.16}, skill: {time: 5000}, audioKey: 'pvz-fulisha', imgType: 'png', imgSource: _requireCDN('fulisha.png'), isForward: true, isFlip: false},
-  {name: '舞王小兵',        w: 1.5, h: 1.5,  curSpeed: 0.04, speed: 0.04, reward: 5, hp: {cur: 15, sum: 15, size: 0.16}, audioKey: 'pvz-dance-little', imgType: 'gif', imgSource: _requireCDN('zombies_10_move.gif'), isForward: true, isFlip: false},
-  {name: '小鬼僵尸',        w: 1.5, h: 1.5,  curSpeed: 0.06, speed: 0.06, reward: 5, hp: {cur: 10, sum: 10, size: 0.16}, audioKey: 'pvz-little', imgType: 'gif', imgSource: _requireCDN('zombies_11_move.gif'), isForward: true, isFlip: false},
-  {name: 'kunkun',         w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 160, hp: {cur: 800, sum: 800, size: 0.16}, skill: {time: 12000}, audioKey: 'kunkun', imgType: 'gif', imgSource: _requireCDN('kunkun.gif'), isForward: false, isFlip: false},
-  {name: 'rabbish',        w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 50, hp: {cur: 300, sum: 300, size: 0.16}, audioKey: 'rabbish', imgType: 'gif', imgSource: _requireCDN('rabbish_1.gif'), isForward: false, isFlip: true},
-  {name: 'rabbish-2',      w: 1.8, h: 1.8, curSpeed: 0.04, speed: 0.04, reward: 100, hp: {cur: 400, sum: 400, size: 0.16}, skill: {time: 3000, r:2, animation: {cur: 80, sum: 80}},  audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), isForward: false, isFlip: true},
-  {name: 'godzilla',       w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400, size: 0.16}, skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 4}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), isForward: false, isFlip: true},
-]
-export default enemyArr
-
-// w, h, curSpeed, speed, hp.size 的大小一开始都是size的倍数
 /** 敌人资源  */
 export type EnemyType = {
-  name: string
+  name: EnemyName
   w: number
   h: number
   /** 图片的方向是正的 */
@@ -46,7 +48,6 @@ export type EnemyType = {
   hp: {
     cur: number
     sum: number
-    size: number
     level?: number
   }
   /** 僵尸技能 */
@@ -75,6 +76,12 @@ export type EnemyType = {
     } 
     /** 被技能锁定的塔防 */
     towerIds?: string[]
+    /** 技能图片 */
+    img?: string
+    /** 技能释放次数 */
+    count?: number
+    /** 技能是否触发 */
+    isTriggle?: boolean
   }
   /** 音频播放的key值 */
   audioKey: string
@@ -82,6 +89,8 @@ export type EnemyType = {
   imgType: 'gif' | 'png'
   /** 图片资源 */
   imgSource: string
+  /** 死亡图片 */
+  dieImg?: string
 }
 
 /** 敌人的最高等级 */
