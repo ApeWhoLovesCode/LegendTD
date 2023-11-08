@@ -4,7 +4,7 @@ import { WorkerFnName } from "./type/worker";
 
 import { addMoney, baseDataState, canvasInfo, checkMode, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
 import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
-import testBuildData from "./tools/testBuild";
+import { testBuildTowers } from "./tools/testBuild";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
@@ -17,6 +17,7 @@ import { addRowColArr } from "@/utils/direction";
 import levelData from "@/dataSource/levelData";
 import { GridInfo, MapGridInfo, towerCanvasMapData } from "@/dataSource/mapData";
 import { WithPartial } from "@/type";
+import { getLoadingAllImgParams } from "./tools/towerCanvas";
 
 addEventListener('message', e => {
   const { data } = e;
@@ -31,9 +32,9 @@ addEventListener('message', e => {
     source.mapLevel = data.source.mapLevel
     setting.isHighRefreshScreen = data.setting.isHighRefreshScreen
     if(data.isTowerCover) {
-      setting.tname = data.tname
-      setting.enemyList = data.enemyList
       setting.isTowerCover = data.isTowerCover
+      setting.enemyList = data.enemyList
+      setting.towerList = data.towerList
     }
     init()
   } 
@@ -67,19 +68,18 @@ addEventListener('message', e => {
 })
 
 async function init() {
-  const params = setting.isTowerCover ? {enemyList: setting.enemyList?.map(e => e.enemyName) ?? [], towerList: [setting.tname]} : void 0
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
-  }, params)
+  }, getLoadingAllImgParams())
   onWorkerPostFn('onProgress', 100)
   checkMode()
+  initAllGrid()
   if(isExperience) {
     addMoney(10_000)
   } else if(isInfinite) {
     addMoney(94_999)
   }
   if(!setting.isTowerCover) {
-    initAllGrid()
     onLevelChange()
   }
   initMovePath()
@@ -90,7 +90,9 @@ async function init() {
     initBuildTowers()
     testBuildTowers()
   } else { // 塔防展示组件
-    buildTower({tname: setting.tname, x: 4 * gameConfigState.size, y: 3 * gameConfigState.size}, false, false)
+    setting.towerList?.forEach(t => {
+      buildTower({tname: t.towerName, x: t.x * gameConfigState.size, y: t.y * gameConfigState.size}, false, false)
+    })
     makeEnemy()
     startAnimation()
   }
@@ -236,31 +238,6 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
     return
   }
   onWorkerPostFn('showTowerBuilding', {left, top})
-}
-
-/** 测试: 建造塔防 */
-function testBuildTowers() {
-  if(!setting.isDevTestMode) return
-  addMoney(999999)
-  enemyState.levelEnemy = ['zombie-dance','zombie-dance','fulisha','fulisha','rabbish-2','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha','zombie-dance','zombie-dance','fulisha','fulisha']
-  const size = gameConfigState.size
-  testBuildData.forEach(item => {
-    item.x *= size
-    item.y *= size
-    buildTower({...item}, false, false)
-  })
-  for(let i = 0; i < 20; i++) {
-    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 6; i < 15; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
-  }
 }
 
 export default {}

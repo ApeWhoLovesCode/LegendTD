@@ -114,7 +114,11 @@ function damageTower(t: TowerStateType, damage = 1) {
   t.hp.cur -= damage
   t.hp.isShow = true
   if(t.hp.cur <= 0) {
-    removeTower(t.id, false)
+    if(setting.isTowerCover) {
+      t.hp.cur = t.hp.sum
+    } else {
+      removeTower(t.id, false)
+    }
   }
 }
 

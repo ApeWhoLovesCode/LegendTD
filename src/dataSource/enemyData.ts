@@ -1,7 +1,7 @@
 import { requireCDN } from "@/utils/handleImg";
 const  _requireCDN = (url: string) => requireCDN(url, 'zombies')
 
-const enemyObj: TowerDataObj = {
+const enemyObj: EnemyDataObj = {
   'zombie-flag': {name: 'zombie-flag',   w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 50, hp: {cur: 10, sum: 10}, audioKey: 'pvz-pieces', imgType: 'gif', imgSource: _requireCDN('zombie_0_move.gif'), isForward: true, isFlip: false},
   'zombie-1': {name: 'zombie-1',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 10, hp: {cur: 10, sum: 10}, audioKey: 'pvz', imgType: 'gif', imgSource: _requireCDN('zombie_1_move.gif'), isForward: true, isFlip: false},
   'zombie-2': {name: 'zombie-2',      w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 15, hp: {cur: 25, sum: 25}, audioKey: 'pvz-hat', imgType: 'gif', imgSource: _requireCDN('zombie_2_move.gif'), isForward: true, isFlip: false},
@@ -19,7 +19,7 @@ const enemyObj: TowerDataObj = {
   'kunkun': {name: 'kunkun',         w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 160, hp: {cur: 800, sum: 800}, skill: {time: 10000}, audioKey: 'kunkun', imgType: 'gif', imgSource: _requireCDN('kunkun.gif'), isForward: false, isFlip: false},
   'rabbish': {name: 'rabbish',        w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 50, hp: {cur: 300, sum: 300}, audioKey: 'rabbish', imgType: 'gif', imgSource: _requireCDN('rabbish_1.gif'), isForward: false, isFlip: true},
   'rabbish-2': {name: 'rabbish-2',    skill: {time: 3000, r:2, animation: {cur: 80, sum: 80}}, w: 1.8, h: 1.8, curSpeed: 0.04, speed: 0.04, reward: 100, hp: {cur: 400, sum: 400}, audioKey: 'rabbish-2', imgType: 'gif', imgSource: _requireCDN('rabbish_2.gif'), isForward: false, isFlip: true},
-  'godzilla': {name: 'godzilla',      skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 4}, w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), isForward: false, isFlip: true},
+  'godzilla': {name: 'godzilla',      skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 6}, w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400}, audioKey: 'pvz-godzilla', imgType: 'png', imgSource: _requireCDN('godzilla.png'), isForward: false, isFlip: true},
   'zombie-boom': {name: 'zombie-boom', skill: {time: 3000, r: 2, animation: {cur: 120, sum: 120}, damage: 10, img: _requireCDN('zombie-boom-skill.gif')}, w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 150, sum: 150}, audioKey: 'pvz-boom', imgType: 'gif', imgSource: _requireCDN('zombie-boom.gif'), dieImg: _requireCDN('zombie-boom-skill2.gif'), isForward: true, isFlip: false},
 }
 export default enemyObj
@@ -29,7 +29,7 @@ export type EnemyName = 'zombie-flag' | 'zombie-1' | 'zombie-2' | 'zombie-3' | '
 | 'afu' | 'fulisha' | 'dance-little' | 'zombie-little' | 'kunkun'
 | 'rabbish' | 'rabbish-2' | 'godzilla' | 'zombie-boom'
 
-export type TowerDataObj = {[key in EnemyName]: EnemyType}
+export type EnemyDataObj = {[key in EnemyName]: EnemyType}
 
 /** 敌人资源  */
 export type EnemyType = {

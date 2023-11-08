@@ -183,7 +183,8 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
   // 敌人扣血
   enemy.hp.cur = Math.max(hp, 0)
   if(enemy.hp.cur <= 0) {
-    if(setting.isTowerCover) {
+    // 封面预览敌人（除了召唤怪外，血量为0就满血）
+    if(setting.isTowerCover && !enemy.id.includes('callenemy')) {
       enemy.hp.cur = enemy.hp.sum
       return
     }

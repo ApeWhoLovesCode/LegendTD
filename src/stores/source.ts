@@ -1,4 +1,4 @@
-import enemyData, { EnemyName, TowerDataObj } from '@/dataSource/enemyData'
+import enemyData, { EnemyName } from '@/dataSource/enemyData'
 import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
 import towerData, { TowerName } from '@/dataSource/towerData'
 import { EnemyStateType, TowerStateType } from '@/type/game'

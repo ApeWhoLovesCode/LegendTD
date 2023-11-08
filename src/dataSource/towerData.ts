@@ -117,7 +117,11 @@ export type TowerStaticItem = {
   /** 说明文本 */
   explain: string
   /** 展示的敌人数组 */
-  enemyList?: TowerEnemyItem[]
+  enemyList?: TowerCanvasEnemy[]
 }
 
-export type TowerEnemyItem = {enemyName: EnemyName, level?: number}
+/** 塔防封面钟的塔防 */
+export type TowerCanvasTower = {towerName: TowerName, x: number, y: number}
+
+/** 塔防封面中的敌人 */
+export type TowerCanvasEnemy = {enemyName: EnemyName, level?: number}

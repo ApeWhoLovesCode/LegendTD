@@ -133,11 +133,11 @@ function setEnemy() {
 function damageTheEnemy(enemy: EnemyStateType, damage: number) {
   enemy.hp.cur = Math.max(enemy.hp.cur - damage, 0)
   if(enemy.hp.cur <= 0) {
-    if(!setting.isTowerCover) {
+    if(setting.isTowerCover && !enemy.id.includes('callenemy')) {
+      enemy.hp.cur = enemy.hp.sum
+    } else {
       removeEnemy([enemy.id])
       addMoney(enemy.reward)
-    } else {
-      enemy.hp.cur = enemy.hp.sum
     }
   }
 }
@@ -286,8 +286,8 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
   towerMap.forEach(t => {
     if(enemy.skill!.towerIds?.includes(t.id)) {
       const {cur, sum} = enemy.skill!.animation!
-      // 每隔 sum(50) / damage(5) = 10 掉一次血 
-      if(cur > 0 && !(cur % Math.floor(sum / enemy.skill!.damage!))) {
+      // 每隔 Math.floor(sum(60 - 1) / damage(4)) = 14 掉一次血，减一是防止最后一次不触发
+      if(cur > 0 && !(cur % Math.floor((sum - 1) / enemy.skill!.damage!))) {
         damageTower(t)
       }
     }

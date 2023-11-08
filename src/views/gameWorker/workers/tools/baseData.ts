@@ -5,7 +5,7 @@ import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
-import { TowerEnemyItem, TowerName } from "@/dataSource/towerData";
+import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from "@/dataSource/towerData";
 import levelEnemyArr from "@/dataSource/levelEnemyArr";
 import { GridValue } from "../type/baseData";
 import { MapDataItem } from "@/dataSource/mapData";
@@ -22,10 +22,10 @@ const setting = {
   isDevTestMode: false,
   /** 是否是塔防展示组件 */
   isTowerCover: false,
-  /** 塔防名字 */
-  tname: '' as TowerName,
-  /** 敌人索引列表 */
-  enemyList: [] as TowerEnemyItem[],
+  /** 封面展示中的敌人列表 */
+  enemyList: [] as TowerCanvasEnemy[],
+  /** 封面展示中的塔防列表 */
+  towerList: [] as TowerCanvasTower[],
 }
 
 const baseDataState = {
