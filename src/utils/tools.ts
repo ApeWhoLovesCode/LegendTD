@@ -21,9 +21,11 @@ export function checkInRect(t: {x: number, y: number}, rect: {x?: number, y?: nu
   return rx < t.x && t.x < rx + rect.w && ry < t.y && t.y < ry + rect.h
 }
 
+type CreateEnemy = Exclude<EnemyName, 'dance-little' | 'zombie-little' | 'zombie-flag'>
+
 /** 根据概率生成敌人索引 */
 export function createProbNum(level: number): EnemyName {
-  const obj: {[key in EnemyName]: number} = {
+  const obj: {[key in CreateEnemy]: number} = {
     'zombie-1': 4,
     'zombie-2': 5,
     'zombie-3': 6,
@@ -34,6 +36,7 @@ export function createProbNum(level: number): EnemyName {
     'pole-vault': 10,
     'ice-car': 14,
     'afu': 12,
+    'fulisha': 14,
     'kunkun': 16,
     'rabbish': 12,
     'rabbish-2': 15,
@@ -43,14 +46,14 @@ export function createProbNum(level: number): EnemyName {
   const powN = Math.sqrt(Math.sqrt(level))
   let sum = 0
   for(const key in obj) {
-    let item = obj[key as EnemyName]
+    let item = obj[key as CreateEnemy]
     item = Math.pow(item, powN)
     sum += item
   }
   const num = randomNum(1, sum)
   for(const key in obj) {
-    if(!obj[key as EnemyName]) continue
-    sum -= obj[key as EnemyName]
+    if(!obj[key as CreateEnemy]) continue
+    sum -= obj[key as CreateEnemy]
     if(num > sum) {
       return key as EnemyName
     }
