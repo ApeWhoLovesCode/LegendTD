@@ -5,11 +5,11 @@ import keepInterval from "@/utils/keepInterval";
 import sourceInstance from "@/stores/sourceInstance";
 import { enemyState, makeEnemy } from "./enemy";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
-import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from "@/dataSource/towerData";
+import { TowerCanvasEnemy, TowerCanvasTower, EnemyName } from "@/type";
 import levelEnemyArr from "@/dataSource/levelEnemyArr";
 import { GridValue } from "../type/baseData";
 import { MapDataItem } from "@/dataSource/mapData";
-import enemyObj, { EnemyName } from "@/dataSource/enemyData";
+import enemyObj from "@/dataSource/enemyData";
 
 const source = sourceInstance.state
 

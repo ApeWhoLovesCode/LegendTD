@@ -1,5 +1,4 @@
-import { EnemyName } from "./enemyData"
-import { TowerName } from "./towerData"
+import { EnemyName, TowerName } from "@/type"
 
 /**
  * 地图数据 

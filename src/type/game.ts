@@ -1,11 +1,7 @@
 /** 游戏详情页类型 */
 
-import { EnemyName, EnemyType } from "@/dataSource/enemyData"
-import { GridInfo } from "@/dataSource/mapData"
 import { SkillType } from "@/dataSource/skillData"
-import { TowerSlowType, TowerType } from "@/dataSource/towerData"
-import { DebouncedFunc } from "lodash"
-import { ImgLoadType } from "."
+import { EnemyType, ImgLoadType, TowerType } from "."
 
 /** 游戏配置信息 */
 export type GameConfigType = {
@@ -43,124 +39,6 @@ export type GameBaseData = {
   hp: number
   /** 金钱 */
   money: number
-}
-
-/** 敌人的类型 */
-export type EnemyStateType = {
-  id: string
-  x: number
-  y: number
-  /** 敌人等级 */
-  level: number
-  /** 中毒 */
-  poison?: EnemyPoison
-  /** 减速类型 */
-  slowType?: TowerSlowType
-  /** 距离终点还有多少格 */
-  endDistance: number
-  /** 在当前格行进的距离 */
-  gridDistance: number
-  /** gif图遍历的帧数的索引 */
-  framesNum: number
-  /** 当前绘画到的图片索引，用于gif图 */
-  imgIndex: number
-  /** 敌人移动路径(会有多个路径的情况)的索引 */
-  movePathIndex: number
-  /** 敌人是否已经死亡 */
-  isDead: boolean
-} & EnemyType
-
-/** 敌人数据 */
-export type EnemyState = {
-  /** 当前等级需要的敌人 */
-  levelEnemy: EnemyName[]
-  /** 已上场的敌人数量 */
-  createdEnemyNum: number
-  /** 敌人的移动轨迹 x坐标, y坐标, x_y方向 1:左 2:下 3:右 4:上 */
-  movePath: GridInfo[][]
-}
-/** 敌人中毒 */
-export type EnemyPoison = {
-  /** 中毒伤害 最终会乘等级来计算伤害 */
-  damage: number
-  /** 伤害等级 */
-  level: number
-  /** 是否到时间允许继续中毒了 */
-  isToTimePoison?: boolean
-  /** 中毒触发函数 */
-  poisonFun?: DebouncedFunc<(e_id: string, t: TowerType) => void>
-}
-
-/** 子弹类型 */
-export type BulletType = {
-  x: number
-  y: number
-  /** 往目标方向增加的 x */
-  addX: number
-  /** 往目标方向增加的 y */
-  addY: number
-  /** 子弹和敌人的距离 */
-  xy: number
-  /** 目标id */
-  e_id: string
-  /** 当前攻击的id集合 */
-  attactIdSet?: Set<string>
-  /** 实际中子弹要旋转的角度 */
-  deg?: number
-  /** 子弹是否回收中 */
-  isRecycling?: boolean
-  /** 子弹旋转的角度 */
-  rotateDeg?: number
-}
-
-/** 塔防的类型 */
-export type TowerStateType = {
-  id: string
-  x: number
-  y: number
-  /** 是否到时间允许射击了 */
-  isToTimeShoot?: boolean
-  /** 防抖的射击函数 */
-  shootFun?: DebouncedFunc<(eIdList: string[], t_i: number) => void>
-  /** 攻击的目标id数组 */
-  targetIdList: string[]
-  /** 当前攻击的目标，用于攻击单一目标切换目标后的判断 */
-  curTargetId: string
-  /** 子弹数组 */
-  bulletArr: BulletType[]
-  /** 塔防加载好的图片 */
-  onloadImg: CanvasImageSource
-  /** 子弹图片 */
-  onloadbulletImg: CanvasImageSource
-  /** 子弹的缩放倍数 */
-  scale?: number 
-  /** 子弹的缩放倍数变化值 */
-  addScale?: number
-  /** 子弹发射中 */
-  isBulleting?: boolean
-  /** 用于火男火焰喷柱的粗细变化 */
-  thickness?: number
-  /** 之前的伤害 */
-  preDamage?: number
-  /** 受敌人技能影响 */
-  enemySkill?: {[key in TowerEnemySkillType]?: {ids: string[]}}
-} & TowerType
-/** 塔防的数据 */
-export type TowerState = {
-  /** 塔防的位置 */
-  building: {left: number, top: number, isShow: boolean}
-  /** 塔防的攻击范围 */
-  buildingScope: BuildingScope
-}
-/** 塔防受敌人技能影响的类型 */
-export type TowerEnemySkillType = 'frozen' 
-export type BuildingScope = {
-  left: number, 
-  top: number, 
-  r: number, 
-  isShow: boolean, 
-  towerId: string, 
-  saleMoney: number
 }
 
 /** 游戏音乐 */

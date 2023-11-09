@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import { onMounted, reactive, computed } from 'vue';
 import { ElDrawer, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
-import towerData, { TowerType, towerStaticData, TowerName } from '@/dataSource/towerData';
+import towerData, { towerStaticData } from '@/dataSource/towerData';
 import ScrollCircle from '@/components/scrollCircle/index.vue'
 import ScrollCircleItem from '@/components/scrollCircle/item.vue'
 import { useUserInfoStore } from '@/stores/userInfo';
 import TowerCanvas from './towerCanvas.vue';
 import { useSourceStore } from '@/stores/source';
+import { TowerName, TowerType } from '@/type';
 
 const userStore = useUserInfoStore()
 const source = useSourceStore()
@@ -40,8 +41,6 @@ const onPageChange = ({pageNum, pageSize}: {pageNum: number, pageSize: number}) 
   state.pageNum = pageNum
   state.pageSize = pageSize
 }
-
-const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 const isSelect = (name: TowerName) => (userStore.towerSelectList.find(tname => tname === name) !== void 0)
 
@@ -131,7 +130,7 @@ onMounted(() => {
       >
         <ScrollCircleItem 
           v-for="(item, i) in state.items" 
-          :key="cardIndex(i)" 
+          :key="item.name" 
           :index="i"
           @on-click="() => {
             handleSelectTower(item.name)

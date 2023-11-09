@@ -1,9 +1,10 @@
-import enemyData, { EnemyDataObj, EnemyName } from "@/dataSource/enemyData"
+import enemyData from "@/dataSource/enemyData"
 import otherImgData, { OnloadImgKey } from "@/dataSource/otherImgData"
-import towerData, { TowerCanvasTower, TowerDataObj, TowerName } from "@/dataSource/towerData"
+import towerData from "@/dataSource/towerData"
 import { gifToStaticImgList, loadImageWorker } from "@/utils/handleImg"
 import _ from "lodash"
 import { EnemySource, SourceStateType, TowerSource } from "./source"
+import { EnemyDataObj, EnemyName, TowerCanvasTower, TowerDataObj, TowerName } from "@/type"
 
 export type HandleEnemyTowerImgParams = {
   towerList: TowerCanvasTower[]

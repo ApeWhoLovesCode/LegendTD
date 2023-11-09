@@ -20,7 +20,7 @@ import useTower from "./hooks/useTower";
 import { ElMessage } from "element-plus";
 import { KeepIntervalKey } from "@/utils/keepInterval";
 import { VueFnName, WorkerFnName } from "./workers/type/worker";
-import { TowerName } from "@/dataSource/towerData";
+import { TowerName } from "@/type";
 import { useUserInfoStore } from "@/stores/userInfo";
 import { updateScoreApi } from "@/service/rank";
 import { useRoute } from "vue-router";

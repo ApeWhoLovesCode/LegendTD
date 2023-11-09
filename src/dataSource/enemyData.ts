@@ -1,3 +1,4 @@
+import { EnemyDataObj, EnemyName, EnemyStaticItem } from "@/type/enemy";
 import { requireCDN } from "@/utils/handleImg";
 const  _requireCDN = (url: string) => requireCDN(url, 'zombies')
 
@@ -24,73 +25,26 @@ const enemyObj: EnemyDataObj = {
 }
 export default enemyObj
 
-export type EnemyName = 'zombie-flag' | 'zombie-1' | 'zombie-2' | 'zombie-3' | 'iron-gate'
-| 'rugby' | 'newspaper' | 'zombie-dance' | 'pole-vault' | 'ice-car'
-| 'afu' | 'fulisha' | 'dance-little' | 'zombie-little' | 'kunkun'
-| 'rabbish' | 'rabbish-2' | 'godzilla' | 'zombie-boom'
-
-export type EnemyDataObj = {[key in EnemyName]: EnemyType}
-
-/** 敌人资源  */
-export type EnemyType = {
-  name: EnemyName
-  w: number
-  h: number
-  /** 图片的方向是正的 */
-  isForward: boolean
-  /** 图片的方向是否要翻转 */
-  isFlip: boolean
-  /** 当前的速度 */
-  curSpeed: number
-  /** 原本的速度 */
-  speed: number
-  reward: number
-  hp: {
-    cur: number
-    sum: number
-    level?: number
-  }
-  /** 僵尸技能 */
-  skill?: {
-    /** 技能cd */
-    time: number
-    /** 技能持续时间 */
-    keepTime?: number
-    /** 技能动画播放 */
-    animation?: {
-      cur: number
-      sum: number
-    }
-    /** 技能对塔防的总伤害 */
-    damage?: number
-    /** 技能范围，初始值是size的多少倍 */
-    r?: number
-    /** 技能方向 */
-    direction?: {
-      x: number
-      y: number
-      /** y = kx + b 的斜率 */
-      k: number
-      /** y轴截距 */
-      b: number
-    } 
-    /** 被技能锁定的塔防 */
-    towerIds?: string[]
-    /** 技能图片 */
-    img?: string
-    /** 技能释放次数 */
-    count?: number
-    /** 技能是否触发 */
-    isTriggle?: boolean
-  }
-  /** 音频播放的key值 */
-  audioKey: string
-  /** 图片类型 */
-  imgType: 'gif' | 'png'
-  /** 图片资源 */
-  imgSource: string
-  /** 死亡图片 */
-  dieImg?: string
+export const enemyStaticData: {[key in EnemyName]: EnemyStaticItem} = {
+  'zombie-flag': {name: '旗子僵尸', explain: '作者很懒没写什么...'},
+  'zombie-1': {name: '普通僵尸', explain: '作者很懒没写什么...'},
+  'zombie-2': {name: '路障僵尸', explain: '作者很懒没写什么...'},
+  'zombie-3': {name: '铁桶僵尸', explain: '作者很懒没写什么...'},
+  'iron-gate': {name: '铁门僵尸', explain: '作者很懒没写什么...'},
+  'rugby': {name: '橄榄球僵尸', explain: '作者很懒没写什么...'},
+  'newspaper': {name: '报纸僵尸', explain: '穷鬼一个，击杀它你将损失100金币'},
+  'zombie-dance': {name: '舞王僵尸', explain: '技能: 能召唤4个傀儡僵尸'},
+  'dance-little': {name: '傀儡僵尸', explain: '舞王僵尸的傀儡'},
+  'pole-vault': {name: '撑杆跳僵尸', explain: '他跑得很快...'},
+  'ice-car': {name: '冰车', explain: '技能: 范围内释放冷气，冰冻塔防(塔防将无法攻击并受到少量伤害)'},
+  'afu': {name: '阿福', explain: '乌鸦坐飞机，有待开发...'},
+  'fulisha': {name: '弗利萨', explain: '技能: 召唤两个小鬼僵尸'},
+  'zombie-little': {name: '小鬼僵尸', explain: '作者很懒没写什么...'},
+  'kunkun': {name: '坤坤', explain: '技能: 播放“鸡你太美”回复200生命值'},
+  'rabbish': {name: '兔子', explain: '兔兔很可爱，请不要击杀...'},
+  'rabbish-2': {name: '带帽兔子', explain: '技能: 回复一格范围内所有僵尸5%的生命值'},
+  'godzilla': {name: '哥斯拉', explain: '技能: 往最近的敌人方向释放原子吐息，该方向上的所有塔防都将收到巨量伤害'},
+  'zombie-boom': {name: '炸弹僵尸', explain: '技能: 当生命值低于50%时，会进入自爆状态，如果在时间内未能击杀它，两格范围内的塔防都将被它炸掉'},
 }
 
 /** 敌人的最高等级 */

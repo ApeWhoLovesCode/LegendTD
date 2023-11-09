@@ -1,5 +1,5 @@
-import { TowerName } from '@/dataSource/towerData';
 import { loginApi, LoginApiParams, logoutApi } from '@/service/login';
+import { TowerName } from '@/type';
 import {defineStore} from 'pinia';
 
 export type UserInfo = {

@@ -1,4 +1,4 @@
-import { EnemyStateType, TowerStateType } from "@/type/game"
+import { EnemyStateType, TowerStateType } from "@/type"
 import { TargetCircleInfo, addMoney, baseDataState, checkValInCircle, gameConfigState, onWorkerPostFn, setting, source } from "./baseData"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"

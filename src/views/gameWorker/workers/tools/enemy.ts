@@ -1,7 +1,6 @@
 import { ENEMY_MAX_LEVEL, enemyHpColors } from "@/dataSource/enemyData"
-import { TowerSlow } from "@/dataSource/towerData"
 import sourceInstance from "@/stores/sourceInstance"
-import { EnemyState, EnemyStateType } from "@/type/game"
+import { EnemyState, EnemyStateType, TowerSlow } from "@/type"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import _ from "lodash"
 import { addMoney, baseDataState, canvasInfo, checkValInCircle, gameConfigState, isNormalMode, onLevelChange, onReduceHp, onWorkerPostFn, setting, source } from "./baseData"
