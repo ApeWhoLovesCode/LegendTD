@@ -121,7 +121,7 @@ function initWorker() {
     top: 50%;
     transform: translate(-50%, -50%);
     color: #e7e7e7;
-    font-size: 20px;
+    font-size: 16px;
   }
 }
 </style>

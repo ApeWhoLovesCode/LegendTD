@@ -122,7 +122,7 @@ export type EnemyStaticItem = {
   name: string
   explain: string
   /** 需要生成的敌人，默认：生成对应 name 的敌人 */
-  enemyNameList?: string[]
+  enemyNameList?: EnemyName[]
   /** 生成的塔防，默认：中间位置放置烬 */
   towerList?: TowerCanvasTower[]
 }
