@@ -23,8 +23,8 @@ const emit = defineEmits<{
 }>()
 
 const enemyList = computed<EnemyName[]>(() => {
-  return ['zombie-dance']
-  // return Object.keys(enemyStaticData).slice(0, 3) as EnemyName[]
+  // return ['zombie-dance']
+  return Object.keys(enemyStaticData).slice(0, 3) as EnemyName[]
 })
 
 const getCanvasEnemyList = (enemyName: EnemyName): TowerCanvasEnemy[] => {
@@ -50,7 +50,7 @@ const onClose = () => {
     direction="btt"
     @close="onClose"
     :style="{ 
-      '--cardGridSize': source.isMobile ? '10px' : '16px',
+      '--cardGridSize': source.isMobile ? '18px' : '16px',
     }"
   >
     <div class='enemyInfo'>
@@ -59,26 +59,31 @@ const onClose = () => {
         v-for="enemyName in enemyList"
         :key="enemyName"
       >
-        <div class="img">
-          <TowerCanvas :enemy-list="getCanvasEnemyList(enemyName)" :tower-list="enemyStaticData[enemyName].towerList" />
-        </div>
-        <div class="content">
-          <div class="name">{{ enemyStaticData[enemyName].name }}</div>
-          <div class="row">
-            <span class="iconfont icon-jinbi1"></span>
-            <div class="info">{{ enemyObj[enemyName].reward }}</div>
+        <div class="cardArea">
+          <div class="img">
+            <TowerCanvas 
+              :enemy-list="getCanvasEnemyList(enemyName)" 
+              :tower-list="enemyStaticData[enemyName].towerList ?? [{towerName: 'jin', x: 4, y: 3}]" 
+            />
           </div>
-          <div class="row">
-            <span class="iconfont icon-aixin"></span>
-            <div class="info">{{ enemyObj[enemyName].hp.sum }}</div>
-          </div>
-          <div class="row">
-            <span class="iconfont icon-yundong icon-speed"></span>
-            <div class="info">{{ enemyObj[enemyName].speed * 60_00 / 100  }} / s</div>
-          </div>
-          <div class="row">
-            <span class="iconfont icon-icon_xiangguanmiaoshu icon-explain"></span>
-            <div class="info">{{ enemyStaticData[enemyName].explain }}</div>
+          <div class="content">
+            <div class="name">{{ enemyStaticData[enemyName].name }}</div>
+            <div class="row">
+              <span class="iconfont icon-jinbi1"></span>
+              <div class="info">{{ enemyObj[enemyName].reward }}</div>
+            </div>
+            <div class="row">
+              <span class="iconfont icon-aixin"></span>
+              <div class="info">{{ enemyObj[enemyName].hp.sum }}</div>
+            </div>
+            <div class="row">
+              <span class="iconfont icon-yundong icon-speed"></span>
+              <div class="info">{{ enemyObj[enemyName].speed * 60_00 / 100  }} / s</div>
+            </div>
+            <div class="row">
+              <span class="iconfont icon-icon_xiangguanmiaoshu icon-explain"></span>
+              <div class="info">{{ enemyStaticData[enemyName].explain }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -99,13 +104,21 @@ const onClose = () => {
     flex-wrap: wrap;
     padding: calc(2 * @gridSize) calc(2 * @gridSize);
     .card {
-      position: relative;
-      width: calc(12 * @gridSize);
+      width: calc(16.5 * @gridSize);
       height: calc(10 * @gridSize);
-      background-color: #dcf4f9;
-      border-radius: 8px;
       padding-left: calc(4.5 * @gridSize);
-      margin: 0 calc(1 * @gridSize) calc(1 * @gridSize) calc(4.5 * @gridSize);
+      margin: 0 calc(1 * @gridSize) calc(1 * @gridSize) 0;
+      &Area {
+        position: relative;
+        width: calc(12 * @gridSize);
+        height: calc(10 * @gridSize);
+        background-color: #dcf4f9;
+        border-radius: 8px;
+        padding-left: calc(4.5 * @gridSize);
+      }
+      &:last-of-type {
+        margin-bottom: 0;
+      }
       .img {
         box-sizing: content-box;
         position: absolute;
@@ -157,6 +170,12 @@ const onClose = () => {
             margin-left: 5px;
             flex: 1;
             font-size: 12px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            word-break: break-all;
           }
         }
       }
