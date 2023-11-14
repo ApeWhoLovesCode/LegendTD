@@ -225,10 +225,10 @@ function enemySkillKunkun(enemy: EnemyStateType) {
 }
 /** 2号兔子技能 */
 function enemySkillRabbish2(enemy: EnemyStateType) {
-  // 兔子和隔壁一格内的怪全部回5%的血
+  // 兔子和隔壁一格内的怪全部回10%的血
   enemyMap.forEach(e => {
     if(Math.abs(enemy.endDistance - e.endDistance) <= 1) {
-      e.hp.cur = Math.min(e.hp.cur + e.hp.sum * 0.05, e.hp.sum) 
+      e.hp.cur = Math.min(e.hp.cur + e.hp.sum * 0.1, e.hp.sum) 
     }
   })
   enemy.skill!.animation!.cur = 0

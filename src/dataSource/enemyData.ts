@@ -25,6 +25,13 @@ const enemyObj: EnemyDataObj = {
 }
 export default enemyObj
 
+export const enemyNameListData: EnemyName[] = [
+  'zombie-flag','zombie-1','zombie-2','zombie-3','iron-gate',
+  'rugby','newspaper','zombie-dance','dance-little','pole-vault',
+  'ice-car','afu','fulisha','zombie-little','kunkun',
+  'rabbish','rabbish-2','godzilla','zombie-boom',
+]
+
 export const enemyStaticData: {[key in EnemyName]: EnemyStaticItem} = {
   'zombie-flag': {name: '旗子僵尸', explain: '作者很懒没写什么...'},
   'zombie-1': {name: '普通僵尸', explain: '作者很懒没写什么...'},
@@ -33,18 +40,51 @@ export const enemyStaticData: {[key in EnemyName]: EnemyStaticItem} = {
   'iron-gate': {name: '铁门僵尸', explain: '作者很懒没写什么...'},
   'rugby': {name: '橄榄球僵尸', explain: '作者很懒没写什么...'},
   'newspaper': {name: '报纸僵尸', explain: '穷鬼一个，击杀它你将损失100金币'},
-  'zombie-dance': {name: '舞王僵尸', explain: '技能: 能召唤4个傀儡僵尸', enemyNameList: ['zombie-dance', 'dance-little'], towerList: [{x: 3, y: 3, towerName: 'lanbo'},{x: 4, y: 3, towerName: 'lanbo'},{x: 5, y: 3, towerName: 'huonan'}]},
+  'zombie-dance': {
+    name: '舞王僵尸', explain: '技能: 能召唤4个傀儡僵尸', 
+    towerList: [
+      {x: 3, y: 3, towerName: 'nanqiang'},
+      {x: 4, y: 3, towerName: 'nanqiang'},
+      {x: 5, y: 3, towerName: 'nanqiang'},
+    ]
+  },
   'dance-little': {name: '舞王傀儡', explain: '舞王僵尸的傀儡'},
   'pole-vault': {name: '撑杆跳僵尸', explain: '他跑得很快...'},
-  'ice-car': {name: '冰车', explain: '技能: 范围内释放冷气，冰冻塔防(塔防将无法攻击并受到少量伤害)'},
+  'ice-car': {
+    name: '冰车', explain: '技能: 范围内释放冷气，冰冻塔防(塔防将无法攻击并受到少量伤害)',
+    towerList: [
+      {x: 2, y: 2, towerName: 'jin'},
+      {x: 2, y: 3, towerName: 'jin'},
+      {x: 4, y: 3, towerName: 'jin'},
+      {x: 6, y: 3, towerName: 'jin'},
+      {x: 6, y: 4, towerName: 'jin'},
+    ]
+  },
   'afu': {name: '阿福', explain: '乌鸦坐飞机，有待开发...'},
-  'fulisha': {name: '弗利萨', explain: '技能: 召唤两个小鬼僵尸', enemyNameList: ['zombie-dance', 'zombie-little']},
+  'fulisha': {
+    name: '弗利萨', explain: '技能: 召唤两个小鬼僵尸',
+    towerList: [
+      {x: 3, y: 3, towerName: 'jin'},
+      {x: 4, y: 3, towerName: 'jin'},
+    ]
+  },
   'zombie-little': {name: '小鬼僵尸', explain: '作者很懒没写什么...'},
   'kunkun': {name: '坤坤', explain: '技能: 播放“鸡你太美”回复200生命值'},
   'rabbish': {name: '兔子', explain: '兔兔很可爱，请不要击杀...'},
-  'rabbish-2': {name: '带帽兔子', explain: '技能: 回复一格范围内所有僵尸5%的生命值'},
+  'rabbish-2': {
+    name: '带帽兔子', explain: '技能: 回复一格范围内所有僵尸10%的生命值',
+    enemyNameList: ['zombie-3','rabbish-2','zombie-3'],
+    towerList: [{x: 4, y: 3,towerName: 'nanqiang'}]
+  },
   'godzilla': {name: '哥斯拉', explain: '技能: 往最近的敌人方向释放原子吐息，该方向上的所有塔防都将收到巨量伤害'},
-  'zombie-boom': {name: '炸弹僵尸', explain: '技能: 当生命值低于50%时，会进入自爆状态，如果在时间内未能击杀它，两格范围内的塔防都将被它炸掉'},
+  'zombie-boom': {
+    name: '炸弹僵尸', explain: '技能: 当生命值低于50%时，会进入自爆状态，如果在时间内未能击杀它，两格范围内的塔防都将被它炸掉',
+    towerList: [
+      {x: 2, y: 3,towerName: 'nanqiang'},
+      {x: 4, y: 3,towerName: 'nanqiang'},
+      {x: 6, y: 3,towerName: 'nanqiang'},
+    ]
+  },
 }
 
 /** 敌人的最高等级 */

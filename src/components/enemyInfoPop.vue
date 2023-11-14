@@ -2,13 +2,14 @@
 import { computed, onMounted, reactive } from 'vue';
 import { ElDrawer, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
 import { useSourceStore } from '@/stores/source';
-import enemyObj, { enemyStaticData } from "@/dataSource/enemyData"
-import otherImgData, {imgSource} from '@/dataSource/otherImgData'
+import enemyObj, { enemyStaticData, enemyNameListData } from "@/dataSource/enemyData"
 import TowerCanvas from './towerCanvas.vue';
 import { EnemyName, TowerCanvasEnemy } from '@/type';
-import BlogIcon from '@/assets/img/blog.svg'
 
 const source = useSourceStore()
+
+/** 处理器最大的运行线程数量，不代表web worker就只能运行这几个 */
+const MAX_WORKERS = window.navigator.hardwareConcurrency || 4
 
 defineProps({
   visible: {
@@ -22,10 +23,6 @@ const emit = defineEmits<{
   (event: 'update:visible', v: boolean): void;
 }>()
 
-const enemyList = computed<EnemyName[]>(() => {
-  // return ['zombie-dance']
-  return Object.keys(enemyStaticData).slice(0, 3) as EnemyName[]
-})
 
 const getCanvasEnemyList = (enemyName: EnemyName): TowerCanvasEnemy[] => {
   return enemyStaticData[enemyName].enemyNameList?.map(name => ({
@@ -56,7 +53,7 @@ const onClose = () => {
     <div class='enemyInfo'>
       <div 
         class="card"
-        v-for="enemyName in enemyList"
+        v-for="enemyName in enemyNameListData"
         :key="enemyName"
       >
         <div class="cardArea">
@@ -82,7 +79,14 @@ const onClose = () => {
             </div>
             <div class="row">
               <span class="iconfont icon-icon_xiangguanmiaoshu icon-explain"></span>
-              <div class="info">{{ enemyStaticData[enemyName].explain }}</div>
+              <ElTooltip>
+                <template #content>
+                  <div style="max-width: 200px">
+                    {{enemyStaticData[enemyName].explain}}
+                  </div>
+                </template>
+                <div class="info">{{ enemyStaticData[enemyName].explain }}</div>
+              </ElTooltip>
             </div>
           </div>
         </div>
@@ -102,22 +106,22 @@ const onClose = () => {
     @gridSize: var(--cardGridSize);
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     padding: calc(2 * @gridSize) calc(2 * @gridSize);
+    gap: calc(1.5 * @gridSize);
     .card {
-      width: calc(16.5 * @gridSize);
+      width: calc(18 * @gridSize);
       height: calc(10 * @gridSize);
       padding-left: calc(4.5 * @gridSize);
-      margin: 0 calc(1 * @gridSize) calc(1 * @gridSize) 0;
       &Area {
         position: relative;
-        width: calc(12 * @gridSize);
-        height: calc(10 * @gridSize);
+        width: 100%;
+        height: 100%;
+        // width: calc(12 * @gridSize);
+        // height: calc(10 * @gridSize);
         background-color: #dcf4f9;
         border-radius: 8px;
         padding-left: calc(4.5 * @gridSize);
-      }
-      &:last-of-type {
-        margin-bottom: 0;
       }
       .img {
         box-sizing: content-box;
@@ -176,6 +180,7 @@ const onClose = () => {
             -webkit-line-clamp: 3;
             overflow: hidden;
             word-break: break-all;
+            user-select: none;
           }
         }
       }
