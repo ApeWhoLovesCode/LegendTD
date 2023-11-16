@@ -44,6 +44,7 @@ const onClickItem = (item: ToolsFolderItem) => {
 }
 
 const onShowMore = () => {
+  if(Date.now() - ballClickTime.value > 300) return
   isShowMore.value = true
   isMoreOverflowHidden.value = false
   setTimeout(() => {

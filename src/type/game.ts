@@ -43,8 +43,6 @@ export type GameBaseData = {
 
 /** 游戏音乐 */
 export type GameAudio = {
-  /** 所有音乐数据 */
-  audioList: {[key in string]: string},
   /** 终点音乐 */
   audioEnd: string,
   /** 当前技能音乐 */

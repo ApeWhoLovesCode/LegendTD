@@ -17,7 +17,7 @@ import otherImgData from '@/dataSource/otherImgData';
 
 const rankListVisible = ref(false)
 const selectTowerVisible = ref(false)
-const enemyInfoVisible = ref(true)
+const enemyInfoVisible = ref(false)
 
 const onClickItem = (item: ToolsFolderItem) => {
   if(item.title === '排行榜') {

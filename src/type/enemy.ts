@@ -60,9 +60,11 @@ export type EnemyType = {
     count?: number
     /** 技能是否触发 */
     isTriggle?: boolean
+    /** 播放技能音效的key值 */
+    audioKeys?: string[]
   }
-  /** 音频播放的key值 */
-  audioKey: string
+  /** 音频播放的key值，拥有该值时会创建 audio */
+  audioKey?: string
   /** 图片类型 */
   imgType: 'gif' | 'png'
   /** 图片资源 */

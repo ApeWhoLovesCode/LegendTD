@@ -14,7 +14,7 @@ const towerMap: Map<string, TowerStateType> = new Map()
 
 /** 点击建造塔防 */
 function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = true) {
-  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
+  const { rate, money, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(isMoney) {
     if(baseDataState.money < money) return
     addMoney(-money)
@@ -25,7 +25,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money
   }
   tower.r *= size 
   tower.speed *= size
@@ -53,7 +53,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
     baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 'tower'
   }
   drawTower(tower)
-  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
+  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey: tower.audioKey})
   if(isMusic) {
     onWorkerPostFn('playDomAudio', {id: tower.id})
   }
@@ -138,7 +138,7 @@ function removeTower(towerId: string, isSale = true) {
     keepInterval.delete(id)
   })
   towerMap.delete(towerId)
-  onWorkerPostFn('saleTowerCallback', id)
+  onWorkerPostFn('removeAudio', id)
 }
 
 /** 检查塔防是否受到敌人技能影响 */

@@ -4,8 +4,6 @@ import { reactive } from "vue"
 
 export default function useAudioState() {
   const audioState = reactive<GameAudio>({
-    // 所有音乐数据
-    audioList: audioData,
     // 终点音乐
     audioEnd: '',
     // 当前技能音乐
@@ -14,11 +12,12 @@ export default function useAudioState() {
   
   /** 生成音频播放器 */
   function createAudio(audioKey: string, id: string) {
-    if(!audioState.audioList[audioKey]) return
     const audioWrap = document.querySelector('#audio-wrap')
     const audio = document.createElement('audio') //生成一个audio元素 
-    audio.src = audioState.audioList[audioKey]  //音乐的路径
     audio.id = id
+    if(audioData[audioKey]) {
+      audio.src = audioData[audioKey]  
+    }
     audioWrap?.appendChild(audio)  //把它添加到页面中
   }
   
@@ -27,7 +26,7 @@ export default function useAudioState() {
     const audioWrap = document.querySelector('#audio-wrap')
     const audioDom = (audioWrap?.querySelector(`#${id}`) as HTMLAudioElement)
     if(!audioDom) return
-    if(audioKey) audioDom.src = audioState.audioList[audioKey]
+    if(audioKey) audioDom.src = audioData[audioKey]
     audioDom.volume = volume
     audioDom.play()
   }
@@ -47,5 +46,4 @@ export default function useAudioState() {
     playDomAudio,
     removeAudio,
   }
-
 }

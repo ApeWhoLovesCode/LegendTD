@@ -1,6 +1,5 @@
 <script setup lang='ts'>
-import { computed, onMounted, reactive } from 'vue';
-import { ElDrawer, ElMessage, ElMessageBox, ElTooltip } from 'element-plus';
+import { ElDrawer, ElTooltip } from 'element-plus';
 import { useSourceStore } from '@/stores/source';
 import enemyObj, { enemyStaticData, enemyNameListData } from "@/dataSource/enemyData"
 import TowerCanvas from './towerCanvas.vue';
@@ -61,6 +60,7 @@ const onClose = () => {
             <TowerCanvas 
               :enemy-list="getCanvasEnemyList(enemyName)" 
               :tower-list="enemyStaticData[enemyName].towerList ?? [{towerName: 'jin', x: 4, y: 3}]" 
+              :is-pause="!visible"
             />
           </div>
           <div class="content">
@@ -108,7 +108,7 @@ const onClose = () => {
     flex-wrap: wrap;
     justify-content: center;
     padding: calc(2 * @gridSize) calc(2 * @gridSize);
-    gap: calc(1.5 * @gridSize);
+    gap: calc(3 * @gridSize);
     .card {
       width: calc(18 * @gridSize);
       height: calc(10 * @gridSize);
