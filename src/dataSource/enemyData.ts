@@ -37,8 +37,8 @@ const enemyObj: EnemyDataObj = {
   },
   'ice-car': {
     name: 'ice-car', w: 1.8, h: 1.8,  curSpeed: 0.04, speed: 0.04, reward: 110, hp: {cur: 200, sum: 200}, 
-    imgType: 'gif', imgSource: _requireCDN('zombie_9_move.gif'), isForward: true, isFlip: false,
-    skill: {time: 5000, r: 3, keepTime: 3000, animation: {cur: 120, sum: 120}}, 
+    imgType: 'gif', imgSource: _requireCDN('zombie_9_move.gif'), isForward: true, isFlip: false, audioKey: 'ice-car-frozen',
+    skill: {time: 6000, r: 3, keepTime: 3000, animation: {cur: 120, sum: 120}},
   },
   'afu': {
     name: 'afu', w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 500, sum: 500}, 
@@ -72,9 +72,9 @@ const enemyObj: EnemyDataObj = {
     skill: {time: 3000, r:2, animation: {cur: 80, sum: 80}},  
   },
   'godzilla': {
-    name: 'godzilla', w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400}, audioKey: 'godzilla', 
+    name: 'godzilla', w: 1.8, h: 1.8, curSpeed: 0.03, speed: 0.03, reward: 200, hp: {cur: 400, sum: 400}, audioKey: 'godzilla-fire', 
     imgType: 'png', imgSource: _requireCDN('godzilla.png'), isForward: false, isFlip: true,
-    skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 4, audioKeys: ['godzilla-fire']},
+    skill: {time: 6000, animation: {cur: 60, sum: 60}, damage: 4},
   },
   'zombie-boom': {
     name: 'zombie-boom', w: 1.5, h: 1.5, curSpeed: 0.03, speed: 0.03, reward: 80, hp: {cur: 160, sum: 160}, audioKey: 'pvz-boom', 

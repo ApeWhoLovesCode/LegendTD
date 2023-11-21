@@ -174,7 +174,7 @@ function enemySkillGodzilla(enemy: EnemyStateType) {
     }
   })
   slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
-  onWorkerPostFn('playDomAudio', {id: enemy.id, audioKey: enemy.skill!.audioKeys![0]})
+  onWorkerPostFn('playDomAudio', {id: enemy.id})
 }
 
 /** 哥斯拉释放技能中，清除塔防 */
@@ -194,6 +194,7 @@ function enemyGodzillaRemoveTower(enemy: EnemyStateType) {
 function enemySkillIceCar(enemy: EnemyStateType) {
   enemy.skill!.animation!.cur = 0
   slowEnemy(enemy.id, {num: 0, time: 1000, type: 'stop'})
+  onWorkerPostFn('playDomAudio', {id: enemy.id})
 }
 
 /** 冰车释放技能中 */

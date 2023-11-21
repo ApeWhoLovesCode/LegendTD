@@ -30,8 +30,9 @@ export default {
   'skill-coin': _requireCDN('coin-4s.mp3'),
   'game-fail': _requireCDN('game-fail.mp3'),
   'skill-boom': _requireCDN('skill-boom.mp3'),
-  'godzilla-fire': _requireCDN('godzilla-fire.mp3'),
+  'godzilla-fire': _requireCDN('godzilla-fire-short.mp3'),
   'zombie-boom-countdown': _requireCDN('zombie-boom-countdown.mp3'),
   'zombie-boom-scream': _requireCDN('zombie-boom-scream.mp3'),
   'zombie-boom-boom': _requireCDN('zombie-boom-boom.mp3'),
+  'ice-car-frozen': _requireCDN('ice-car-frozen.mp3'),
 } as {[key in string]: string}
