@@ -21,9 +21,9 @@ const source = useSourceStore()
 
 const ballClickTime = ref(0)
 const isShowMore = ref(false)
-const isMoreAreaHide = ref(false)
 const isMoreOverflowHidden = ref(true)
-const moreStyleState = ref<{x: number, y: number}[]>([])
+const toolsFolderRef = ref<HTMLDivElement>()
+const moreItems = ref<{x: number, y: number}[]>([])
 
 const ballStyle = computed(() => {
   let distance = source.isMobile ? '1rem' : '1rem'
@@ -35,6 +35,7 @@ const ballStyle = computed(() => {
 })
 
 const onClickItem = (item: ToolsFolderItem) => {
+  if(!moreItems.value.length) return // 当还未获取位置展开弹出层的时候禁止点击
   if(Date.now() - ballClickTime.value < 300 || isShowMore.value) {
     if(item.url) {
       window.open(item.url)
@@ -44,81 +45,84 @@ const onClickItem = (item: ToolsFolderItem) => {
 }
 
 const onShowMore = () => {
-  if(Date.now() - ballClickTime.value > 300) return
+  if(Date.now() - ballClickTime.value > 300 || isShowMore.value) return
   isShowMore.value = true
   isMoreOverflowHidden.value = false
   setTimeout(() => {
     const arr = []
-    for(let i = 0; i < props.list.length - 3; i++) {
-      const itemInfo = document.querySelector(`.lastItem .icon${i}`)!.getBoundingClientRect()
-      const popItemInfo = document.querySelector(`.pop .item${i}`)!.getBoundingClientRect()
+    for(let i = 0; i < props.list.length; i++) {
+      const itemInfo = toolsFolderRef.value?.querySelector(`.item-${i}`)?.getBoundingClientRect()
+      const popItemInfo = toolsFolderRef.value?.querySelector(`.pop-item-${i}`)?.getBoundingClientRect()
+      if(!itemInfo || !popItemInfo) continue;
       arr.push({
         x: popItemInfo.left - itemInfo.left,
         y: popItemInfo.top - itemInfo.top, 
       })
     }
-    moreStyleState.value = arr
+    moreItems.value = arr
   }, 10);
 }
 
-const animationEnd = () => {
-  isMoreAreaHide.value = true
-}
 
 const onHideMore = () => {
-  isMoreAreaHide.value = false
-  moreStyleState.value = []
+  moreItems.value = []
   isShowMore.value = false
   setTimeout(() => {
     isMoreOverflowHidden.value = true
-  }, 200);
+  }, 300);
 }
 
 </script>
 
 <template>
-  <FloatingBall
-    magnetic="x"
-    :style="ballStyle"
-  >
-    <div class="tools" @mousedown="ballClickTime = Date.now()">
-      <div 
-        class="item" 
-        v-for="(item, i) in list.slice(0, 3)" 
-        :key="item.icon + i" 
-        @click="onClickItem(item)"
-      >
-        <img :src="item.icon" class="icon">
-      </div>
-      <div 
-        class="lastItem" 
-        :class="{more: isShowMore, overflowHide: isMoreOverflowHidden}" 
-        @click="onShowMore" 
-        @animationend="animationEnd"
-      >
-        <img 
-          v-for="(item, i) in list.slice(3)" 
+  <div ref="toolsFolderRef">
+    <FloatingBall
+      magnetic="x"
+      :style="ballStyle"
+    >
+      <div class="tools" @mousedown="ballClickTime = Date.now()">
+        <div 
+          v-for="(item, i) in list.slice(0, 3)" 
           :key="item.icon + i" 
-          :src="item.icon" 
-          :class="`icon icon${i} ${isMoreAreaHide ? 'iconHide' : ''}`"
+          :class="`item item-${i}`"
+          @click="onClickItem(item)"
           :style="{
-            transform: moreStyleState[i] ? `translate(${moreStyleState[i].x}px, ${moreStyleState[i].y}px)` : '',
-            opacity: i > 4 ?( moreStyleState[i] ? 1 : 0) : '',
+            transform: moreItems[i] ? `translate(${moreItems[i].x}px, ${moreItems[i].y}px)` : '',
           }"
-        />
+        >
+          <img :src="item.icon" class="icon">
+          <div v-if="isShowMore" class="title">{{ item.title }}</div>
+        </div>
+        <div 
+          class="item lastItem" 
+          :class="{more: isShowMore, overflowHide: isMoreOverflowHidden}" 
+          @click="onShowMore" 
+        >
+          <div
+            v-for="(item, i) in list.slice(3)" 
+            :key="item.icon + i" 
+            :class="`item-sub item-${3 + i}`"
+            :style="{
+              transform: moreItems[3 + i] ? `translate(${moreItems[3 + i].x}px, ${moreItems[3 + i].y}px)` : '',
+              opacity: i >= 4 ?( moreItems[3 + i] ? 1 : 0) : '',
+            }"
+            @click="onClickItem(item)"
+          >
+            <img :src="item.icon" class="icon"/>
+            <div v-if="isShowMore" class="title">{{ item.title }}</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </FloatingBall>
-  <div class="pop" v-if="isShowMore" @click="onHideMore">
-    <div class="content">
-      <div 
-        v-for="(item, i) in list.slice(3)" 
-        :key="item.icon + i" 
-        :class="`item item${i}`" 
-        @click="onClickItem(item)"
-      >
-        <img :src="item.icon" class="icon">
-        <div class="title">{{ item.title }}</div>
+    </FloatingBall>
+    <div class="pop" v-show="isShowMore" @click="onHideMore">
+      <div class="content">
+        <div 
+          v-for="(item, i) in list" 
+          :key="item.icon + i" 
+          :class="`pop-item pop-item-${i}`" 
+          @click="e => e.stopPropagation()"
+        >
+        </div>
       </div>
     </div>
   </div>
@@ -140,16 +144,27 @@ const onHideMore = () => {
     border-radius: 1.6rem;
   }
   .item {
+    transition: transform .3s, opacity .2s;
     .icon {
       display: block;
       width: 4rem;
       height: 4rem;
-      transition: all .4s;
       user-select: none;
       -webkit-user-drag: none;
+      transition: scale .3s;
       &:hover {
         scale: 1.05;
       }
+    }
+    .title {
+      margin-top: 5px;
+      font-size: 10px;
+      color: #fff;
+      text-align: center;
+      user-select: none;
+    }
+    &-sub {
+      transition: transform 0.4s, opacity .2s;
     }
   }
   .lastItem {
@@ -159,19 +174,13 @@ const onHideMore = () => {
     gap: 0.25rem;
     grid-template: 'a a' 'b b';
     padding: 0.25rem;
-    transition: all .4s;
     border-radius: 0.5rem;
-    &:hover {
-      background-color: rgba(255, 255, 255, .1);
-      border-radius: 1rem;
-    }
     .icon {
       width: 1.625rem;
       height: 1.625rem;
       display: block;
       user-select: none;
       -webkit-user-drag: none;
-      transition: transform .3s, opacity .2s;
     }
   }
   .overflowHide {
@@ -179,17 +188,9 @@ const onHideMore = () => {
   }
   .more {
     overflow: visible;
-    // 该动画是为了触发动画结束的回调
-    @keyframes iconEnd {
-      0% { opacity: 1; }
-    }
-    animation: iconEnd 0.5s;
     .icon {
       width: 4rem;
       height: 4rem;
-      &Hide {
-        opacity: 0;
-      }
     }
   }
 }
@@ -202,32 +203,16 @@ const onHideMore = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1001;
-  background-color: rgba(0, 0, 0, .1);
+  z-index: 999;
+  background-color: rgba(0, 0, 0, .3);
   .content {
     display: grid;
     gap: 2rem;
     grid-template: 'a a a';
     animation: popShow 0.3s ease;
-    .item {
-      .icon {
-        display: block;
-        width: 4rem;
-        height: 4rem;
-        transition: all .4s;
-        user-select: none;
-        -webkit-user-drag: none;
-        &:hover {
-          scale: 1.05;
-        }
-      }
-      .title {
-        margin-top: 5px;
-        font-size: 10px;
-        color: #fff;
-        text-align: center;
-        user-select: none;
-      }
+    .pop-item {
+      width: 4rem;
+      height: 4rem;
     }
   }
 }
