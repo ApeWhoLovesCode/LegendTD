@@ -88,7 +88,7 @@ function enemySkillDance(enemy: EnemyStateType) {
     const callEnemyItem = callEnemy(newEnemy, i)
     enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
-  onWorkerPostFn('playDomAudio', {id, volume: 1})
+  onWorkerPostFn('playDomAudio', {id, volume: 0.6})
 }
 
 /** 弗利萨技能 */
@@ -106,7 +106,7 @@ function enemySkillFulisha(enemy: EnemyStateType) {
     const callEnemyItem = callEnemy(newEnemy, i)
     enemyMap.set(callEnemyItem.id, callEnemyItem)
   }
-  onWorkerPostFn('playDomAudio', {id, volume: 0.7})
+  onWorkerPostFn('playDomAudio', {id, volume: 0.6})
 }
 
 /** 坤坤技能 */
@@ -114,7 +114,7 @@ function enemySkillKunkun(enemy: EnemyStateType) {
   const {id, hp} = enemy
   const newHp = hp.cur + 200
   enemy.hp.cur = limitRange(newHp, newHp, hp.sum)
-  onWorkerPostFn('playDomAudio', {id, volume: 0.5})
+  onWorkerPostFn('playDomAudio', {id})
 }
 
 /** 2号兔子技能 */

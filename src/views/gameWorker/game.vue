@@ -267,7 +267,7 @@ function playAudio(audioKey: string, key: 'End' | 'Skill') {
   }
   nextTick(()=>{
     // 调节音量
-    audioRefObj[audio_key + 'Ref'].value!.volume = 0.6
+    audioRefObj[audio_key + 'Ref'].value!.volume = 0.5
     audioRefObj[audio_key + 'Ref'].value!.play()
   })
 }
