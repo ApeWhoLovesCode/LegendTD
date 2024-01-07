@@ -37,3 +37,9 @@ const otherImgData = {
 export default otherImgData
 
 export type OnloadImgKey = keyof typeof otherImgData
+
+/** 仅用于展示图片数据 */
+export const imgSource = {
+  /** 爱心 */
+  heart: requireCDN('heart.svg'),
+}

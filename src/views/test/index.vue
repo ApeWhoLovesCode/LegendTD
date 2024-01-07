@@ -5,7 +5,6 @@ import TowerCanvas from '@/components/towerCanvas.vue';
 import SelectTips from '@/components/selectTips.vue';
 import UserBall from '@/components/userBall.vue';
 import ToolsFolder from '@/components/toolsFolder/index.vue';
-import GithubWhiteIcon from '@/assets/img/githubWhite.svg';
 import MyToolsFolder from '@/components/toolsFolder/myToolsFolder.vue';
 
 const source = useSourceStore()
@@ -22,14 +21,14 @@ onMounted(() => {
 
 <template>
   <div class='test'>
-    <div class="towerImg"> 
+    <!-- <div class="towerImg"> 
       <TowerCanvas 
         :enemy-list="[{enemyName: 'godzilla', level: 1}]"
         :tower-list="[{towerName: 'nanqiang', x: 2, y: 2}, {towerName: 'jin', x: 3, y: 2}]"
       />
-    </div>
+    </div> -->
     <!-- <UserBall /> -->
-    <!-- <MyToolsFolder /> -->
+    <MyToolsFolder />
   </div>
 </template>
 
