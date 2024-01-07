@@ -34,13 +34,15 @@ const ballStyle = computed(() => {
   }
 })
 
-const onClickItem = (item: ToolsFolderItem) => {
-  if(!moreItems.value.length) return // 当还未获取位置展开弹出层的时候禁止点击
+const onClickItem = (item: ToolsFolderItem, isExpand = false) => {
+  // 需要展开项，当还未获取位置展开弹出层的时候禁止点击 
+  if(!isExpand && !moreItems.value.length) return
   if(Date.now() - ballClickTime.value < 300 || isShowMore.value) {
     if(item.url) {
       window.open(item.url)
     }
     emits('onClickItem', item)
+    onHideMore()
   }
 }
 
@@ -85,7 +87,7 @@ const onHideMore = () => {
           v-for="(item, i) in list.slice(0, 3)" 
           :key="item.icon + i" 
           :class="`item item-${i}`"
-          @click="onClickItem(item)"
+          @click="onClickItem(item, true)"
           :style="{
             transform: moreItems[i] ? `translate(${moreItems[i].x}px, ${moreItems[i].y}px)` : '',
           }"
