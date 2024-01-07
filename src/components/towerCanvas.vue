@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import Worker from "../views/gameWorker/workers/index.ts?worker";
-import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from '@/dataSource/towerData';
 import { useSettingStore } from "@/stores/setting";
 import { useSourceStore } from '@/stores/source';
 import { randomStr } from '@/utils/random';
 import _ from 'lodash';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import Loading from "./loading.vue";
+import { TowerCanvasEnemy, TowerCanvasTower, TowerName } from "@/type";
 
 const props = withDefaults(defineProps<{
   /** 只传塔防名字，代表只有一座塔防 */
@@ -121,7 +121,7 @@ function initWorker() {
     top: 50%;
     transform: translate(-50%, -50%);
     color: #e7e7e7;
-    font-size: 20px;
+    font-size: 16px;
   }
 }
 </style>

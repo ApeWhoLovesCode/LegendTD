@@ -1,4 +1,4 @@
-import { EnemyName } from "@/dataSource/enemyData";
+import { EnemyName } from "@/type";
 
 /** 用于限制 num 最大和最小不能超过边界值 */
 export function limitRange(num: number, min: number, max: number) {

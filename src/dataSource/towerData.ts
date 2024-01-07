@@ -1,5 +1,5 @@
+import { TowerDataObj, TowerName, TowerStaticItem } from "@/type";
 import { requireCDN } from "@/utils/handleImg";
-import { EnemyName } from "./enemyData";
 const  _requireCDN = (url: string) => requireCDN(url, 'tower')
 
 
@@ -36,92 +36,3 @@ export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'}]},
   'twitch': { name: '老鼠', explain: '每隔5秒往敌人的地上喷射毒液，路过的敌人将减速并受到持续的中毒效果，每隔1秒将叠加一层毒液效果，最大5层', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2',level:2},{enemyName:'zombie-3',level:3}]},
 }
-
-export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan' | 'twitch'
-
-export type TowerDataObj = {[key in TowerName]: TowerType}
-
-export type TowerType = {
-  name: TowerName
-  money: number
-  saleMoney: number
-  /** 塔防生命值 */
-  hp: {
-    cur: number
-    sum: number
-    /** 是否显示生命条 */
-    isShow?: boolean
-    /** 受伤时间 */
-    injuryTime?: number
-  },
-  /** 塔防半径 */
-  r: number
-  /** 伤害 */
-  damage: number
-  /** 增加的伤害 */
-  addDamage?: number
-  /** 最多攻击目标 */
-  targetNum: number
-  /** 攻击速率(n毫秒/次 */
-  rate: number
-  /** 子弹速度 */
-  speed: number
-  /** 子弹大小 */
-  bSize: BulletSize
-  /** 塔防音频的key */
-  audioKey: string
-  /** 游戏图片 */
-  img: string
-  /** 封面图 */
-  cover?: string
-  /** 子弹图片 */
-  bulletImg: string
-  /** 是否是可穿透的 */
-  isThrough?: boolean 
-  /** 是否充能完毕 是否可以下一次攻击 */
-  isCharging?: boolean
-  /** 减速 */
-  slow?: TowerSlow
-  /** 子弹的初始角度 */
-  bulletInitDeg?: number
-  /** 是否保存该子弹 */
-  isSaveBullet?: boolean
-  /** 持续伤害 */
-  poison?: TowerPoison
-}
-export type BulletSize = { w: number; h: number}
-
-export type TowerSlow = {
-  /** 减少速度 */
-  num: number
-  /** 减速持续时间 */
-  time: number
-  /** 减速类型 */
-  type: TowerSlowType
-}
-export type TowerSlowType = 'slow' | 'twitch' | 'vertigo' | 'stop'
-
-/** 持续伤害比如中毒等 */
-export type TowerPoison = {
-  /** 毒液在地上持续时间 */
-  bulletTime: number
-  /** 持续时间 */
-  time: number
-  /** 伤害 */
-  damage: number
-}
-
-export type TowerStaticItem = {
-  /** 中文名字 */
-  name: string
-  /** 说明文本 */
-  explain: string
-  /** 展示的敌人数组 */
-  enemyList?: TowerCanvasEnemy[]
-}
-
-/** 塔防封面钟的塔防 */
-export type TowerCanvasTower = {towerName: TowerName, x: number, y: number}
-
-/** 塔防封面中的敌人 */
-export type TowerCanvasEnemy = {enemyName: EnemyName, level?: number}

@@ -1,10 +1,9 @@
 <script setup lang='ts'>
 import { computed } from 'vue';
 import { useSourceStore } from '@/stores/source';
-import { GameBaseData, TowerState } from '@/type/game';
+import { GameBaseData, TowerState, TowerName } from '@/type';
 import otherImgData from '@/dataSource/otherImgData';
 import { useUserInfoStore } from '@/stores/userInfo';
-import { TowerName } from '@/dataSource/towerData';
 
 const props = defineProps<{
   towerState: TowerState

@@ -1,11 +1,11 @@
-import { BulletType, EnemyStateType, SpecialBulletItem, SpecialBullets, TargetInfo, TowerStateType } from "@/type/game"
+import { BulletType, EnemyStateType, SpecialBulletItem, SpecialBullets, TargetInfo, TowerStateType, TowerName, TowerType } from "@/type"
 import { damageTheEnemy, enemyMap, removeEnemy, slowEnemy } from "./enemy"
 import { addMoney, canvasInfo, gameConfigState, setting, source } from "./baseData"
 import { powAndSqrt } from "@/utils/tools"
 import { getAngle } from "@/utils/handleCircle"
 import { isTowerSufferEnemy, towerMap } from "./tower"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
-import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
+import towerArr from "@/dataSource/towerData";
 import { drawLinearGradientRoundRect } from "./canvas"
 import { randomStr } from "@/utils/random"
 

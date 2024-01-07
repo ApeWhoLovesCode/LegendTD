@@ -3,7 +3,8 @@ import sourceInstance from '@/stores/sourceInstance'
 import { WorkerFnName } from "./type/worker";
 
 import { addMoney, baseDataState, canvasInfo, checkMode, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
-import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
+import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList } from './tools/enemy'
+import { watchEnemySkill } from "./tools/enemySkill";
 import { testBuildTowers } from "./tools/testBuild";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";

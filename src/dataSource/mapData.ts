@@ -1,5 +1,4 @@
-import { EnemyName } from "./enemyData"
-import { TowerName } from "./towerData"
+import { EnemyName, TowerName } from "@/type"
 
 /**
  * 地图数据 
@@ -15,6 +14,9 @@ const mapData: MapDataItem[] = [
     //   {tname: 'huonan', x: 4, y: 5},
     //   {tname: 'huonan', x: 5, y: 4},
     // ]
+    enemyArr: [
+      ['ice-car']
+    ]
   },
   // X形
   {
