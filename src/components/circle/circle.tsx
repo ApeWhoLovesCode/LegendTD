@@ -1,4 +1,3 @@
-import colorVar from '@/style/var';
 import { range } from '@/utils/format';
 import { isObj } from '@/utils/validate';
 import { defineComponent, ExtractPropTypes, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
@@ -30,9 +29,9 @@ export const circleProps = {
    */
   speed: makeNumberProp(60),
   /** 颜色 */
-  color: makeStringProp(colorVar.blue3),
+  color: makeStringProp('#68baf5'),
   /** 进度条的底色 */
-  layerColor: makeStringProp(colorVar.gray1),
+  layerColor: makeStringProp('#F6F6F6'),
   /** 线条的端点样式 */
   lineCap: makeStringProp<CanvasLineCap>('round'),
   /**

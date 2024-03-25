@@ -1,3 +1,4 @@
+import { TowerDataObj, TowerName, TowerStaticItem } from "@/type";
 import { requireCDN } from "@/utils/handleImg";
 const  _requireCDN = (url: string) => requireCDN(url, 'tower')
 
@@ -24,97 +25,14 @@ export default towerObj
 
 export const towerStaticData: {[key in TowerName]: TowerStaticItem} = {
   'icestar': { name: '冰星', explain: '向最前方的一个敌人发射一颗会使敌人减速的冰星。' },
-  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。', enemyList: [{i:1},{i:2},{i:3}] },
+  'nanqiang': { name: '男枪', explain: '往三个敌人发射子弹。', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'},{enemyName:'zombie-3'}] },
   'ejiate': { name: '厄加特', explain: '向一个敌人发射一连串的子弹。' },
   'jin': { name: '烬', explain: '攻击范围更大，子弹伤害更高。' },
-  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。', enemyList: [{i:1},{i:2}] },
-  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.', enemyList: [{i:1},{i:2},{i:3}] },
-  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', enemyList: [{i: 1, level: 1},{i: 1, level: 2},{i: 1, level: 3},{i: 1, level: 4},{i: 1, level: 5},{i: 1, level: 6},{i: 1, level: 7},{i: 1, level: 8},{i: 1, level: 9},{i: 1, level: 10}] },
-  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', enemyList: [{i:1},{i:2},{i:3}] },
-  'delaiwen': { name: '德莱文', explain: '往前方敌人处最多丢出两个会回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', enemyList: [{i:1, level: 3},{i:3, level: 3},{i:4, level: 3}] },
-  'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', enemyList: [{i:1},{i:2}]},
-  'twitch': { name: '老鼠', explain: '每隔5秒往敌人的地上喷射毒液，路过的敌人将减速并受到持续的中毒效果，每隔1秒将叠加一层毒液效果，最大5层', enemyList: [{i:1,level:1},{i:2,level:2},{i:3,level:3}]},
-}
-
-export type TowerName = 'icestar' | 'fengche' | 'nanqiang' | 'ejiate' | 'jin'| 'ez' | 'lanbo'| 'aixi' | 'delaiwen' | 'huonan' | 'twitch'
-
-export type TowerDataObj = {[key in TowerName]: TowerType}
-
-export type TowerType = {
-  name: TowerName
-  money: number
-  saleMoney: number
-  /** 塔防生命值 */
-  hp: {
-    cur: number
-    sum: number
-    /** 是否显示生命条 */
-    isShow?: boolean
-    /** 受伤时间 */
-    injuryTime?: number
-  },
-  /** 塔防半径 */
-  r: number
-  /** 伤害 */
-  damage: number
-  /** 增加的伤害 */
-  addDamage?: number
-  /** 最多攻击目标 */
-  targetNum: number
-  /** 攻击速率(n毫秒/次 */
-  rate: number
-  /** 子弹速度 */
-  speed: number
-  /** 子弹大小 */
-  bSize: BulletSize
-  /** 塔防音频的key */
-  audioKey: string
-  /** 游戏图片 */
-  img: string
-  /** 封面图 */
-  cover?: string
-  /** 子弹图片 */
-  bulletImg: string
-  /** 是否是可穿透的 */
-  isThrough?: boolean 
-  /** 是否充能完毕 是否可以下一次攻击 */
-  isCharging?: boolean
-  /** 减速 */
-  slow?: TowerSlow
-  /** 子弹的初始角度 */
-  bulletInitDeg?: number
-  /** 是否保存该子弹 */
-  isSaveBullet?: boolean
-  /** 持续伤害 */
-  poison?: TowerPoison
-}
-export type BulletSize = { w: number; h: number}
-
-export type TowerSlow = {
-  /** 减少速度 */
-  num: number
-  /** 减速持续时间 */
-  time: number
-  /** 减速类型 */
-  type: TowerSlowType
-}
-export type TowerSlowType = 'slow' | 'twitch' | 'vertigo' | 'stop'
-
-/** 持续伤害比如中毒等 */
-export type TowerPoison = {
-  /** 毒液在地上持续时间 */
-  bulletTime: number
-  /** 持续时间 */
-  time: number
-  /** 伤害 */
-  damage: number
-}
-
-export type TowerStaticItem = {
-  /** 中文名字 */
-  name: string
-  /** 说明文本 */
-  explain: string
-  /** 展示的敌人数组 */
-  enemyList?: {i: number, level?: number}[]
+  'fengche': { name: '风车', explain: '发射一个旋转风车，风车可穿透敌人并造成伤害。', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'}] },
+  'ez': { name: '伊泽瑞尔', explain: '发射一个大范围的精准弹幕，可以穿透所有敌人并造成伤害.', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'},{enemyName:'zombie-3'}] },
+  'lanbo': { name: '兰博', explain: '向附近区域发射火焰，对命中的所有敌人造成伤害。', enemyList: [{enemyName:'zombie-1', level: 1},{enemyName:'zombie-1', level: 2},{enemyName:'zombie-1', level: 3},{enemyName:'zombie-1', level: 4},{enemyName:'zombie-1', level: 5},{enemyName:'zombie-1', level: 6},{enemyName:'zombie-1', level: 7},{enemyName:'zombie-1', level: 8},{enemyName:'zombie-1', level: 9},{enemyName:'zombie-1', level: 10}] },
+  'aixi': { name: '艾希', explain: '最多往九个敌人发射冰箭，并使敌人减速。', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'},{enemyName:'zombie-3'}] },
+  'delaiwen': { name: '德莱文', explain: '往前方敌人处最多丢出两个会回收的斧头，斧头会处决生命值低于10%的敌人，并有10%几率使该敌人奖励翻倍。', enemyList: [{enemyName:'zombie-3',level:3},{enemyName:'zombie-3',level:3},{enemyName:'rugby', level: 3}] },
+  'huonan': { name: '火男', explain: '对一名敌人喷射火焰，火焰将持续造成越来越高的伤害', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2'}]},
+  'twitch': { name: '老鼠', explain: '每隔5秒往敌人的地上喷射毒液，路过的敌人将减速并受到持续的中毒效果，每隔1秒将叠加一层毒液效果，最大5层', enemyList: [{enemyName:'zombie-1'},{enemyName:'zombie-2',level:2},{enemyName:'zombie-3',level:3}]},
 }

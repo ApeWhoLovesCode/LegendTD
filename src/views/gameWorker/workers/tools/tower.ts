@@ -1,4 +1,4 @@
-import { TowerStateType } from "@/type/game"
+import { EnemyStateType, TowerStateType } from "@/type"
 import { TargetCircleInfo, addMoney, baseDataState, checkValInCircle, gameConfigState, onWorkerPostFn, setting, source } from "./baseData"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
 import { randomStr } from "@/utils/random"
@@ -6,14 +6,15 @@ import { powAndSqrt } from "@/utils/tools"
 import _ from "lodash"
 import { enemyMap } from "./enemy"
 import { shootBullet, specialBullets, triggerPoisonFun } from "./bullet"
-import { BuildTowerParams } from "../type/tower"
 import levelData from "@/dataSource/levelData"
+import { BuildTowerParams } from "@/dataSource/mapData"
+import sourceInstance from "@/stores/sourceInstance"
 
 const towerMap: Map<string, TowerStateType> = new Map()
 
 /** 点击建造塔防 */
 function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = true) {
-  const { rate, money, audioKey, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
+  const { rate, money, onloadImg, onloadbulletImg, ...ret } = _.cloneDeep(source.towerSource![tname]) 
   if(isMoney) {
     if(baseDataState.money < money) return
     addMoney(-money)
@@ -24,13 +25,14 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
   const size = gameConfigState.size
   // 处理多个相同塔防的id值
   const tower: TowerStateType = {
-    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money, audioKey
+    ...ret, x, y, id: randomStr(tname), targetIdList: [], bulletArr: [], onloadImg, onloadbulletImg, rate, money
   }
   tower.r *= size 
   tower.speed *= size
   tower.bSize.w *= size
   tower.bSize.h *= size
   tower.hp.injuryTime = 0
+  tower.enemySkill = {}
   // 子弹射击的防抖函数
   if(tower.name !== 'huonan') {
     tower.isToTimeShoot = true
@@ -51,7 +53,7 @@ function buildTower({x, y, tname}: BuildTowerParams, isMusic = true, isMoney = t
     baseDataState.gridInfo.arr[Math.floor(y / size)][Math.floor(x / size)] = 'tower'
   }
   drawTower(tower)
-  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey})
+  onWorkerPostFn('buildTowerCallback', {towerId: tower.id, audioKey: tower.audioKey})
   if(isMusic) {
     onWorkerPostFn('playDomAudio', {id: tower.id})
   }
@@ -74,9 +76,10 @@ function drawTowerMap() {
 /** 画塔防 */
 function drawTower(tower: TowerStateType) {
   const size = gameConfigState.size
-  gameConfigState.ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
-  if(tower.hp.isShow && tower.hp.injuryTime! + 1500 > Date.now()) {
-    const ctx = gameConfigState.ctx
+  const ctx = gameConfigState.ctx
+  ctx.drawImage(tower.onloadImg, tower.x, tower.y, size, size)
+  // 画塔防的生命值
+  if(tower.hp.isShow && tower.hp.injuryTime! + 2000 > Date.now()) {
     const { x, y, hp } = tower
     const hpSize = size / 7
     // 血条背景色
@@ -94,18 +97,32 @@ function drawTower(tower: TowerStateType) {
   } else {
     tower.hp.isShow = false
   }
-}
-
-/** 伤害塔防 */
-function damageTower(t: TowerStateType) {
-  t.hp.injuryTime = Date.now()
-  t.hp.cur -= 1
-  if(t.hp.cur <= 0) {
-    removeTower(t.id, false)
+  // 画塔防受到敌人技能的效果
+  for(const ekey in tower.enemySkill) {
+    if(ekey === 'frozen' && tower.enemySkill.frozen) {
+      ctx.save()
+      ctx.globalAlpha = 0.8
+      ctx.drawImage(sourceInstance.state.othOnloadImg.snow!, tower.x + size / 4, tower.y + size / 4, size / 2, size / 2)
+      ctx.restore()
+    }
   }
 }
 
-/** 售卖防御塔 */
+/** 伤害塔防 */
+function damageTower(t: TowerStateType, damage = 1) {
+  t.hp.injuryTime = Date.now()
+  t.hp.cur -= damage
+  t.hp.isShow = true
+  if(t.hp.cur <= 0) {
+    if(setting.isTowerCover) {
+      t.hp.cur = t.hp.sum
+    } else {
+      removeTower(t.id, false)
+    }
+  }
+}
+
+/** 移除防御塔 */
 function removeTower(towerId: string, isSale = true) {
   const size = gameConfigState.size
   const tower = towerMap.get(towerId)!
@@ -117,14 +134,29 @@ function removeTower(towerId: string, isSale = true) {
     addMoney(saleMoney)
   }
   keepInterval.delete(`towerShoot-${id}`)
+  tower.enemySkill?.frozen?.ids.forEach(id => {
+    keepInterval.delete(id)
+  })
   towerMap.delete(towerId)
-  onWorkerPostFn('saleTowerCallback', id)
+  onWorkerPostFn('removeAudio', id)
+}
+
+/** 检查塔防是否受到敌人技能影响 */
+function isTowerSufferEnemy(enemySkill: TowerStateType['enemySkill']) {
+  for(const ekey in enemySkill) {
+    if(ekey === 'frozen' && enemySkill.frozen) {
+      return true // 塔防被冰冻，无法攻击
+    }
+  }
 }
 
 /** 处理敌人的移动，进入塔防的范围 */
 function checkEnemyAndTower() {
   if(!enemyMap.size) return
   towerMap.forEach(t => {
+    if(isTowerSufferEnemy(t.enemySkill)) {
+      return
+    }
     if(t.name === 'huonan') {
       const targetIdList = enterAttackScopeList(t)
       if(targetIdList) t.targetIdList = targetIdList
@@ -160,14 +192,20 @@ function checkEnemyAndTower() {
 
 /** 返回进入攻击范围的值的数组 */
 function enterAttackScopeList(target: TargetCircleInfo) {
-  const arr: {curFloorI: number, id: string}[] = []
+  const arr: EnemyStateType[] = []
   enemyMap.forEach(enemy => {
-    if(checkValInCircle(enemy, target)) {
-      arr.push({curFloorI: enemy.curFloorI, id: enemy.id})
+    if(!enemy.isDead && checkValInCircle(enemy, target)) {
+      arr.push(enemy)
     }
   })
   if(!arr.length) return
-  arr.sort((a, b) => b.curFloorI - a.curFloorI)
+  arr.sort((a, b) => {
+    const val = a.endDistance - b.endDistance
+    if(val === 0) { // 当所处格子相同时，比较当前格子的行进距离
+      return b.gridDistance - a.gridDistance
+    }
+    return val
+  })
   if(target.targetNum) {
     return arr.splice(0, target.targetNum).map(item => item.id)
   }
@@ -182,4 +220,5 @@ export {
   damageTower,
   removeTower,
   checkEnemyAndTower,
+  isTowerSufferEnemy,
 }

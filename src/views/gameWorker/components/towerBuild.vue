@@ -1,10 +1,9 @@
 <script setup lang='ts'>
 import { computed } from 'vue';
 import { useSourceStore } from '@/stores/source';
-import { GameBaseData, TowerState } from '@/type/game';
-import imgSource from '@/dataSource/imgSource';
+import { GameBaseData, TowerState, TowerName } from '@/type';
+import otherImgData from '@/dataSource/otherImgData';
 import { useUserInfoStore } from '@/stores/userInfo';
-import { TowerName } from '@/dataSource/towerData';
 
 const props = defineProps<{
   towerState: TowerState
@@ -83,7 +82,7 @@ function transRatio(v: number) {
     >
     <div v-show="towerState.building.isShow" class="building-wrap" :style="buildingStyle">
       <!-- 塔防的容器 -->
-      <img :src="imgSource.BuildingImg" alt="" class="add-icon">
+      <img :src="otherImgData.building" alt="" class="add-icon">
       <div v-if="source.towerSource" class="tower-wrap" :class="buildingClass">
         <div 
           v-for="(tname, index) in userInfoStore.towerSelectList" 

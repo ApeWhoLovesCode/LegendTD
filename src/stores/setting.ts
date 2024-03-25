@@ -14,7 +14,7 @@ export const useSettingStore = defineStore('setting', {
     isHighRefreshScreen: false
   }),
   actions: {
-    getFpx() {
+    getFps() {
       getScreenFps().then(fps => {
         this.$state.fps = fps
         this.$state.isHighRefreshScreen = fps > 65

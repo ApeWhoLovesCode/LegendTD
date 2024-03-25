@@ -1,11 +1,12 @@
 {
   "name": "protect-horse",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
+    "tsc": "vue-tsc",
     "preview": "vite preview"
   },
   "dependencies": {

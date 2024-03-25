@@ -1,0 +1,54 @@
+name: release
+on:
+  # 代码 push master 分支的时候触发
+  push:
+    branches: master
+jobs:
+  # 定义一个job，名字为 release
+  release:
+    # 使用github提供给我们的机器去跑
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取最新的代码
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      # 安装node环境
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+      # 为node_modules设置缓存
+      - name: Cache
+        # 缓存命中结果会存储在steps.[id].outputs.cache-hit里，该变量在继后的step中可读
+        id: cache-dependencies
+        uses: actions/cache@v3
+        with:
+          # 缓存文件目录的路径
+          path: |
+            **/node_modules
+          key: ${{runner.OS}}
+      # 安装依赖
+      - name: Installing Dependencies
+        # 如果命中缓存，就不需要安装依赖，使用缓存即可
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: npm install
+      # 打包
+      - name: Build
+        run: |
+            npm run docs:build
+      # 产物上传服务器
+      - name: Upload to Deploy Server
+        uses: easingthemes/ssh-deploy@v2.0.7
+        env:
+          # 免密登录的秘钥 宝塔/安全/SSH登录私钥
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PASS }}
+          # 服务器的公网IP
+          REMOTE_HOST: ${{ secrets.SERVER_HOST }}
+          # 服务器登录用户名
+          REMOTE_USER: root
+          # 你打包后产物的文件夹
+          SOURCE: "dist/"
+          # 先清空目标目录
+          ARGS: "-avzr --delete"
+          # 上传到服务器目标目录
+          TARGET: "/www/wwwroot/LegendTD"

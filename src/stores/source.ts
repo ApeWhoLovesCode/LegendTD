@@ -1,15 +1,20 @@
 import enemyData from '@/dataSource/enemyData'
 import otherImgData, { OnloadImgKey } from '@/dataSource/otherImgData'
-import towerData, { TowerName } from '@/dataSource/towerData'
-import { EnemyStateType, TowerStateType } from '@/type/game'
+import towerData from '@/dataSource/towerData'
+import { EnemyName, TowerName } from '@/type'
+import { EnemyStateType, TowerStateType } from '@/type'
 import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
+import { isMobile } from '@/utils/tools'
 import { SourceImgObj } from 'lhh-utils'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 
+export type EnemySource = {[key in EnemyName]: EnemyStateType}
 export type TowerSource = {[key in TowerName]: TowerStateType}
 
 export type OthOnloadImg = {[key in OnloadImgKey]?: CanvasImageSource}
+
+export type SourceImgItem = {list: SourceImgObj[], total: number}
 
 export type SourceStateType = {
   /** 游戏页面是否初始化完成 */
@@ -17,12 +22,16 @@ export type SourceStateType = {
   /** 游戏在进行中 */
   isGameing: boolean
   /** 敌人处理好的静态资源 */
-  enemySource: EnemyStateType[]
+  enemySource?: EnemySource
   /** 敌人加载完成的图片资源 */
   enemyImgSource: {
     [key in string]: {
       img?: HTMLImageElement | ImageBitmap
       imgList?: SourceImgObj[]
+      /** 技能图片 */
+      skill?: SourceImgItem
+      /** 死亡图片 */
+      die?: SourceImgItem
     }
   }
   /** 塔防处理好的静态资源 */
@@ -43,13 +52,13 @@ export const useSourceStore = defineStore('source', {
   state: (): SourceStateType => ({
     isGameInit: false,
     isGameing: false,
-    enemySource: [],
+    enemySource: void 0,
     enemyImgSource: {},
     towerSource: void 0,
     othOnloadImg: {},
     mapLevel: 0,
-    isMobile: false,
-    ratio: 1,
+    isMobile: !!isMobile(),
+    ratio: window.devicePixelRatio ?? 1,
     progress: 0,
   }),
   actions: {
@@ -72,11 +81,13 @@ export const useSourceStore = defineStore('source', {
       // })
     },
     async handleEnemyImg() {
-      if(!this.$state.enemySource.length) {
-        this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemyStateType[]
+      const arr = Object.keys(enemyData) as EnemyName[]
+      if(!this.$state.enemySource) {
+        this.$state.enemySource = _.cloneDeep(enemyData) as unknown as EnemySource
       }
-      const step = 70 / enemyData.length
-      return Promise.all(enemyData.map(async (enemy) => {
+      const step = 70 / arr.length
+      return Promise.all(arr.map(async (enemyName) => {
+        const enemy = this.$state.enemySource![enemyName]
         const item = this.$state.enemyImgSource[enemy.name]
         if(!item?.imgList?.length && !item?.img) {
           if(enemy.imgType === 'gif') {
@@ -96,7 +107,6 @@ export const useSourceStore = defineStore('source', {
       if(!this.$state.towerSource) {
         this.$state.towerSource = _.cloneDeep(towerData) as unknown as TowerSource
       }
-      // const step = 20 / arr.length / 2
       const step = 80 / arr.length / 2
       return Promise.all(arr.map(async (key) => {
         const item = this.$state.towerSource![key]

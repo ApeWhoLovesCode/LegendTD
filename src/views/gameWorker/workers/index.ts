@@ -1,18 +1,24 @@
-import { GridInfo, towerCanvasMapData, towerCanvasMapGridInfo } from "@/dataSource/mapData";
-import { waitTime } from "@/utils/tools";
-import sourceInstance from '@/stores/sourceInstance'
-import { addMoney, baseDataState, canvasInfo, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
-import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList, watchEnemySkill } from './tools/enemy'
-import keepInterval from "@/utils/keepInterval";
 import _ from "lodash";
+import sourceInstance from '@/stores/sourceInstance'
 import { WorkerFnName } from "./type/worker";
-import testBuildData from "./tools/testBuild";
-import { range } from "@/utils/format";
+
+import { addMoney, baseDataState, canvasInfo, checkMode, gameConfigState, initAllGrid, isExperience, isInfinite, onLevelChange, onWorkerPostFn, setting, source, unifiedMoney } from "./tools/baseData";
+import { drawEnemyMap, enemyState, makeEnemy, watchEnemyList } from './tools/enemy'
+import { watchEnemySkill } from "./tools/enemySkill";
+import { testBuildTowers } from "./tools/testBuild";
 import { towerMap, drawTowerMap, removeTower, buildTower, checkEnemyAndTower, initBuildTowers } from "./tools/tower";
 import { drawSpecialBullets, handleBulletMove } from "./tools/bullet";
 import { handleSkill } from "./tools/gameSkill";
-import levelData from "@/dataSource/levelData";
+
+import { waitTime } from "@/utils/tools";
+import keepInterval from "@/utils/keepInterval";
+import { range } from "@/utils/format";
 import { addRowColArr } from "@/utils/direction";
+
+import levelData from "@/dataSource/levelData";
+import { GridInfo, MapGridInfo, towerCanvasMapData } from "@/dataSource/mapData";
+import { WithPartial } from "@/type";
+import { getLoadingAllImgParams } from "./tools/towerCanvas";
 
 addEventListener('message', e => {
   const { data } = e;
@@ -27,9 +33,9 @@ addEventListener('message', e => {
     source.mapLevel = data.source.mapLevel
     setting.isHighRefreshScreen = data.setting.isHighRefreshScreen
     if(data.isTowerCover) {
-      setting.tname = data.tname
-      setting.enemyList = data.enemyList
       setting.isTowerCover = data.isTowerCover
+      setting.enemyList = data.enemyList
+      setting.towerList = data.towerList
     }
     init()
   } 
@@ -63,18 +69,18 @@ addEventListener('message', e => {
 })
 
 async function init() {
-  const params = setting.isTowerCover ? {enemyList: setting.enemyList?.map(e => e.i) ?? [], towerList: [setting.tname]} : void 0
   await sourceInstance.loadingAllImg((progress: number) => {
     onWorkerPostFn('onProgress', range(progress, 0, 100))
-  }, params)
+  }, getLoadingAllImgParams())
   onWorkerPostFn('onProgress', 100)
+  checkMode()
+  initAllGrid()
   if(isExperience) {
     addMoney(10_000)
   } else if(isInfinite) {
     addMoney(94_999)
   }
   if(!setting.isTowerCover) {
-    initAllGrid()
     onLevelChange()
   }
   initMovePath()
@@ -85,7 +91,9 @@ async function init() {
     initBuildTowers()
     testBuildTowers()
   } else { // 塔防展示组件
-    buildTower({tname: setting.tname, x: 4 * gameConfigState.size, y: 3 * gameConfigState.size}, false, false)
+    setting.towerList?.forEach(t => {
+      buildTower({tname: t.towerName, x: t.x * gameConfigState.size, y: t.y * gameConfigState.size}, false, false)
+    })
     makeEnemy()
     startAnimation()
   }
@@ -122,7 +130,9 @@ function startAnimationLockFrame() {
 /** 开始绘画 */
 function startDraw() {
   gameConfigState.ctx.clearRect(0, 0, canvasInfo.offscreen.width, canvasInfo.offscreen.height);
-  drawStart()
+  if(!setting.isTowerCover) {
+    drawStart()
+  } 
   drawFloorTile()
   drawTowerMap()
   drawEnemyMap()
@@ -139,7 +149,7 @@ function startDraw() {
 /** 画起点 */
 function drawStart() {
   const size = gameConfigState.size
-  levelData[source.mapLevel].start.forEach(s => {
+  baseDataState.mapItem.start.forEach(s => {
     gameConfigState.ctx.drawImage(source.othOnloadImg.start!, s.x * size, s.y * size, size, size)
     baseDataState.gridInfo.arr[s.y][s.x] = 'start'
   })
@@ -158,23 +168,20 @@ function drawFloorTile() {
 /** 初始化行动轨迹 */
 function initMovePath() {
   const size = gameConfigState.size
-  levelData[source.mapLevel].start.forEach((levelStart, startIndex) => {
-    const movePathItem = JSON.parse(JSON.stringify(
-      !setting.isTowerCover ? levelStart : towerCanvasMapGridInfo
-    ))
+  baseDataState.mapItem = !setting.isTowerCover ? levelData[source.mapLevel] : towerCanvasMapData
+  baseDataState.mapItem.start.forEach((levelStart, startIndex) => {
+    const movePathItem: WithPartial<MapGridInfo, 'num'> = JSON.parse(JSON.stringify(levelStart))
     const {addRow, addCol} = addRowColArr[movePathItem.x_y - 1]
     movePathItem.x = (movePathItem.x + addCol) * size;
     movePathItem.y = (movePathItem.y + addRow) * size;
-    baseDataState.floorTile.num = movePathItem.num
     // 刚开始就右移了，所以该初始格不会算上去
     const length = movePathItem.num!
     delete movePathItem.num
-    const _mapData = !setting.isTowerCover ? levelData[source.mapLevel].map[startIndex] : towerCanvasMapData
     const movePath: GridInfo[] = [JSON.parse(JSON.stringify(movePathItem))]
     // 控制x y轴的方向 1:左 2:下 3:右 4:上
     let x_y = movePathItem.x_y
     for(let i = 0; i < length; i++) {
-      const newXY = _mapData[i]
+      const newXY = baseDataState.mapItem.map[startIndex][i]
       if(newXY) {
         x_y = newXY
       }
@@ -188,17 +195,19 @@ function initMovePath() {
     }
     enemyState.movePath.push(movePath)
   })
-  // 为终点赋值
-  let end = levelData[source.mapLevel].end
-  if(!end) {
-    const lastItem = enemyState.movePath.at(-1)?.at(-1)
-    end = {
-      x: Math.floor(lastItem!.x / size),
-      y: Math.floor(lastItem!.y / size),
+  if(!setting.isTowerCover) {
+    // 为终点赋值
+    let end = baseDataState.mapItem.end
+    if(!end) {
+      const lastItem = enemyState.movePath.at(-1)?.at(-1)
+      end = {
+        x: Math.floor(lastItem!.x / size),
+        y: Math.floor(lastItem!.y / size),
+      }
     }
+    baseDataState.end = end
+    baseDataState.gridInfo.arr[end!.y][end!.x] = 'end'
   }
-  baseDataState.end = end
-  baseDataState.gridInfo.arr[end!.y][end!.x] = 'end'
 }
 
 /** 点击获取鼠标位置 操作塔防 */
@@ -230,31 +239,6 @@ function getMouse(e: {offsetX:number, offsetY:number}) {
     return
   }
   onWorkerPostFn('showTowerBuilding', {left, top})
-}
-
-/** 测试: 建造塔防 */
-function testBuildTowers() {
-  if(!setting.isDevTestMode) return
-  addMoney(999999)
-  enemyState.levelEnemy = [11,0,14,11,17,7,9,9,7,7,9,16,17,11,11,7,16,7,10,7,7,7,17,11,15,16,7,11,7,14,14,14,7,7,11,9,14,9,9,11,11,9,14,14,17,11,11]
-  const size = gameConfigState.size
-  testBuildData.forEach(item => {
-    item.x *= size
-    item.y *= size
-    buildTower({...item}, false, false)
-  })
-  for(let i = 0; i < 20; i++) {
-    buildTower({x: i * size, y: 0, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: size, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 0; i < 4; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
-  }
-  for(let i = 6; i < 15; i++) {
-    buildTower({x: i * size, y: 2 * size, tname: 'delaiwen'}, false, false)
-  }
 }
 
 export default {}

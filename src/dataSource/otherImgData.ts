@@ -4,6 +4,8 @@ import { requireCDN } from "@/utils/handleImg"
 const otherImgData = {
   /** 起点 */
   start: requireCDN('start.jpg'),
+  /** 终点 */
+  terminal: requireCDN('terminal.png'),
   /** 地板 */
   floor: requireCDN('floor-tile.png'),
   /** 金币 */
@@ -24,8 +26,20 @@ const otherImgData = {
   sun: requireCDN('sun.png'),
   /** 回血 */
   returnBlood: requireCDN('return-blood.png'),
+  /** 敌人冰冻塔防技能 */
+  frozen: requireCDN('frozen.png'),
+  /** 建造图片 */
+  building: requireCDN('add.png'),
+  /** 阳光 gif */
+  sunGif: requireCDN('Sun.gif'),
 }
 
 export default otherImgData
 
 export type OnloadImgKey = keyof typeof otherImgData
+
+/** 仅用于展示图片数据 */
+export const imgSource = {
+  /** 爱心 */
+  heart: requireCDN('heart.svg'),
+}

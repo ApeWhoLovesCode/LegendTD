@@ -1,8 +1,11 @@
 <script setup lang='ts'>
-import Worker from "./workers/index.ts?worker"
-import { useSourceStore } from '@/stores/source';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { useRoute } from "vue-router";
+import Worker from "./workers/index.ts?worker"
+import { VueFnName, WorkerFnName } from "./workers/type/worker";
+import { TowerName } from "@/type";
 
+import { ElMessage } from "element-plus";
 import GameNavBar from './components/gameNavBar.vue'
 import StartAndEnd from './components/startAndEnd.vue';
 import TowerBuild from './components/towerBuild.vue';
@@ -10,24 +13,22 @@ import Skill from './components/skill.vue'
 import Terminal from "./components/terminal.vue";
 import ProgressBar from './components/progressBar.vue';
 
-import useDomRef from './tools/domRef';
-import useGameConfig from './tools/gameConfig';
-import useBaseData from './tools/baseData';
-import useAudioState from './tools/audioState';
-import useGameSkill from "./tools/gameSkill";
-import useTower from "./tools/tower";
+import useDomRef from './hooks/useDomRef';
+import useGameConfig from './hooks/useGameConfig';
+import useBaseData from './hooks/useBaseData';
+import useAudioState from './hooks/useAudioState';
+import useGameSkill from "./hooks/useGameSkill";
+import useTower from "./hooks/useTower";
 
-import { ElMessage } from "element-plus";
-import { KeepIntervalKey } from "@/utils/keepInterval";
-import { VueFnName, WorkerFnName } from "./workers/type/worker";
-import { TowerName } from "@/dataSource/towerData";
-import { useUserInfoStore } from "@/stores/userInfo";
-import { updateScoreApi } from "@/service/rank";
-import { useRoute } from "vue-router";
 import useKeepInterval from "@/hooks/useKeepInterval";
-import { waitTime } from "@/utils/tools";
+import { useSourceStore } from '@/stores/source';
+import { useUserInfoStore } from "@/stores/userInfo";
 import { useSettingStore } from "@/stores/setting";
+import { updateScoreApi } from "@/service/rank";
+import { KeepIntervalKey } from "@/utils/keepInterval";
+import { waitTime } from "@/utils/tools";
 import levelData, { LevelDataItemEnum } from "@/dataSource/levelData";
+import audioData from "@/dataSource/audioData"
 
 const emit = defineEmits<{
   (event: 'reStart'): void
@@ -110,8 +111,8 @@ function initWorker() {
       case 'buildTowerCallback': {
         buildTowerCallback(param); break;
       }
-      case 'saleTowerCallback': {
-        saleTowerCallback(param); break;
+      case 'removeAudio': {
+        removeAudio(param); break;
       }
       // --- 塔防相关 end ---
       case 'onLevelChange': {
@@ -181,7 +182,7 @@ function onGameOver() {
   keepInterval.clear()
 }
 async function uploadScore() {
-  playAudio('ma-gameover', 'Skill')
+  playAudio('game-fail', 'End')
   onGameOver()
   if(levelData[source.mapLevel].type !== LevelDataItemEnum.Normal) {
     return
@@ -214,9 +215,6 @@ function buildTowerCallback(p: {towerId: string, audioKey: string}) {
 }
 function saleTower(towerId: string) {
   onWorkerPostFn('saleTower', towerId)
-}
-function saleTowerCallback(id: string) {
-  removeAudio(id)
 }
 /** 发动技能 */
 function handleSkill(index: number) {
@@ -269,7 +267,7 @@ function playAudio(audioKey: string, key: 'End' | 'Skill') {
   }
   nextTick(()=>{
     // 调节音量
-    audioRefObj[audio_key + 'Ref'].value!.volume = 0.6
+    audioRefObj[audio_key + 'Ref'].value!.volume = 0.5
     audioRefObj[audio_key + 'Ref'].value!.play()
   })
 }
@@ -385,12 +383,11 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       </div>
     </div>
     <div id="audio-wrap">
-      <audio ref="audioBgRef" :src="audioState.audioList['pvz-morning']" loop></audio>
-      <audio ref="audioLevelRef" :src="audioState.audioList['pvz-comein']"></audio>
-      <audio ref="audioSkillRef" :src="audioState.audioList[audioState.audioSkill]"></audio>
-      <audio ref="audioEndRef" :src="audioState.audioList[audioState.audioEnd]"></audio>
+      <audio ref="audioBgRef" :src="audioData['pvz-morning']" loop></audio>
+      <audio ref="audioLevelRef" :src="audioData['pvz-comein']"></audio>
+      <audio ref="audioSkillRef" :src="audioData[audioState.audioSkill]"></audio>
+      <audio ref="audioEndRef" :src="audioData[audioState.audioEnd]"></audio>
     </div>
-    <!-- <div class="screenMask"></div> -->
   </div>
 </template>
 
@@ -412,14 +409,6 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
       overflow: hidden;
     }
   }
-  .screenMask {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    box-shadow: 0 0 500px 1000px rgba(0, 0, 0, .6);
-  }
 }
 @media screen and (orientation: portrait) {
   .game-wrap {
@@ -429,4 +418,4 @@ function onWorkerPostFn(fnName: WorkerFnName, event?: any) {
     transform: rotate(90deg);
   }
 }
-</style>
+</style>./hooks/domRef./hooks/gameConfig./hooks/baseData./hooks/audioState./hooks/gameSkill./hooks/tower./hooks/useAudioState./hooks/useBaseData./hooks/useTower./hooks/useGameSkill./hooks/useDomRef./hooks/useGameConfig

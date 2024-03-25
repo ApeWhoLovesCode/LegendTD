@@ -26,5 +26,12 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, "src")
     }
+  },
+  css: {
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true, // less 中使用 js
+      }
+    }
   }
 })

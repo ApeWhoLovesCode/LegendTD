@@ -1,11 +1,11 @@
-import { BulletType, EnemyStateType, SpecialBulletItem, SpecialBullets, TargetInfo, TowerStateType } from "@/type/game"
+import { BulletType, EnemyStateType, SpecialBulletItem, SpecialBullets, TargetInfo, TowerStateType, TowerName, TowerType } from "@/type"
 import { damageTheEnemy, enemyMap, removeEnemy, slowEnemy } from "./enemy"
 import { addMoney, canvasInfo, gameConfigState, setting, source } from "./baseData"
 import { powAndSqrt } from "@/utils/tools"
 import { getAngle } from "@/utils/handleCircle"
-import { towerMap } from "./tower"
+import { isTowerSufferEnemy, towerMap } from "./tower"
 import keepInterval, { KeepIntervalKey } from "@/utils/keepInterval"
-import towerArr, { TowerName, TowerType } from "@/dataSource/towerData";
+import towerArr from "@/dataSource/towerData";
 import { drawLinearGradientRoundRect } from "./canvas"
 import { randomStr } from "@/utils/random"
 
@@ -72,6 +72,7 @@ function drawRotateBullet({x, y, w, h, deg, img}: {
 export function handleBulletMove() {
   const e_idList: string[] = []
   towerMap.forEach(t => {
+    if(t.enemySkill)
     for(let b_i = t.bulletArr.length - 1; b_i >= 0; b_i--) {
       const {w, h} = t.bSize
       // 当前塔防的当前子弹
@@ -182,7 +183,8 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
   // 敌人扣血
   enemy.hp.cur = Math.max(hp, 0)
   if(enemy.hp.cur <= 0) {
-    if(setting.isTowerCover) {
+    // 封面预览敌人（除了召唤怪外，血量为0就满血）
+    if(setting.isTowerCover && !enemy.id.includes('callenemy')) {
       enemy.hp.cur = enemy.hp.sum
       return
     }
@@ -205,7 +207,6 @@ function handelDamageEnemy(e_id: string, t: TowerStateType, e_idList: string[]) 
 /** 画塔防的特殊子弹 */
 function drawTowerBullet(t: TowerStateType) {
   const {w, h} = t.bSize
-  // 当前塔防的当前子弹
   const ctx = gameConfigState.ctx
   if(t.name === 'lanbo') {
     let {x, y, scale = 1, r, addScale} = t
@@ -229,6 +230,9 @@ function drawTowerBullet(t: TowerStateType) {
 function handleFireBullet(t: TowerStateType) {
   const enemy = enemyMap.get(t.targetIdList[0])
   if(!enemy) return
+  if(isTowerSufferEnemy(t.enemySkill)) {
+    return
+  }
   damageTheEnemy(enemy, t.damage)
   if(t.damage < t.preDamage! * 3) {
     t.thickness! = Math.min(t.thickness! + 0.025, gameConfigState.size / 2)
