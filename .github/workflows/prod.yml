@@ -1,6 +1,6 @@
 name: release
 on:
-  # 代码 push main 分支的时候触发
+  # 代码 push master 分支的时候触发
   push:
     branches: master
 jobs:
