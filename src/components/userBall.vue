@@ -30,7 +30,7 @@ const loginVisible = ref(false)
 const selectLevelVisible = ref(false)
 const selectTowerVisible = ref(false)
 const isCircleProgress = ref(source.progress < 100)
-const ballTimer = ref<NodeJS.Timer>()
+const ballTimer = ref<NodeJS.Timeout>()
 
 const floatingBallStyle = computed(() => {
   let distance = source.isMobile ? '1rem' : '50px'

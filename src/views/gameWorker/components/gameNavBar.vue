@@ -73,7 +73,7 @@ const source = useSourceStore()
 
 const addMoney = reactive({
   num: '', 
-  timer: null as NodeJS.Timer | null, 
+  timer: undefined as NodeJS.Timeout | undefined, 
   time: 1000
 })
 
@@ -81,7 +81,7 @@ const addMoney = reactive({
 watch(() => props.money, (newVal, oldVal) => {
   addMoney.num = ''
   clearTimeout(addMoney.timer!)
-  addMoney.timer = null
+  addMoney.timer = undefined
   nextTick(() => {
     const val = newVal - oldVal
     addMoney.num = (val >= 0 ? '+' : '') + val

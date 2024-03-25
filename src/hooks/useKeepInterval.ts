@@ -17,8 +17,8 @@ export default function useKeepInterval() {
     stopTime(key)
     if((!timerMap.has(key) || isCover) && fn) {
       timerMap.set(key, {
-        timeout: null,
-        interval: null,
+        timeout: undefined,
+        interval: undefined,
         cur: 0,
         end: 0,
         fn,
@@ -88,11 +88,11 @@ export default function useKeepInterval() {
     const timeItem = timerMap.get(key)
     if(timeItem?.timeout) {
       clearTimeout(timeItem.timeout)
-      timeItem.timeout = null
+      timeItem.timeout = undefined
     }
     if(timeItem?.interval) {
       clearInterval(timeItem.interval)
-      timeItem.interval = null
+      timeItem.interval = undefined
     }
   }
 
@@ -119,9 +119,9 @@ export type KeepIntervalSetParams = {
 
 export type TimerMap = {
   // 第一层的setTimeout
-  timeout: NodeJS.Timeout | null
+  timeout: NodeJS.Timeout | undefined
   // 第二层的setInterval
-  interval: NodeJS.Timeout | null
+  interval: NodeJS.Timeout | undefined
   // 当前时间
   cur: number
   // 暂停时间

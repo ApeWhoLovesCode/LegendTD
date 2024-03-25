@@ -38,8 +38,8 @@ class KeepInterval {
     this.stopTime(key)
     if((!this.timerMap.has(key) || isCover) && fn) {
       this.timerMap.set(key, {
-        timeout: null,
-        interval: null,
+        timeout: undefined,
+        interval: undefined,
         cur: 0,
         end: 0,
         fn,
@@ -109,11 +109,11 @@ class KeepInterval {
     const timeItem = this.timerMap.get(key)
     if(timeItem?.timeout) {
       clearTimeout(timeItem.timeout)
-      timeItem.timeout = null
+      timeItem.timeout = undefined
     }
     if(timeItem?.interval) {
       clearInterval(timeItem.interval)
-      timeItem.interval = null
+      timeItem.interval = undefined
     }
   }
 }

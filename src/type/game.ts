@@ -54,7 +54,7 @@ export type GameMasterSkill = {
   /** 生产的金钱 */
   proMoney: {isShow: boolean, interval: number, money: number},
   /** 增加的金钱 */
-  addMoney: {num: string, timer: NodeJS.Timer | null, time: number},
+  addMoney: {num: string, timer: NodeJS.Timer | undefined, time: number},
   /** 底部技能栏 */
   skillList: SkillType[],
 }
