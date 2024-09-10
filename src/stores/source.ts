@@ -4,6 +4,7 @@ import towerData from '@/dataSource/towerData'
 import { EnemyName, TowerName } from '@/type'
 import { EnemyStateType, TowerStateType } from '@/type'
 import { gifToStaticImgList, loadImage } from '@/utils/handleImg'
+import { isMobile } from '@/utils/tools'
 import { SourceImgObj } from 'lhh-utils'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
@@ -56,8 +57,8 @@ export const useSourceStore = defineStore('source', {
     towerSource: void 0,
     othOnloadImg: {},
     mapLevel: 0,
-    isMobile: false,
-    ratio: 1,
+    isMobile: !!isMobile(),
+    ratio: window.devicePixelRatio ?? 1,
     progress: 0,
   }),
   actions: {

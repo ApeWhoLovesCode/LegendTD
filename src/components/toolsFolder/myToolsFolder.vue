@@ -10,7 +10,6 @@ import BlogIcon from '@/assets/img/blog.svg';
 import ComponentIcon from '@/assets/img/component.svg';
 import MyGameIcon from '@/assets/img/myGame.png';
 import RankListIcon from '@/assets/img/rankList.svg';
-import TowerLogoIcon from '@/assets/img/towerLogo.svg';
 import JuejinIcon from '@/assets/img/juejin.svg';
 import LTDIcon from '@/assets/img/LTDIcon.png';
 import otherImgData from '@/dataSource/otherImgData';

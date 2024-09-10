@@ -7,7 +7,7 @@ export default function useGameSkill() {
     // 生产的金钱
     proMoney: {isShow: false, interval: 10000, money: 25},
     // 增加的金钱
-    addMoney: {num: '', timer: null, time: 1000},
+    addMoney: {num: '', timer: undefined, time: 1000},
     // 底部技能栏
     skillList: JSON.parse(JSON.stringify(skillData)),
   })

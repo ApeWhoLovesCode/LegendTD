@@ -42,7 +42,8 @@ const onClickItem = (item: ToolsFolderItem, isExpand = false) => {
       window.open(item.url)
     }
     emits('onClickItem', item)
-    onHideMore()
+    // 延时一下，防止先触发hide，然后再冒泡触发onShowMore
+    setTimeout(() => { onHideMore() }, 10);
   }
 }
 
@@ -115,8 +116,9 @@ const onHideMore = () => {
           </div>
         </div>
       </div>
+      <div v-show="isShowMore" class="mask" @click="onHideMore"></div>
     </FloatingBall>
-    <div class="pop" v-show="isShowMore" @click="onHideMore">
+    <div class="pop" v-show="isShowMore">
       <div class="content">
         <div 
           v-for="(item, i) in list" 
@@ -146,6 +148,8 @@ const onHideMore = () => {
     border-radius: 1.6rem;
   }
   .item {
+    position: relative;
+    z-index: 1;
     transition: transform .3s, opacity .2s;
     .icon {
       display: block;
@@ -159,17 +163,24 @@ const onHideMore = () => {
       }
     }
     .title {
-      margin-top: 5px;
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
       font-size: 10px;
       color: #fff;
       text-align: center;
       user-select: none;
     }
     &-sub {
+      position: relative;
+      z-index: 1;
       transition: transform 0.4s, opacity .2s;
     }
   }
   .lastItem {
+    position: static;
+    z-index: unset;
     width: 4rem;
     height: 4rem;
     display: grid;
@@ -196,6 +207,14 @@ const onHideMore = () => {
     }
   }
 }
+.mask {
+  position: fixed;
+  left: -100vw;
+  top: -100vw;
+  width: 200vw;
+  height: 200vh;
+  background-color: rgba(0, 0, 0, .3);
+}
 .pop {
   position: fixed;
   left: 0;
@@ -206,7 +225,6 @@ const onHideMore = () => {
   justify-content: center;
   align-items: center;
   z-index: 999;
-  background-color: rgba(0, 0, 0, .3);
   .content {
     display: grid;
     gap: 2rem;
