@@ -19,23 +19,18 @@ jobs:
           node-version: "20.x"
       # 为node_modules设置缓存
       - name: Cache
-        # 缓存命中结果会存储在steps.[id].outputs.cache-hit里，该变量在继后的step中可读
-        id: cache-dependencies
         uses: actions/cache@v3
         with:
           # 缓存文件目录的路径
-          path: |
-            **/node_modules
-          key: ${{runner.OS}}
+          path: node_modules
+          key: node_modules-${{hashFiles('package-lock.json')}}
+          restore-keys: node_modules-
       # 安装依赖
       - name: Installing Dependencies
-        # 如果命中缓存，就不需要安装依赖，使用缓存即可
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: npm install
       # 打包
       - name: Build
-        run: |
-            npm run build
+        run: npm run build
       # 产物上传服务器
       - name: Upload to Deploy Server
         uses: easingthemes/ssh-deploy@v2.0.7
