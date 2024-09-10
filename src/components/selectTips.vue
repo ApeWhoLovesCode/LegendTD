@@ -1,50 +1,60 @@
-<script setup lang='ts'>
-import { useSourceStore } from '@/stores/source';
-import { ref } from 'vue';
+<script setup lang="ts">
+import { useSourceStore } from "@/stores/source";
+import { ref } from "vue";
 
 const emit = defineEmits<{
-  (event: 'clickMask'): void
-  (event: 'clickContent'): boolean
-}>()
+  (event: "clickMask"): void;
+  (event: "clickContent"): boolean;
+}>();
 
-const source = useSourceStore()
+const source = useSourceStore();
 
-const isShow = ref(true)
-const isAnimationEnd = ref(false)
-const isContentShow = ref(false)
+const isShow = ref(true);
+const isAnimationEnd = ref(false);
+const isContentShow = ref(false);
 
 const clickMaskFn = () => {
-  isShow.value = false
-  emit('clickMask')
-}
+  isShow.value = false;
+  emit("clickMask");
+};
 
 const clickContentFn = (e: Event) => {
-  e.stopPropagation()
-  const _isShow = emit('clickContent')
-  isShow.value = !_isShow
-}
+  e.stopPropagation();
+  const _isShow = emit("clickContent");
+  isShow.value = !_isShow;
+};
 
 const onAnimationEnd = () => {
-  isAnimationEnd.value = true
+  isAnimationEnd.value = true;
   setTimeout(() => {
-    isContentShow.value = true
+    isContentShow.value = true;
   }, 10);
-}
-
+};
 </script>
 
 <template>
-  <div v-if="isShow" class='selectTips' @click="clickMaskFn">
+  <div
+    v-if="isShow"
+    class="selectTips"
+    @click="clickMaskFn"
+  >
     <template v-if="isAnimationEnd">
-      <div class="mask content" :class="{'contentShow': isContentShow}" @click="clickContentFn"></div>
-      <div class="tips" :class="{'tipsMobile': source.isMobile}">
+      <div
+        class="mask content"
+        :class="{ contentShow: isContentShow }"
+        @click="clickContentFn"
+      ></div>
+      <div
+        class="tips"
+        :class="{ tipsMobile: source.isMobile }"
+      >
         <div class="info">点击关卡试玩，享受游戏吧 ~</div>
         <div class="info2">点击其他区域关闭引导层</div>
       </div>
     </template>
     <template v-else>
-      <div 
-        class="mask animation animationLeft" 
+      <div
+        class="mask animation animationLeft"
         @animationend="onAnimationEnd"
       >
         <div class="boxShadowWrap">
@@ -60,13 +70,14 @@ const onAnimationEnd = () => {
   </div>
 </template>
 
-<style lang='less' scoped>
+<style lang="less" scoped>
 .selectTips {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
+  z-index: 1001;
   @contentSize: 30rem;
   @shadow1: rgba(0, 0, 0, 0.5);
   @shadow2: rgba(0, 0, 0, 0.75);
@@ -82,16 +93,13 @@ const onAnimationEnd = () => {
   .content {
     border-radius: 50%;
     transition: box-shadow 0.8s;
-    box-shadow: 0 0 0 100vmax @shadow1, 
-      inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 100vmax @shadow1, inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
     &Show {
-      box-shadow: 0 0 0 100vmax @shadow2, 
-        inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 0 100vmax @shadow2, inset 2px -5px 1rem rgba(0, 0, 0, 0.6);
     }
     &:hover {
       cursor: pointer;
-      box-shadow: 0 0 0 100vmax @shadow3, 
-        inset 2px -5px 3rem rgba(0, 0, 0, 0.9);
+      box-shadow: 0 0 0 100vmax @shadow3, inset 2px -5px 3rem rgba(0, 0, 0, 0.9);
     }
   }
   .tips {
@@ -104,7 +112,7 @@ const onAnimationEnd = () => {
     color: #eee;
     font-size: 1rem;
     cursor: pointer;
-    animation: tipsShow .5s ease-in;
+    animation: tipsShow 0.5s ease-in;
     &Mobile {
       left: calc(50% - @contentSize / 4);
     }
