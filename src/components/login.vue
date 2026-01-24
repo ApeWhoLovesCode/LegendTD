@@ -19,7 +19,7 @@ type Arrayable<T> = T | T[];
 
 const source = useSourceStore();
 
-const { visible } = defineProps({
+const props = defineProps({
   visible: {
     type: Boolean,
     default: false,
@@ -113,6 +113,7 @@ const clearData = () => {
     :title="isRegister ? '注册' : '登录'"
     :width="source.isMobile ? '85%' : '50%'"
     draggable
+    style="max-width: 500px;min-width: 360px;"
     @close="emit('update:visible', false)"
   >
     <ElForm
@@ -124,6 +125,7 @@ const clearData = () => {
       <ElFormItem
         label="用户名"
         prop="name"
+        style="margin-bottom: 40px;"
       >
         <ElInput
           v-model="userInfo.name"

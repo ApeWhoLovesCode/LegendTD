@@ -56,6 +56,9 @@ const onCardClick = (i: number) => {
 const cardIndex = (i: number) => (state.pageNum - 1) * state.pageSize + i
 
 const getCardText = (i: number) => {
+  if(state.pageNum > 1) {
+    return (state.pageNum - 1) * state.pageSize + i 
+  }
   switch (levelData[i].type) {
     case LevelDataItemEnum.Endless: return '卍';
     case LevelDataItemEnum.Experience: return '试玩';

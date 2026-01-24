@@ -83,7 +83,7 @@ const onHideMore = () => {
       magnetic="x"
       :style="ballStyle"
     >
-      <div class="tools" @mousedown="ballClickTime = Date.now()">
+      <div class="ltd-tools" @mousedown="ballClickTime = Date.now()">
         <div 
           v-for="(item, i) in list.slice(0, 3)" 
           :key="item.icon + i" 
@@ -116,9 +116,9 @@ const onHideMore = () => {
           </div>
         </div>
       </div>
-      <div v-show="isShowMore" class="mask" @click="onHideMore"></div>
+      <div v-show="isShowMore" class="ltd-mask" @click="onHideMore"></div>
     </FloatingBall>
-    <div class="pop" v-show="isShowMore">
+    <div class="ltd-pop" v-show="isShowMore">
       <div class="content">
         <div 
           v-for="(item, i) in list" 
@@ -133,7 +133,7 @@ const onHideMore = () => {
 </template>
 
 <style lang='less' scoped>
-.tools {
+.ltd-tools {
   display: grid;
   gap: 0.75rem;
   grid-template: 'a a' 'b b';
@@ -206,45 +206,45 @@ const onHideMore = () => {
       height: 4rem;
     }
   }
-}
-.mask {
-  position: fixed;
-  left: -100vw;
-  top: -100vw;
-  width: 200vw;
-  height: 200vh;
-  background-color: rgba(0, 0, 0, .3);
-}
-.pop {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-  .content {
-    display: grid;
-    gap: 2rem;
-    grid-template: 'a a a';
-    animation: popShow 0.3s ease;
-    .pop-item {
-      width: 4rem;
-      height: 4rem;
+  .ltd-mask {
+    position: fixed;
+    left: -100vw;
+    top: -100vw;
+    width: 200vw;
+    height: 200vh;
+    background-color: rgba(0, 0, 0, .3);
+  }
+  .ltd-pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    .content {
+      display: grid;
+      gap: 2rem;
+      grid-template: 'a a a';
+      animation: popShow 0.3s ease;
+      .pop-item {
+        width: 4rem;
+        height: 4rem;
+      }
     }
   }
-}
-@keyframes popShow {
-  0% {
-    opacity: 0;
-  }
-  99% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
+  @keyframes popShow {
+    0% {
+      opacity: 0;
+    }
+    99% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 }
 </style>
